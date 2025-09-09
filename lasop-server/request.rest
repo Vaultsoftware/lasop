@@ -1,0 +1,260 @@
+POST http://localhost:5000/postCourse
+Content-Type: application/json
+
+{
+    "title": "Backeend development",
+    "code": "MBAUG24",
+    "price": "400,000",
+    "exams": []
+}
+
+###
+
+GET http://localhost:5000/getCourse
+
+###
+
+POST http://localhost:5000/postCohort
+Content-Type: application/json
+
+{
+    "cohortName": "OLADIPUPO TESTING",
+    "courseId": ["66cd6d560d14292ee2136134", "66cd6d9e0d14292ee2136138", "66cd6dae0d14292ee213613b"],
+    "startDate": "Oct 17, 2024",
+    "endDate": "Dec 17, 2024",
+    "center": [
+        "66ea0e90798d99f26a5f30c2",
+        "66ea0ee08660a7fc26e80012"
+    ],
+    "mode": [
+        "Online",
+        "Weekday"
+    ],
+    "courseTutors": [
+        {
+            "center": "66ea0e90798d99f26a5f30c2",
+            "course": "66cd6d560d14292ee2136134",
+            "mode": "Weekday",
+            "tutors": "674e6f3986a98aa257b0eebc"
+        },
+        {
+            "center": "66ea0ee08660a7fc26e80012",
+            "course": "66cd6d9e0d14292ee2136138",
+            "mode": "Online",
+            "tutors": "6765b7ce1e0def51fcf36d97"
+        },
+        {
+            "center": "66ea0ee08660a7fc26e80012",
+            "course": "66cd6dae0d14292ee213613b",
+            "mode": "Weekday",
+            "tutors": "6765b7dc1e0def51fcf36d9a"
+        }
+    ],
+    "isActive": true
+}
+
+###
+
+GET  http://localhost:5000/getCohort
+
+###
+post http://localhost:5000/postCenter
+Content-Type: application/json
+
+{
+    "title": "Berger"
+}
+
+###
+GET  http://localhost:5000/getCenter
+
+###
+post http://localhost:5000/postStaff
+Content-Type: application/json
+
+{
+    "firstName": "David",
+    "lastName": "Ajadi",
+    "email": "david+1@gmail.com",
+    "contact": "3063515173",
+    "address": "Regina",
+    "nationality": "Nigeria",
+    "password": "akalmin247$",
+    "role": "academic",
+    "enrol": "Cyber security",
+    "status": "probation"
+}
+
+###
+
+post http://localhost:5000/postOtherInfo
+Content-Type: application/json
+
+{
+    "staffId": "66ea3a43a66e4f36fa322463"
+}
+
+###
+GET  http://localhost:5000/getStudent
+
+###
+post http://localhost:5000/postMsg
+Content-Type: application/json
+
+{
+    "sender": "66ea3a43a66e4f36fa322463",
+    "senderModel": "Staff",
+    "reciever": "66fea28570996699110ddf1c",
+    "recieverModel": "Student",
+    "message": "Thank you, I can see it works"
+}
+
+###
+post http://localhost:5000/sendOtp
+Content-Type: application/json
+
+{
+    "email": "akalmin247@gmail.com"
+}
+
+###
+post http://localhost:5000/verifyOtp
+Content-Type: application/json
+
+{
+    "email": "akalmin247@gmail.com",
+    "code": "822705"
+}
+
+###
+get http://localhost:5000/getCertificate
+
+###
+post http://localhost:5000/postClassroom
+Content-Type: application/json
+
+{
+    "title": "HTML Introduction",
+    "cohortId": "6701573b00e916a43d064d8a",
+    "courseId": "66cd6de60d14292ee213613e",
+    "date": "Oct 18, 2024",
+    "time": "Oct 18, 2024 18:59:59",
+    "zoomLink": "https://meet.google.com/cqk-vrgq-tgw",
+    "startClass": true,
+    "attendance": [
+        "6708e9de73c36d925b2bccaf"
+    ],
+    "duration": "9hr 30mins"
+}
+
+###
+post http://localhost:5000/postAssessment
+Content-Type: application/json
+
+{
+    "title": "HTML Framework",
+    "submission": [
+        {
+            "studentId": "6708e9de73c36d925b2bccaf",
+            "submitted": true,
+            "submissionDate": "2024-10-31T18:30:00.000Z",
+            "grade": 85,
+            "feedback": "Good work, but be careful with syntax.",
+            "status": "graded"
+        }
+    ],
+    "instruction": "Skecth a framework of your portfolio",
+    "dueDate": "Oct 29, 2024",
+    "cohortId": "6701573b00e916a43d064d8a",
+    "courseId": "66cd6de60d14292ee213613e"
+}
+
+###
+post http://localhost:5000/postProject
+Content-Type: application/json
+
+{
+    "title": "Design a e-commerce website",
+    "duration": "2 weeks",
+    "start": "31 Dec, 2024",
+    "overview": "Design a CSS framework for a portfolio website, focusing on modern and responsive design principles.",
+    "objectives": [
+        "Improve understanding of CSS layout techniques.",
+        "Enhance responsive design skills using CSS Grid and Flexbox.",
+        "Create a visually appealing portfolio design."
+    ],
+    "deliverables": [
+        "CSS file demonstrating the portfolio layout and design.",
+        "Documentation explaining the design choices and challenges."
+    ],
+    "submission": [
+        {
+            "studentId": "6708e9de73c36d925b2bccaf",
+            "submitted": true,
+            "submissionDate": "2024-10-31T18:30:00.000Z",
+            "grade": 85,
+            "feedback": "Good work, but be careful with syntax.",
+            "status": "graded"
+        }
+    ],
+    "dueDate": "2024-10-29T00:00:00.000Z",
+    "cohortId": "6701573b00e916a43d064d8a",
+    "courseId": "66cd6de60d14292ee213613e"
+}
+
+###
+post http://localhost:5000/postJob
+Content-Type: application/json
+
+{
+    "jobTitle": "Backend Developer",
+    "salary": "$60,000 - $80,000",
+    "jobType": "Full-time",
+    "requirements": "3+ years of experience with Django and MySQL.",
+    "company": "Tech Innovators Ltd.",
+    "location": "Remote",
+    "city": "San Francisco",
+    "jobDescription": "We are looking for a highly skilled front-end developer with experience in building modern web applications."
+}
+
+###
+PUT http://localhost:5000/assignCohort/6701573b00e916a43d064d8a
+Content-Type: application/json
+
+{
+    "course": "66cd6e330d14292ee2136144",
+    "center": "66ea0ee08660a7fc26e80012",
+    "mode": "Weekend",
+    "tutors": "67187fb6e10444102ad20b51"
+}
+
+###
+POST http://localhost:5000/postNonCourse
+Content-Type: application/json
+
+    {
+        "title": "Manager",
+        "code": "MNGR",
+        "price": "200,000"
+    }
+
+###
+POST http://localhost:5000/submitAssessment/67994ac1df2e88bda4846819
+Content-Type: application/json
+
+{
+    "studentId": "67a17f7c47d3252ab7e1b228",
+    "answer": "Here is the link to my portfolio \n https://doublea247.vercel.app"
+}
+
+###
+PUT http://localhost:5000/gradeStudent/67994ac1df2e88bda4846819/grade/67a17f7c47d3252ab7e1b228
+Content-Type: application/json
+
+{
+    "grade": 90,
+    "feedback": "Excellent work! Keep up the good work."
+}
+
+###
+PUT http://localhost:5000/addOtherName
