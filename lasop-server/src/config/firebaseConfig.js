@@ -1,13 +1,12 @@
-// config/firebaseConfig.js
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-const { getStorage } = require('firebase-admin/storage');
-const serviceAccount = require('../../lasop-test-firebase-adminsdk-ql9js-4913b23920.json');
-
-const app = initializeApp({
-  credential: cert(serviceAccount),
-  storageBucket: 'lasop-test.appspot.com', // Replace with your actual bucket name
-});
-
-// Export the storage instance
-const storage = getStorage(app);
-module.exports = { storage };
+// src/config/firebaseConfig.js
+// Firebase disabled for this build. Prevents app from crashing at startup.
+module.exports = {
+  admin: null,
+  storage: {
+    bucket() {
+      throw new Error(
+        'Firebase Storage is disabled. Migrate this route to GridFS or configure FIREBASE_* env vars.'
+      );
+    },
+  },
+};

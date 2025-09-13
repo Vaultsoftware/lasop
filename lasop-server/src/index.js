@@ -1,7 +1,11 @@
+// src/index.js (server entry)
+require('dotenv').config();
+
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const connection = require("./config/connection");
+
 const signStudent = require("./routes/student/signStudent");
 const signUser = require("./routes/admin/signUser");
 const postCohort = require("./routes/cohort/postCohort");
@@ -36,7 +40,7 @@ const getExam = require("./routes/exam/getExam");
 const updateExam = require("./routes/exam/updateExam");
 const delExam = require("./routes/exam/delExam");
 const postCohortExam = require("./routes/cohortExam/postCohortExam");
-const getCohortExam = require("./routes/cohortExam/getCohortExamDet");
+const getCohortExam = require("./routes/cohortExam/getCohortExamDet"); // kept as in your app
 const getCohortDetails = require("./routes/cohort/getCohortId");
 const getCourseDetails = require("./routes/course/getCourseId");
 const postCenter = require("./routes/center/postCenter");
@@ -65,18 +69,22 @@ const getClassroom = require("./routes/classroom/getClassroom");
 const getClassroomDetail = require("./routes/classroom/getClassroomDet");
 const delClassroom = require("./routes/classroom/delClassroom");
 const updateClassroom = require("./routes/classroom/updateClassroom");
+
 const authToken = require("./middleware/authToken");
-const {postCert, upload} = require("./routes/certificate/postCert");
+
+// const { postCert, upload } = require("./routes/certificate/postCert");
 const getCertificate = require("./routes/certificate/getCertificate");
 const getCertId = require("./routes/certificate/getCertId");
 const updateCert = require("./routes/certificate/updateCert");
-const delCert = require("./routes/certificate/delCert");
+// const delCert = require("./routes/certificate/delCert");
+
 const postMsg = require("./routes/messages/postMsg");
 const getMessages = require("./routes/messages/getMsg");
 const getMessageDetail = require("./routes/messages/getMsgDet");
 const deleteMessage = require("./routes/messages/delMsg");
+
 const getCohortExamDet = require("./routes/cohortExam/getCohortExamDet");
-const verifyUserCode = require('./routes/verifyOtp/verifyUserCode')
+const verifyUserCode = require('./routes/verifyOtp/verifyUserCode');
 const sendVerificationCode = require('./routes/verifyOtp/sendVerificationCode');
 const logStaff = require("./routes/staff/logStaff");
 const assignCohort = require("./routes/cohort/assignCohort");
@@ -96,23 +104,52 @@ const updateProjectStatus = require("./routes/status/projectStatus");
 const updateCohortStatus = require("./routes/status/cohortStatus");
 const updateAssessmentStatus = require("./routes/status/assessmentStatus");
 const updateStudentWithoutOtherName = require("./routes/student/updateStudentOther");
+const devPeekOtp = require('./routes/verifyOtp/devPeekOtp');
+
+// ✅ GridFS certificate routes
+const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
+const streamFile = require("./routes/files/streamFile");
+const delCert = require("./routes/certificate/delCert.gridfs");
 
 const app = express();
 
-app.use(cors());
+/* ---------------- CORS (dev/prod) ---------------- */
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://lasop.net',
+  'https://www.lasop.net',
+  process.env.CLIENT_ORIGIN, // e.g. https://lasop-client.vercel.app
+].filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+const corsMiddleware = cors(corsOptions);
+app.use(corsMiddleware);
+app.options('*', corsMiddleware);
+/* ----------------------------------------------- */
 
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Admin / Accountant / Super admin
+/* ============= Admin / Accountant / Super admin ============= */
 app.post('/user', signUser);
 app.post('/logUser', logUser);
 app.put('/updateUser/:id', updateUser);
 app.delete('/deleteUser/:id', delUser);
 
-// student
+/* ============================ Student ============================ */
+// NOTE: field name has a trailing space, kept to avoid breaking existing clients.
 app.post('/signStudent', upload.single('profile '), signStudent);
-app.post('/convertProgram', convertProgramArrayToObject)
+app.post('/convertProgram', convertProgramArrayToObject);
 app.post('/logStudent', logStudent);
 app.put('/updateStudent/:id', updateStudent);
 app.put('/addCourse/:id', authToken, addCourseStudent);
@@ -120,7 +157,7 @@ app.delete('/deleteStudent/:id', delStudent);
 app.get('/studentDetails/:id', getStudentDet);
 app.get('/getStudent', getStudent);
 
-// Assessment
+/* =========================== Assessment ========================== */
 app.post('/postAssessment', postAssessment);
 app.get('/getAssessment', getAssessment);
 app.get('/getAssessmentDet/:id', getAssessmentDetail);
@@ -128,15 +165,15 @@ app.put('/gradeStudent/:assessmentId/grade/:studentId', postGradeAss);
 app.post('/submitAssessment/:assessmentId', postSubmissionAss);
 app.delete('/delAssessment/:id', authToken, delAssessment);
 
-// Classroom
+/* ============================ Classroom ========================= */
 app.post('/postClassroom', postClassroom);
 app.get('/getClassroom', getClassroom);
 app.get('/getClassroomDet/:id', getClassroomDetail);
-app.delete('/delClassroom/id', delClassroom);
+app.delete('/delClassroom/id', delClassroom); // kept as-is
 app.put('/updateClassroom/:id', updateClassroom);
 app.put('/postAttendance/:id', postAttendance);
 
-// Cohort
+/* ============================= Cohort ========================== */
 app.post('/postCohort', postCohort);
 app.get('/getCohort', getCohort);
 app.get('/getCohortDetail/:id', getCohortDetails);
@@ -148,73 +185,85 @@ app.post('/postCohortExam', authToken, postCohortExam);
 app.get('/getCohortExam', authToken, getCohortExam);
 app.get('/getCohortExamDet/:id', authToken, getCohortExamDet);
 
-// Course
+/* ============================== Course ========================= */
 app.post('/postCourse', postCourse);
 app.get('/getCourse', getCourse);
 app.get('/getCourseDetail/:id', getCourseDetails);
 app.put('/updateCourse/:id', authToken, updateCourse);
 app.delete('/deleteCourse/:id', authToken, delCourse);
 
-// Center
+/* ============================== Center ========================= */
 app.post('/postCenter', authToken, postCenter);
 app.get('/getCenter', getCenter);
 
-// Certificate
+/* =========================== Certificate ======================= */
 app.post('/postCertificate', upload.single('certificate'), postCert);
 app.get('/getCertificate', getCertificate);
-app.get('/getCertificateId/:id', authToken, getCertId);
-app.put('/updateCertificate/:id', authToken, updateCert);
-app.delete('/deleteCertificate/:id', authToken, delCert);
 
+// Dev toggle: REQUIRE_AUTH=0 bypasses auth for cert detail/update/delete
+const requireAuth = process.env.REQUIRE_AUTH !== '0';
 
-// Exam
+if (requireAuth) {
+  app.get('/getCertificateId/:id', authToken, getCertId);
+  app.put('/updateCertificate/:id', authToken, updateCert);
+  app.delete('/deleteCertificate/:id', authToken, delCert);
+} else {
+  app.get('/getCertificateId/:id', getCertId);
+  app.put('/updateCertificate/:id', updateCert);
+  app.delete('/deleteCertificate/:id', delCert);
+}
+
+// 🔹 Serve GridFS files by id
+app.get('/files/:id', streamFile);
+
+/* ================================ Exam ========================= */
 app.post('/postExam', authToken, postExam);
 app.get('/getExam', authToken, getExam);
 app.put('/updateExam/:id', authToken, updateExam);
 app.delete('/deleteExam/:id', authToken, delExam);
 
-// Job
+/* ================================ Job ========================== */
 app.post('/postJob', postJob);
 app.get('/getJob', getJob);
 app.put('/updateJob/:id', authToken, updateJob);
 app.delete('/deleteJob/:id', authToken, delJob);
 
-// Message
+/* ============================== Message ======================== */
 app.post('/postMsg', postMsg);
 app.get('/getMsg', authToken, getMessages);
 app.get('/getMessage/:id', authToken, getMessageDetail);
 app.delete('/deleteMsg/:id', authToken, deleteMessage);
 
-// Non-course staff
+/* ========================== Non-course staff =================== */
 app.post('/postNonCourse', postNonCourse);
-app.get('/getNonCourse', getNonCourse)
+app.get('/getNonCourse', getNonCourse);
 
-// Project
+/* ============================== Project ======================== */
 app.post('/postProject', postProject);
 app.get('/getProject', getProject);
 app.get('/getProjectDet/:id', getProjectDetail);
 app.delete('/delProject/:id', authToken, delProject);
 app.put('/gradeProject/:projectId/grade/:studentId', postGradePro);
-app.post('/submitProject/:projectId', postSubmissionPro)
+app.post('/submitProject/:projectId', postSubmissionPro);
 
-// Profile
+/* ============================== Profile ======================== */
 app.post('/postProfile', upload.single('proPic'), postProfile);
 app.get('/getProfile', getProfile);
 app.get('/getProfileDet/:id', getProfileDet);
 app.delete('/delProfile/:id', delProfile);
 
-// Result
+/* =============================== Result ======================== */
 app.post('/postResult', authToken, postResult);
 app.get('/getResult', authToken, getResult);
 app.get('/getResultDetail/:id', authToken, getResultDetail);
 
-// Syllabus
+/* ============================== Syllabus ======================= */
 app.post('/postSyllabus', upload.single('sylFile'), postSyllabus);
 app.get('/getSyllabus', getSyllabus);
 app.put('/updateSyllabus/:id', authToken, updateSyllabus);
 app.delete('/deleteSyllabus/:id', authToken, delSyllabus);
 
-// Staff
+/* =============================== Staff ========================= */
 app.post('/postStaff', postStaff);
 app.post('/logStaff', logStaff);
 app.get('/getStaff', getStaff);
@@ -226,20 +275,21 @@ app.get('/getOtherInfo', authToken, getOtherInfo);
 app.get('/getOtherInfoDet/:id', authToken, getOtherInfoDet);
 app.put('/updateOtherInfo/:id', authToken, updateOtherInfo);
 
-// Status
+/* =============================== Status ======================== */
 app.put('/cohortStatus', updateCohortStatus);
 app.put('/projectStatus', updateProjectStatus);
-app.put('/assessmentStatus', updateAssessmentStatus)
+app.put('/assessmentStatus', updateAssessmentStatus);
 
-// Verify Email
+/* ============================ Verify Email ===================== */
 app.post('/sendOtp', sendVerificationCode);
-app.post('/verifyOtp', verifyUserCode)
+app.post('/verifyOtp', verifyUserCode);
+app.get('/__dev/otp', devPeekOtp);
 
-// Chat
+/* ================================ Chat ========================= */
 app.post('/postChat', authToken, sendMsg);
 app.get('/getChat', authToken, getMsg);
 
-// update student without other name
+/* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
 connection({ app, port: process.env.PORT || 5000 });

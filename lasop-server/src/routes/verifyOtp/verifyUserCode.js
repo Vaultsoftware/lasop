@@ -1,34 +1,48 @@
+// routes/verifyOtp/verifyUserCode.js
+require('dotenv').config();
 const VerifyOtp = require('../../models/verification');
 
-const verifyUserCode = async (req, res) => {
-    const { email, code } = req.body;
+module.exports = async function verifyUserCode(req, res) {
+  try {
+    const email = String(req.body?.email ?? '').trim().toLowerCase();
+    const code = String(req.body?.code ?? '').trim().replace(/\s+/g, '');
 
-    try {
-        // Find the email entry in the database
-        const emailEntry = await VerifyOtp.findOne({ email });
-
-        if (!emailEntry) {
-            return res.status(404).json({ message: 'No verification code found for this email.' });
-        }
-
-        // Check if the provided code matches
-        if (emailEntry.code !== code) {
-            return res.status(400).json({ message: 'Invalid verification code.' });
-        }
-
-        // Check if the code has expired
-        if (Date.now() > emailEntry.codeExpiration) {
-            return res.status(400).json({ message: 'Verification code has expired.' });
-        }
-
-        // If the code is correct and not expired, mark the email as verified
-        await VerifyOtp.findOneAndDelete({ email }); 
-
-        return res.status(200).json({ message: 'Email verified successfully.' });
-
-    } catch (error) {
-        return res.status(500).json({ message: 'An error occurred during verification.', error: error.message });
+    if (!email || !code) {
+      return res.status(400).json({ message: 'Email and code are required' });
     }
-};
 
-module.exports = verifyUserCode;
+    const rec = await VerifyOtp.findOne({ email });
+    if (!rec) {
+      return res.status(400).json({ message: 'No OTP found for this email' });
+    }
+
+    const nowMs = Date.now();
+    const expMs = new Date(rec.codeExpiration).getTime();
+    if (!rec.codeExpiration || Number.isNaN(expMs) || nowMs > expMs) {
+      await VerifyOtp.deleteOne({ _id: rec._id }); // consume expired
+      const dev = process.env.EXPOSE_OTP_IN_DEV === '1'
+        ? { reason: 'expired', now: new Date(nowMs), codeExpiration: rec.codeExpiration }
+        : undefined;
+      return res.status(400).json({ message: 'Code expired. Request a new one.', ...dev });
+    }
+
+    const expected = String(rec.code).trim();
+    if (code !== expected) {
+      const dev = process.env.EXPOSE_OTP_IN_DEV === '1'
+        ? { reason: 'mismatch', expected, received: code }
+        : undefined;
+      return res.status(400).json({ message: 'Invalid code', ...dev });
+    }
+
+    await VerifyOtp.deleteOne({ _id: rec._id }); // success: consume
+
+    return res.status(200).json({
+      message: 'Email verified',
+      verified: true,
+      data: { email, code: expected, codeExpiration: rec.codeExpiration },
+    });
+  } catch (err) {
+    console.error('verifyOtp error:', err);
+    return res.status(500).json({ message: 'Failed to verify OTP', detail: err?.message });
+  }
+};

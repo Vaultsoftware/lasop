@@ -1,73 +1,71 @@
-const VerifyOtp = require("../../models/verification");
-const bodyParser = require('body-parser');
+// routes/verifyOtp/sendVerificationCode.js
+require('dotenv').config();
+const VerifyOtp = require('../../models/verification');
 const nodemailer = require('nodemailer');
-const express = require('express');
-const crypto = require('crypto');
-const app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// Nodemailer setup
-let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_RECIEVE,
-        pass: process.env.EMAIL_PWD
-    }
-});
-
-// Function to generate a random 6-digit code
-function generateCode() {
-    return crypto.randomInt(100000, 999999).toString();
+function genCode() {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
 }
 
-// Send verification code function
-const sendVerificationCode = async (req, res) => {
-    const { email } = req.body;
+async function makeGmailTransporter() {
+  const user = process.env.EMAIL_RECIEVE;
+  const pass = process.env.EMAIL_PWD;
+  if (!user || !pass) throw new Error('EMAIL_RECIEVE or EMAIL_PWD missing in env');
+  const t = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
+  await t.verify(); // throws if wrong creds or blocked
+  return t;
+}
 
-    try {
-        let emailEntry = await VerifyOtp.findOne({ email });
+module.exports = async function sendVerificationCode(req, res) {
+  try {
+    const rawEmail = req.body?.email ?? '';
+    const email = String(rawEmail).trim().toLowerCase();
+    const name = req.body?.name || 'there';
+    if (!email) return res.status(400).json({ message: 'Email is required' });
 
-        // If the email already exists, update the code and expiration
-        if (emailEntry) {
-            const verificationCode = generateCode();
-            emailEntry.code = verificationCode;
-            emailEntry.codeExpiration = Date.now() + 10 * 60 * 1000;
-            await emailEntry.save();
-        } else {
-            // If the email doesn't exist, create a new entry
-            const verificationCode = generateCode();
-            emailEntry = await VerifyOtp.create({
-                email: email,
-                code: verificationCode,
-                codeExpiration: Date.now() + 10 * 60 * 1000
-            });
-        }
+    const code = genCode();
+    const ttlMinutes = parseInt(process.env.OTP_EXP_MINUTES || '10', 10);
+    const codeExpiration = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-        // Email content
-        const mailOptions = {
-            from: process.env.EMAIL_RECIEVE,
-            to: email,
-            subject: `Verification Code`,
-            text: `Your verification code is ${emailEntry.code}. This code is valid for 10 minutes.`
-        };
+    await VerifyOtp.findOneAndUpdate(
+      { email },
+      { code, codeExpiration },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error occurred while sending email:', error);
-                return res.status(500).json({ message: 'Verification code could not be sent.' });
-            } else {
-                return res.status(201).json({
-                    message: 'Verification code sent',
-                    data: emailEntry
-                });
-            }
-        });
-    } catch (error) {
-        return res.status(400).json({ error: error.message });
+    const transporter = await makeGmailTransporter();
+    const info = await transporter.sendMail({
+      from: `LASOP <${process.env.EMAIL_RECIEVE || 'no-reply@example.com'}>`,
+      to: email,
+      subject: 'Your verification code',
+      text: `Hi ${name},
+
+Your verification code is: ${code}
+
+This code expires in ${ttlMinutes} minutes.
+
+If you didn’t request this, you can ignore this email.
+
+— LASOP`,
+    });
+
+    const payload = {
+      message: 'Verification code sent',
+      smtp: info.response || '',
+      expiresInMinutes: ttlMinutes,
+    };
+
+    // DEV HELP: return the code so you can paste it
+    if (process.env.EXPOSE_OTP_IN_DEV === '1') {
+      payload.data = { email, code, codeExpiration };
     }
-};
 
-module.exports = sendVerificationCode;
+    return res.status(200).json(payload);
+  } catch (err) {
+    console.error('sendOtp error:', err);
+    return res.status(500).json({ message: 'Failed to send OTP', detail: err?.message || String(err) });
+  }
+};

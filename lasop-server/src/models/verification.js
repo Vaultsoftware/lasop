@@ -1,3 +1,5 @@
+
+// lasop-server/models/verification.js
 const mongoose = require('mongoose');
 
 const verificationSchema = new mongoose.Schema({
