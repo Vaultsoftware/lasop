@@ -292,4 +292,6 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
+// connection({ app, port: process.env.PORT || 5000 });
+
 connection({ app, port: process.env.PORT || 5000 });

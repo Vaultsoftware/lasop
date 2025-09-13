@@ -9,10 +9,8 @@ module.exports = async function connection({ app, port }) {
     process.exit(1);
   }
 
-  // Optional tweaks
   mongoose.set('strictQuery', true);
 
-  // Helpful logs
   mongoose.connection.on('connected', () => {
     console.log('Connected to database');
   });
@@ -24,13 +22,11 @@ module.exports = async function connection({ app, port }) {
   });
 
   try {
-    await mongoose.connect(uri, {
-      // Mongoose v6+ doesn’t need useNewUrlParser/useUnifiedTopology
-      maxPoolSize: 10,
-    });
+    await mongoose.connect(uri, { maxPoolSize: 10 });
 
-    const server = app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+    const host = '0.0.0.0'; // required for Fly.io
+    const server = app.listen(port, host, () => {
+      console.log(`✅ Server running at http://${host}:${port}`);
     });
 
     // Graceful shutdown

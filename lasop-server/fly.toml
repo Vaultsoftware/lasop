@@ -1,0 +1,22 @@
+# fly.toml app configuration file generated for lasop-server-lingering-moon-5678 on 2025-09-13T21:34:00+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'lasop-server-lingering-moon-5678'
+primary_region = 'jnb'
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
