@@ -40,7 +40,7 @@ const getExam = require("./routes/exam/getExam");
 const updateExam = require("./routes/exam/updateExam");
 const delExam = require("./routes/exam/delExam");
 const postCohortExam = require("./routes/cohortExam/postCohortExam");
-const getCohortExam = require("./routes/cohortExam/getCohortExamDet"); // kept as in your app
+const getCohortExam = require("./routes/cohortExam/getCohortExamDet");
 const getCohortDetails = require("./routes/cohort/getCohortId");
 const getCourseDetails = require("./routes/course/getCourseId");
 const postCenter = require("./routes/center/postCenter");
@@ -72,11 +72,9 @@ const updateClassroom = require("./routes/classroom/updateClassroom");
 
 const authToken = require("./middleware/authToken");
 
-// const { postCert, upload } = require("./routes/certificate/postCert");
 const getCertificate = require("./routes/certificate/getCertificate");
 const getCertId = require("./routes/certificate/getCertId");
 const updateCert = require("./routes/certificate/updateCert");
-// const delCert = require("./routes/certificate/delCert");
 
 const postMsg = require("./routes/messages/postMsg");
 const getMessages = require("./routes/messages/getMsg");
@@ -118,7 +116,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://lasop.net',
   'https://www.lasop.net',
-  process.env.CLIENT_ORIGIN, // e.g. https://lasop-client.vercel.app
+  process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
 const corsOptions = {
@@ -147,7 +145,6 @@ app.put('/updateUser/:id', updateUser);
 app.delete('/deleteUser/:id', delUser);
 
 /* ============================ Student ============================ */
-// NOTE: field name has a trailing space, kept to avoid breaking existing clients.
 app.post('/signStudent', upload.single('profile '), signStudent);
 app.post('/convertProgram', convertProgramArrayToObject);
 app.post('/logStudent', logStudent);
@@ -169,7 +166,7 @@ app.delete('/delAssessment/:id', authToken, delAssessment);
 app.post('/postClassroom', postClassroom);
 app.get('/getClassroom', getClassroom);
 app.get('/getClassroomDet/:id', getClassroomDetail);
-app.delete('/delClassroom/id', delClassroom); // kept as-is
+app.delete('/delClassroom/id', delClassroom);
 app.put('/updateClassroom/:id', updateClassroom);
 app.put('/postAttendance/:id', postAttendance);
 
@@ -200,7 +197,6 @@ app.get('/getCenter', getCenter);
 app.post('/postCertificate', upload.single('certificate'), postCert);
 app.get('/getCertificate', getCertificate);
 
-// Dev toggle: REQUIRE_AUTH=0 bypasses auth for cert detail/update/delete
 const requireAuth = process.env.REQUIRE_AUTH !== '0';
 
 if (requireAuth) {
@@ -213,7 +209,6 @@ if (requireAuth) {
   app.delete('/deleteCertificate/:id', delCert);
 }
 
-// 🔹 Serve GridFS files by id
 app.get('/files/:id', streamFile);
 
 /* ================================ Exam ========================= */
@@ -292,6 +287,6 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
-// connection({ app, port: process.env.PORT || 5000 });
-
-connection({ app, port: process.env.PORT || 5000 });
+/* ✅ Start server on Fly-assigned port */
+const PORT = process.env.PORT || 5000;
+connection({ app, port: PORT });

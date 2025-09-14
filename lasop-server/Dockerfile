@@ -1,6 +1,5 @@
 # syntax = docker/dockerfile:1
 
-# Pin Node to a stable slim variant (less likely to 404)
 ARG NODE_VERSION=20-slim
 FROM node:${NODE_VERSION} AS base
 
