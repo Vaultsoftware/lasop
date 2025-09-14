@@ -305,6 +305,9 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
+
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
+
 /* ✅ Start server */
 const PORT = Number(process.env.PORT) || 3000;
 connection({ app, port: PORT });
