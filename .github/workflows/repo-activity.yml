@@ -1,0 +1,35 @@
+name: Repo Activity Tracker
+
+on:
+  push:
+    branches:
+      - "**"        # any branch
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  issues:
+    types: [opened, reopened, closed]
+
+jobs:
+  log-activity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log Activity
+        run: |
+          echo "📌 Event: ${{ github.event_name }}"
+          echo "📂 Repo: ${{ github.repository }}"
+          echo "🔀 Branch: ${{ github.ref_name }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "📝 Commit Message: ${{ github.event.head_commit.message || 'N/A' }}"
+          echo "➡️ PR / Issue: ${{ github.event.pull_request.html_url || github.event.issue.html_url || 'N/A' }}"
+
+      - name: Save Activity to Workflow Summary
+        run: |
+          echo "### 🚀 Repo Activity Logged" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
