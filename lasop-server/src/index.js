@@ -138,6 +138,11 @@ app.options('*', corsMiddleware);
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Minimal health endpoint for Fly checks/readiness
+app.get('/health', (_req, res) => {
+  res.status(200).send('ok');
+});
+
 /* ============= Admin / Accountant / Super admin ============= */
 app.post('/user', signUser);
 app.post('/logUser', logUser);
@@ -287,6 +292,6 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
-/* ✅ Start server on Fly-assigned port */
-const PORT = process.env.PORT || 5000;
+/* ✅ Start server on Fly-assigned port (unified to 3000) */
+const PORT = Number(process.env.PORT) || 3000;
 connection({ app, port: PORT });

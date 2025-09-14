@@ -2,7 +2,11 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-module.exports = async function connection({ app }) {
+module.exports = async function connection({
+  app,
+  port = Number(process.env.PORT) || 3000,
+  host = '0.0.0.0', // why: Fly proxy reaches the app via all interfaces
+}) {
   const uri = process.env.MONGO_DB;
   if (!uri) {
     console.error('❌ MONGO_DB is missing in .env');
@@ -24,15 +28,11 @@ module.exports = async function connection({ app }) {
   try {
     await mongoose.connect(uri, { maxPoolSize: 10 });
 
-    // Fly.io injects PORT into the env (default 3000 if missing)
-    const port = process.env.PORT || 3000;
-    const host = '0.0.0.0';
-
     const server = app.listen(port, host, () => {
-      console.log(`🚀 Server running at http://${host}:${port}`);
+      console.log(`✅ Server running at http://${host}:${port}`);
     });
 
-    // Graceful shutdown
+    // why: graceful shutdown avoids abrupt disconnects
     const shutdown = async (sig) => {
       console.log(`\n${sig} received. Closing server...`);
       server.close(async () => {
@@ -43,7 +43,7 @@ module.exports = async function connection({ app }) {
           process.exit(0);
         }
       });
-      setTimeout(() => process.exit(1), 10000).unref();
+      setTimeout(() => process.exit(1), 10_000).unref();
     };
 
     ['SIGINT', 'SIGTERM'].forEach((sig) => {
