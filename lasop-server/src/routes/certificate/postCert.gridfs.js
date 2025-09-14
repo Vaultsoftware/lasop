@@ -64,7 +64,7 @@ async function postCert(req, res) {
           subject: `Congratulations, You've received your certificate from Lasop`,
           text: `Congratulations on completing your ${certTitle} course, Your certificate is now available for you to view in your dashboard
 
-Please click the link below to login https://lasop-client.vercel.app/login
+Please click the link below to login https://lasop.net/login
 
 Faith Igboin,
 Admission office,
