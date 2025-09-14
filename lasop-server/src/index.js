@@ -292,6 +292,12 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
+
+// in src/index.js, near /health
+app.get('/', (_req, res) => {
+  res.status(200).json({ service: 'lasopnext-server', status: 'ok' });
+});
+
 /* ✅ Start server on Fly-assigned port (unified to 3000) */
 const PORT = Number(process.env.PORT) || 3000;
 connection({ app, port: PORT });
