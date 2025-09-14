@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const connection = require("./config/connection");
 
 const signStudent = require("./routes/student/signStudent");
@@ -138,9 +139,21 @@ app.options('*', corsMiddleware);
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Minimal health endpoint for Fly checks/readiness
+// Liveness
 app.get('/health', (_req, res) => {
   res.status(200).send('ok');
+});
+
+// Readiness (waits on Mongo)
+app.get('/ready', (_req, res) => {
+  const dbReady = mongoose.connection.readyState === 1;
+  if (dbReady) return res.status(200).send('ready');
+  return res.status(503).json({ status: 'starting', dbState: mongoose.connection.readyState });
+});
+
+// Root
+app.get('/', (_req, res) => {
+  res.status(200).json({ service: 'lasopnext-server', status: 'ok' });
 });
 
 /* ============= Admin / Accountant / Super admin ============= */
@@ -292,12 +305,6 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
-
-// in src/index.js, near /health
-app.get('/', (_req, res) => {
-  res.status(200).json({ service: 'lasopnext-server', status: 'ok' });
-});
-
-/* ✅ Start server on Fly-assigned port (unified to 3000) */
+/* ✅ Start server */
 const PORT = Number(process.env.PORT) || 3000;
 connection({ app, port: PORT });

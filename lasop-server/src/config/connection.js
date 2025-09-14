@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 module.exports = async function connection({
   app,
   port = Number(process.env.PORT) || 3000,
-  host = '0.0.0.0', // why: Fly proxy reaches the app via all interfaces
+  host = '0.0.0.0', // must bind to all interfaces on Fly
 }) {
   const uri = process.env.MONGO_DB;
   if (!uri) {
@@ -29,7 +29,7 @@ module.exports = async function connection({
     await mongoose.connect(uri, { maxPoolSize: 10 });
 
     const server = app.listen(port, host, () => {
-      console.log(`✅ Server running at http://${host}:${port}`);
+      console.log(`🚀 Server running at http://${host}:${port}`);
     });
 
     // why: graceful shutdown avoids abrupt disconnects
