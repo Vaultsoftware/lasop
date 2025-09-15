@@ -1,22 +1,21 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
-const authToken = (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(' ')[1];
+module.exports = (req, res, next) => {
+  try {
+    const auth = req.headers['authorization'] || req.headers['Authorization'];
+    const token = auth && auth.startsWith('Bearer ') ? auth.slice(7).trim() : null;
 
-    if(!token) {
-        return res.status(401).json({ error: 'No token provided' });
+    if (!token) {
+      res.set('WWW-Authenticate', 'Bearer realm="api"');
+      return res.status(401).json({ error: 'missing_token' });
     }
 
-    try {
-        const verified = jwt.verify(token, process.env.TOKEN_SECRET);
-        req.user = verified
-
-        next();
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    };
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    req.user = payload;
+    return next();
+  } catch (err) {
+    res.set('WWW-Authenticate', 'Bearer error="invalid_token"');
+    return res.status(401).json({ error: 'invalid_token', detail: err?.message });
+  }
 };
-
-module.exports = authToken;
