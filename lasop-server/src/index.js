@@ -112,8 +112,8 @@ const delCert = require("./routes/certificate/delCert.gridfs");
 
 const app = express();
 
-/* ---------------- CORS (dev/prod) ---------------- */
-const allowedOrigins = [
+/* ---------------- Hardened CORS (prod/dev) ---------------- */
+const rawAllowed = [
   'http://localhost:3000',
   'https://lasop.net',
   'https://www.lasop.net',
@@ -121,21 +121,37 @@ const allowedOrigins = [
   process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
+const normalize = (s) => String(s).trim().replace(/\/+$/, '').toLowerCase();
+const allowedSet = new Set(rawAllowed.map(normalize));
+
 const corsOptions = {
-  origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+  origin(origin, cb) {
+    // Allow non-browser clients or same-origin server-to-server calls (no Origin header)
+    if (!origin) return cb(null, true);
+    const o = normalize(origin);
+    if (allowedSet.has(o)) return cb(null, true);
+    return cb(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  // Echo back whatever headers the browser intends to send (avoids mismatches)
+  allowedHeaders: (req, cb) => {
+    cb(null, req.header('Access-Control-Request-Headers') || 'Content-Type, Authorization, X-Requested-With');
+  },
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
 };
+
+// Ensure proxies/CDNs don't cache the wrong ACAO
+app.use((req, res, next) => {
+  res.header('Vary', 'Origin');
+  next();
+});
 
 const corsMiddleware = cors(corsOptions);
 app.use(corsMiddleware);
 app.options('*', corsMiddleware);
-/* ----------------------------------------------- */
+/* ---------------------------------------------------------- */
 
 app.use(express.json());
 app.use(morgan("dev"));
@@ -164,7 +180,7 @@ app.put('/updateUser/:id', updateUser);
 app.delete('/deleteUser/:id', delUser);
 
 /* ============================ Student ============================ */
-app.post('/signStudent', upload.single('profile '), signStudent);
+app.post('/signStudent', upload.single('profile'), signStudent);
 app.post('/convertProgram', convertProgramArrayToObject);
 app.post('/logStudent', logStudent);
 app.put('/updateStudent/:id', updateStudent);
@@ -306,11 +322,15 @@ app.get('/getChat', authToken, getMsg);
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
 
-
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-app.get("/", (req, res) => {
-  res.send("✅ API is running");
+/* ---------- CORS-specific error surface (optional but helpful) ---------- */
+app.use((err, req, res, next) => {
+  if (err && /Not allowed by CORS/i.test(err.message)) {
+    // still returns with CORS headers from earlier middleware
+    return res.status(403).json({ error: 'CORS', origin: req.headers.origin || null });
+  }
+  return next(err);
 });
 
 /* ✅ Start server */
