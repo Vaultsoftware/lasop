@@ -7,6 +7,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const connection = require("./config/connection");
 
+/* ============================ Route imports ============================ */
 const signStudent = require("./routes/student/signStudent");
 const signUser = require("./routes/admin/signUser");
 const postCohort = require("./routes/cohort/postCohort");
@@ -110,9 +111,10 @@ const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
 const streamFile = require("./routes/files/streamFile");
 const delCert = require("./routes/certificate/delCert.gridfs");
 
+/* ============================ App setup ============================ */
 const app = express();
 
-/* ---------------- Hardened CORS (prod/dev) ---------------- */
+/* -------------------- CORS allowlist / helpers -------------------- */
 const rawAllowed = [
   'http://localhost:3000',
   'https://lasop.net',
@@ -123,18 +125,37 @@ const rawAllowed = [
 
 const normalize = (s) => String(s).trim().replace(/\/+$/, '').toLowerCase();
 const allowedSet = new Set(rawAllowed.map(normalize));
+const isAllowed = (origin) => origin && allowedSet.has(normalize(origin));
+const pickACAO = (origin) => (isAllowed(origin) ? origin : "");
 
+/* ------------- Ultra-early universal preflight (OPTIONS) ----------- */
+/* Handles ALL preflight requests before any other middleware.
+   Guarantees 204 + correct headers for allowed origins, so no route/middleware can 404/401 the preflight. */
+app.use((req, res, next) => {
+  if (req.method !== 'OPTIONS') return next();
+  const origin = req.headers.origin || "";
+  const acao = pickACAO(origin);
+  res.setHeader('Vary', 'Origin');
+  if (acao) res.setHeader('Access-Control-Allow-Origin', acao);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    req.headers['access-control-request-headers'] || 'Content-Type, Authorization, X-Requested-With'
+  );
+  res.setHeader('Access-Control-Max-Age', '86400');
+  return res.sendStatus(204);
+});
+
+/* ---------------------- Hardened CORS middleware ------------------- */
 const corsOptions = {
   origin(origin, cb) {
-    // Allow non-browser clients or same-origin server-to-server calls (no Origin header)
-    if (!origin) return cb(null, true);
-    const o = normalize(origin);
-    if (allowedSet.has(o)) return cb(null, true);
+    if (!origin) return cb(null, true);                // non-browser or same-origin tools
+    if (isAllowed(origin)) return cb(null, true);
     return cb(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  // Echo back whatever headers the browser intends to send (avoids mismatches)
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
   allowedHeaders: (req, cb) => {
     cb(null, req.header('Access-Control-Request-Headers') || 'Content-Type, Authorization, X-Requested-With');
   },
@@ -142,36 +163,31 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Ensure proxies/CDNs don't cache the wrong ACAO
-app.use((req, res, next) => {
-  res.header('Vary', 'Origin');
-  next();
-});
+// Always vary on Origin to avoid proxy cache mixups
+app.use((req, res, next) => { res.header('Vary', 'Origin'); next(); });
 
 const corsMiddleware = cors(corsOptions);
 app.use(corsMiddleware);
-app.options('*', corsMiddleware);
-/* ---------------------------------------------------------- */
 
+// Extra explicit preflight on historically-problematic paths (belt & suspenders)
+app.options('/cohortStatus', corsMiddleware);
+app.options('/projectStatus', corsMiddleware);
+app.options('/assessmentStatus', corsMiddleware);
+app.options('/deleteCertificate/:id', corsMiddleware);
+app.options('*', corsMiddleware); // default catch-all
+
+/* -------------------------- Common middleware ---------------------- */
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Liveness
-app.get('/health', (_req, res) => {
-  res.status(200).send('ok');
-});
-
-// Readiness (waits on Mongo)
+/* ----------------------------- Health ------------------------------ */
+app.get('/health', (_req, res) => res.status(200).send('ok'));
 app.get('/ready', (_req, res) => {
   const dbReady = mongoose.connection.readyState === 1;
   if (dbReady) return res.status(200).send('ready');
   return res.status(503).json({ status: 'starting', dbState: mongoose.connection.readyState });
 });
-
-// Root
-app.get('/', (_req, res) => {
-  res.status(200).json({ service: 'lasopnext-server', status: 'ok' });
-});
+app.get('/', (_req, res) => res.status(200).json({ service: 'lasopnext-server', status: 'ok' }));
 
 /* ============= Admin / Accountant / Super admin ============= */
 app.post('/user', signUser);
@@ -180,7 +196,7 @@ app.put('/updateUser/:id', updateUser);
 app.delete('/deleteUser/:id', delUser);
 
 /* ============================ Student ============================ */
-app.post('/signStudent', upload.single('profile'), signStudent);
+app.post('/signStudent', upload.single('profile'), signStudent); // fixed field name (no trailing space)
 app.post('/convertProgram', convertProgramArrayToObject);
 app.post('/logStudent', logStudent);
 app.put('/updateStudent/:id', updateStudent);
@@ -233,7 +249,6 @@ app.post('/postCertificate', upload.single('certificate'), postCert);
 app.get('/getCertificate', getCertificate);
 
 const requireAuth = process.env.REQUIRE_AUTH !== '0';
-
 if (requireAuth) {
   app.get('/getCertificateId/:id', authToken, getCertId);
   app.put('/updateCertificate/:id', authToken, updateCert);
@@ -324,11 +339,15 @@ app.put('/addOtherName', updateStudentWithoutOtherName);
 
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-/* ---------- CORS-specific error surface (optional but helpful) ---------- */
+/* -------------- CORS-specific error surface (optional) -------------- */
 app.use((err, req, res, next) => {
   if (err && /Not allowed by CORS/i.test(err.message)) {
-    // still returns with CORS headers from earlier middleware
-    return res.status(403).json({ error: 'CORS', origin: req.headers.origin || null });
+    const origin = req.headers.origin || "";
+    const acao = pickACAO(origin);
+    if (acao) res.setHeader('Access-Control-Allow-Origin', acao);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+    return res.status(403).json({ error: 'CORS', origin: origin || null });
   }
   return next(err);
 });
