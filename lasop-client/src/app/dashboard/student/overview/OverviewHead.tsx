@@ -1,4 +1,3 @@
-// app/components/OverviewHead.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -9,6 +8,7 @@ import { toast } from 'react-toastify';
 import { CertificateMain } from '@/interfaces/interface';
 
 function getFileNameFromHeaders(headers: Headers, fallback: string): string {
+  // Requires server to expose header via: Access-Control-Expose-Headers: Content-Disposition
   const cd = headers.get('content-disposition') || '';
   const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
   const encoded = match?.[1];
@@ -30,7 +30,6 @@ function getExtFromContentType(type?: string | null): string {
 }
 
 function deriveStudentName(detail: unknown): string | undefined {
-  // why: avoid TS property errors by probing common keys safely
   const d = (detail as Record<string, unknown>) || {};
   const val = (k: string) => (typeof d[k] === 'string' ? String(d[k]) : undefined);
   const join = (...keys: string[]) => keys.map(val).filter(Boolean).join(' ').trim() || undefined;
@@ -43,6 +42,35 @@ function deriveStudentName(detail: unknown): string | undefined {
     (val('email') ? val('email')!.split('@')[0] : undefined) ||
     val('_id')
   );
+}
+
+/** Normalize any stored cert URL to the current API base.
+ *  Examples it fixes:
+ *   - http://localhost:5000/files/<id>   → https://lasop-server-vault.fly.dev/files/<id>
+ *   - /files/<id> or files/<id>         → https://.../files/<id>
+ */
+function normalizeCertUrl(rawUrl: string): string {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+  if (!rawUrl) return rawUrl;
+
+  // Try to extract /files/<objectId> from whatever is stored
+  const m = rawUrl.match(/\/files\/([a-f0-9]{24})/i);
+  const fileId = m?.[1];
+
+  if (fileId && apiBase) {
+    // Always rebuild absolute URL against the known API base
+    const base = apiBase.replace(/\/+$/, '');
+    return `${base}/files/${fileId}`;
+  }
+
+  // If we couldn't parse an ObjectId, fall back to original
+  try {
+    // If it's relative, resolve against current origin
+    const u = new URL(rawUrl, (typeof window !== 'undefined' ? window.location.origin : undefined) as any);
+    return u.toString();
+  } catch {
+    return rawUrl;
+  }
 }
 
 export default function OverviewHead() {
@@ -90,6 +118,28 @@ export default function OverviewHead() {
     return name.replace(/\s+/g, '_');
   }, [studentDetail]);
 
+  async function tryDownload(url: string): Promise<Response> {
+    // 1st attempt: as-is
+    let res: Response;
+    try {
+      res = await fetch(url, { method: 'GET', credentials: 'include' });
+      if (res.ok) return res;
+    } catch {}
+
+    // 2nd attempt: normalized to API base (/files/<id>)
+    const normalized = normalizeCertUrl(url);
+    if (normalized !== url) {
+      try {
+        res = await fetch(normalized, { method: 'GET', credentials: 'include' });
+        if (res.ok) return res;
+      } catch {}
+    }
+
+    // 3rd attempt: open in new tab as last resort
+    try { window.open(normalized, '_blank'); } catch {}
+    throw new Error(`Download failed`);
+  }
+
   async function handleDownloadCertificate() {
     if (!studentCertificate) {
       toast.info('Certificate not available yet');
@@ -104,14 +154,7 @@ export default function OverviewHead() {
 
     try {
       setDownloading(true);
-      const res = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        throw new Error(`Download failed (${res.status})`);
-      }
+      const res = await tryDownload(url);
 
       const blob = await res.blob();
       const ext = getExtFromContentType(res.headers.get('content-type'));
@@ -128,8 +171,6 @@ export default function OverviewHead() {
       window.URL.revokeObjectURL(href);
       toast.success('Certificate downloaded');
     } catch (err: any) {
-      // Fallback: open in new tab if direct download rejected (CORS or headers)
-      try { window.open(url, '_blank'); } catch {/* ignore */}
       toast.error(err?.message || 'Could not download certificate');
     } finally {
       setDownloading(false);
