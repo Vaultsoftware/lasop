@@ -110,6 +110,7 @@ const devPeekOtp = require('./routes/verifyOtp/devPeekOtp');
 const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
 const streamFile = require("./routes/files/streamFile");
 const delCert = require("./routes/certificate/delCert.gridfs");
+const authEcho = require('./routes/__dev/authEcho');
 
 /* ============================ App setup ============================ */
 const app = express();
@@ -146,6 +147,15 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Max-Age', '86400');
   return res.sendStatus(204);
 });
+
+
+
+
+
+if (process.env.EXPOSE_AUTH_DEBUG === '1') {
+  app.get('/__dev/auth-echo', authEcho);
+  app.delete('/__dev/auth-echo', authEcho);
+}
 
 /* ---------------------- Hardened CORS middleware ------------------- */
 const corsOptions = {

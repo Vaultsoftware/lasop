@@ -1,3 +1,4 @@
+// lasop-client/src/store/certificate/certificateStore.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 import { RootState } from '../store';
@@ -18,7 +19,7 @@ const initialState: InitialState = {
   error: null,
 };
 
-// ---- CREATE (multipart, unprotected on server; header is harmless) ----
+// ---- CREATE (multipart) ----
 export const postCertificate = createAsyncThunk<CertificatePayload, FormData, { state: RootState }>(
   'certificate/postCertificate',
   async (formData, { getState }) => {

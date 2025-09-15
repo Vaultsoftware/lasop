@@ -1,15 +1,10 @@
-// Tries Redux-like slices, then localStorage, then cookies.
-export function pickAnyToken(state?: any): string | null {
-  const s = state || {};
-  const candidates = [s?.student?.token, s?.staff?.token, s?.user?.token, s?.admin?.token];
-  for (const v of candidates) if (typeof v === 'string' && v) return v;
+// lasop-client/src/utils/token.ts
 
-  return getTokenFromStorage();
-}
+// Return a token string WITHOUT the 'Bearer ' prefix
+export function getTokenFromStorage(): string {
+  if (typeof window === 'undefined') return '';
 
-export function getTokenFromStorage(): string | null {
-  if (typeof window === 'undefined') return null;
-
+  // 1) common localStorage keys
   const keys = [
     'token',
     'authToken',
@@ -20,23 +15,50 @@ export function getTokenFromStorage(): string | null {
     'staffToken',
     'lasop_token',
   ];
-
   for (const k of keys) {
-    const v = localStorage.getItem(k);
-    if (v && v.length > 10) return stripBearer(v);
-    try {
-      const parsed = JSON.parse(v || '{}');
-      if (parsed?.token && parsed.token.length > 10) return stripBearer(parsed.token);
-    } catch {}
+    const raw = localStorage.getItem(k);
+    if (raw && typeof raw === 'string') {
+      const val = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
+      if (val.trim()) return val.trim();
+      // sometimes the token is stored as JSON
+      try {
+        const parsed = JSON.parse(raw);
+        const t = parsed?.token || parsed?.accessToken;
+        if (t) {
+          return String(t).startsWith('Bearer ')
+            ? String(t).slice(7).trim()
+            : String(t).trim();
+        }
+      } catch {}
+    }
   }
 
+  // 2) cookie fallback (non-HttpOnly; for SPA convenience)
   const cookie = document.cookie || '';
-  const m = cookie.match(/(?:^|;\s*)(token|authToken|jwt)=([^;]+)/i);
-  if (m?.[2]) return stripBearer(decodeURIComponent(m[2]));
+  const m = cookie.match(/(?:^|;\s*)token=([^;]+)/i);
+  if (m?.[1]) {
+    const c = decodeURIComponent(m[1]);
+    return c.startsWith('Bearer ') ? c.slice(7).trim() : c.trim();
+  }
 
-  return null;
+  return '';
 }
 
-function stripBearer(v: string): string {
-  return v.startsWith('Bearer ') ? v.slice(7) : v;
+// Pull a token from Redux state if present, else storage
+// Accepts state as 'any' to avoid circular imports
+export function pickAnyToken(state?: any): string {
+  const fromState =
+    state?.student?.token ||
+    state?.staff?.token ||
+    state?.user?.token ||
+    state?.admin?.token ||
+    '';
+
+  if (fromState) {
+    return String(fromState).startsWith('Bearer ')
+      ? String(fromState).slice(7).trim()
+      : String(fromState).trim();
+  }
+
+  return getTokenFromStorage();
 }
