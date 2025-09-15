@@ -117,6 +117,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://lasop.net',
   'https://www.lasop.net',
+  'https://lasop.vercel.app',
   process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
