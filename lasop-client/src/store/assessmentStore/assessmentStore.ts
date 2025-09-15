@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '@/lib/api';
 import { RootState } from '../store';
+import { pickAnyToken } from '@/utils/token';
 import { Assessment, AssessmentMain, Grade, Answer, AssessmentResponsePayload } from '@/interfaces/interface';
 
 interface InitialState {
@@ -10,52 +11,18 @@ interface InitialState {
   error: string | null;
 }
 
-const pickAnyToken = (state: RootState): string => {
-  const s: any = state as any;
-  const fromSlices =
-    s?.student?.token || s?.staff?.token || s?.user?.token || s?.admin?.token || '';
-  if (fromSlices) return fromSlices;
-
-  if (typeof window !== 'undefined') {
-    const keys = [
-      'token',
-      'authToken',
-      'jwt',
-      'adminToken',
-      'userToken',
-      'studentToken',
-      'staffToken',
-      'lasop_token',
-    ];
-    for (const k of keys) {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    }
-  }
-  return '';
-};
-
 export const postAssessment = createAsyncThunk<AssessmentResponsePayload, Assessment, { state: RootState }>(
   'assessment/postAssessment',
   async (assessmentData: Assessment, { getState }) => {
     const state = getState().student;
     const { token } = state;
 
-    try {
-      const response = await axios.post<AssessmentResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/postAssessment`,
-        assessmentData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.post<AssessmentResponsePayload>(
+      '/postAssessment',
+      assessmentData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
   }
 );
 
@@ -66,75 +33,44 @@ export const fetchAssessment = createAsyncThunk<AssessmentMain[], void, { state:
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      const response = await axios.get<AssessmentMain[]>(
-        `${process.env.NEXT_PUBLIC_API_URL}/getAssessment`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.get<AssessmentMain[]>('/getAssessment', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   }
 );
 
 export const fetchAssessmentDetail = createAsyncThunk<AssessmentMain, string, { state: RootState }>(
   'assessment/fetchAssessmentDetail',
   async (assessmentId: string) => {
-    try {
-      const response = await axios.get<AssessmentMain>(
-        `${process.env.NEXT_PUBLIC_API_URL}/getAssessmentDet/${assessmentId}`
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.get<AssessmentMain>(`/getAssessmentDet/${assessmentId}`);
+    return response.data;
   }
 );
 
 export const postGrade = createAsyncThunk<AssessmentResponsePayload, Grade, { state: RootState }>(
   'assessment/postGrade',
   async ({ assessmentId, studentId, grade, feedback }: Grade) => {
-    try {
-      const response = await axios.put<AssessmentResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/gradeStudent/${assessmentId}/grade/${studentId}`,
-        { grade, feedback }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message || 'Failed to update grade';
-    }
+    const response = await api.put<AssessmentResponsePayload>(
+      `/gradeStudent/${assessmentId}/grade/${studentId}`,
+      { grade, feedback }
+    );
+    return response.data;
   }
 );
 
 export const postSubmissionAss = createAsyncThunk<AssessmentResponsePayload, Answer, { state: RootState }>(
   'assessment/postSubmissionAss',
   async ({ assessmentId, studentId, answer }: Answer) => {
-    try {
-      const response = await axios.post<AssessmentResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/submitAssessment/${assessmentId}`,
-        { studentId, answer }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message || 'Failed to update grade';
-    }
+    const response = await api.post<AssessmentResponsePayload>(
+      `/submitAssessment/${assessmentId}`,
+      { studentId, answer }
+    );
+    return response.data;
   }
 );
 
@@ -145,39 +81,27 @@ export const delAssessment = createAsyncThunk<string, string, { state: RootState
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/delAssessment/${assessmentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    await api.delete(`/delAssessment/${assessmentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      return assessmentId;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    return assessmentId;
   }
 );
 
-// ✅ now includes Authorization header if available (harmless if server doesn’t require it)
+// Protected on server
 export const updateAssessmentStatus = createAsyncThunk<void, void, { state: RootState }>(
   'assessment/updateAssessmentStatus',
   async (_: void, { getState, rejectWithValue }) => {
     try {
       const token = pickAnyToken(getState());
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/assessmentStatus`,
-        null,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      await api.put('/assessmentStatus', null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       return;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error?.message || 'Failed');
@@ -246,7 +170,7 @@ const assessmentSlice = createSlice({
         if (data) {
           const assessmentIndex = state.assessment.findIndex((ass) => ass._id === data._id);
 
-        if (assessmentIndex !== -1) {
+          if (assessmentIndex !== -1) {
             state.assessment[assessmentIndex] = data;
           } else {
             state.assessment.push(data);

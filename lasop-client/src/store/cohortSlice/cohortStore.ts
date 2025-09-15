@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/lib/api";
 import { RootState } from "../store";
+import { pickAnyToken } from "@/utils/token";
 import { CohortMain, CohortData, AssignCohort, UpdateCohort, CohortResponsePayload } from "@/interfaces/interface";
 
 interface InitialState {
@@ -17,39 +18,11 @@ const initialState: InitialState = {
   error: null,
 };
 
-// tiny helper to grab a token from Redux or localStorage if present
-const pickAnyToken = (state: RootState): string => {
-  const s: any = state as any;
-  const fromSlices =
-    s?.student?.token || s?.staff?.token || s?.user?.token || s?.admin?.token || "";
-  if (fromSlices) return fromSlices;
-
-  if (typeof window !== "undefined") {
-    const keys = [
-      "token",
-      "authToken",
-      "jwt",
-      "adminToken",
-      "userToken",
-      "studentToken",
-      "staffToken",
-      "lasop_token",
-    ];
-    for (const k of keys) {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    }
-  }
-  return "";
-};
-
 // Async thunks
 export const fetchCohort = createAsyncThunk<CohortMain[]>(
   "cohort/fetchCohort",
   async () => {
-    const response = await axios.get<CohortMain[]>(
-      `${process.env.NEXT_PUBLIC_API_URL}/getCohort`
-    );
+    const response = await api.get<CohortMain[]>('/getCohort');
     return response.data;
   }
 );
@@ -57,9 +30,7 @@ export const fetchCohort = createAsyncThunk<CohortMain[]>(
 export const fetchCohortDetail = createAsyncThunk<CohortMain, string>(
   "cohort/fetchCohortDetail",
   async (cohortId: string) => {
-    const response = await axios.get<CohortMain>(
-      `${process.env.NEXT_PUBLIC_API_URL}/getCohortDetail/${cohortId}`
-    );
+    const response = await api.get<CohortMain>(`/getCohortDetail/${cohortId}`);
     return response.data;
   }
 );
@@ -67,10 +38,7 @@ export const fetchCohortDetail = createAsyncThunk<CohortMain, string>(
 export const postCohort = createAsyncThunk<CohortResponsePayload, CohortData>(
   "cohort/postCohort",
   async (cohortData: CohortData) => {
-    const response = await axios.post<CohortResponsePayload>(
-      `${process.env.NEXT_PUBLIC_API_URL}/postCohort`,
-      cohortData
-    );
+    const response = await api.post<CohortResponsePayload>('/postCohort', cohortData);
     return response.data;
   }
 );
@@ -78,10 +46,7 @@ export const postCohort = createAsyncThunk<CohortResponsePayload, CohortData>(
 export const updateCohortDet = createAsyncThunk<CohortResponsePayload, UpdateCohort>(
   "cohort/updateCohort",
   async ({ updateCohort, cohortIdDet }: UpdateCohort) => {
-    const response = await axios.put<CohortResponsePayload>(
-      `${process.env.NEXT_PUBLIC_API_URL}/updateCohort/${cohortIdDet}`,
-      updateCohort
-    );
+    const response = await api.put<CohortResponsePayload>(`/updateCohort/${cohortIdDet}`, updateCohort);
     return response.data;
   }
 );
@@ -89,10 +54,7 @@ export const updateCohortDet = createAsyncThunk<CohortResponsePayload, UpdateCoh
 export const assignCohortStaff = createAsyncThunk<CohortResponsePayload, AssignCohort>(
   "cohort/assignCohort",
   async ({ courseTutorData, cohortIdDet }: AssignCohort) => {
-    const response = await axios.put<CohortResponsePayload>(
-      `${process.env.NEXT_PUBLIC_API_URL}/assignCohort/${cohortIdDet}`,
-      courseTutorData
-    );
+    const response = await api.put<CohortResponsePayload>(`/assignCohort/${cohortIdDet}`, courseTutorData);
     return response.data;
   }
 );
@@ -100,22 +62,20 @@ export const assignCohortStaff = createAsyncThunk<CohortResponsePayload, AssignC
 export const deleteCohort = createAsyncThunk<string, string>(
   "cohort/deleteCohort",
   async (cohortId: string) => {
-    await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/deleteCohort/${cohortId}`);
+    await api.delete(`/deleteCohort/${cohortId}`);
     return cohortId;
   }
 );
 
-// ✅ now includes Authorization header if available (harmless if the server doesn’t require it)
+// Protected on server: include Authorization explicitly (interceptor is fallback)
 export const updateCohortStatus = createAsyncThunk<void, void, { state: RootState }>(
   "cohort/updateCohortStatus",
   async (_: void, { getState, rejectWithValue }) => {
     try {
       const token = pickAnyToken(getState());
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/cohortStatus`,
-        null,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      await api.put('/cohortStatus', null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       return;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error?.message || "Failed");

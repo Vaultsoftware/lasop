@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '@/lib/api';
 import { RootState } from '../store';
+import { pickAnyToken } from '@/utils/token';
 import { Project, ProjectMain, GradeProject, ProjectResponsePayload, AnswerProject } from '@/interfaces/interface';
 
 interface InitialState {
@@ -10,31 +11,6 @@ interface InitialState {
   error: string | null;
 }
 
-const pickAnyToken = (state: RootState): string => {
-  const s: any = state as any;
-  const fromSlices =
-    s?.student?.token || s?.staff?.token || s?.user?.token || s?.admin?.token || '';
-  if (fromSlices) return fromSlices;
-
-  if (typeof window !== 'undefined') {
-    const keys = [
-      'token',
-      'authToken',
-      'jwt',
-      'adminToken',
-      'userToken',
-      'studentToken',
-      'staffToken',
-      'lasop_token',
-    ];
-    for (const k of keys) {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    }
-  }
-  return '';
-};
-
 export const postProject = createAsyncThunk<ProjectResponsePayload, Project, { state: RootState }>(
   'project/postProject',
   async (projectData: Project, { getState }) => {
@@ -42,29 +18,14 @@ export const postProject = createAsyncThunk<ProjectResponsePayload, Project, { s
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      const response = await axios.post<ProjectResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/postProject`,
-        projectData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.post<ProjectResponsePayload>('/postProject', projectData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   }
 );
 
@@ -75,28 +36,14 @@ export const fetchProject = createAsyncThunk<ProjectMain[], void, { state: RootS
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      const response = await axios.get<ProjectMain[]>(
-        `${process.env.NEXT_PUBLIC_API_URL}/getProject`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.get<ProjectMain[]>('/getProject', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   }
 );
 
@@ -107,60 +54,36 @@ export const fetchProjectDetail = createAsyncThunk<ProjectMain, string, { state:
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      const response = await axios.get<ProjectMain>(
-        `${process.env.NEXT_PUBLIC_API_URL}/getProjectDet/${projectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    const response = await api.get<ProjectMain>(`/getProjectDet/${projectId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   }
 );
 
 export const postGradePro = createAsyncThunk<ProjectResponsePayload, GradeProject, { state: RootState }>(
   'assessment/postGrade',
   async ({ projectId, studentId, grade, feedback }: GradeProject) => {
-    try {
-      const response = await axios.put<ProjectResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/gradeProject/${projectId}/grade/${studentId}`,
-        { grade, feedback }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message || 'Failed to update grade';
-    }
+    const response = await api.put<ProjectResponsePayload>(
+      `/gradeProject/${projectId}/grade/${studentId}`,
+      { grade, feedback }
+    );
+    return response.data;
   }
 );
 
 export const postSubmissionPro = createAsyncThunk<ProjectResponsePayload, AnswerProject, { state: RootState }>(
   'project/postSubmissionPro',
   async ({ projectId, studentId, answer }: AnswerProject) => {
-    try {
-      const response = await axios.post<ProjectResponsePayload>(
-        `${process.env.NEXT_PUBLIC_API_URL}/submitProject/${projectId}`,
-        { studentId, answer }
-      );
-
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data.message || 'Failed to update grade';
-    }
+    const response = await api.post<ProjectResponsePayload>(
+      `/submitProject/${projectId}`,
+      { studentId, answer }
+    );
+    return response.data;
   }
 );
 
@@ -171,39 +94,26 @@ export const delProject = createAsyncThunk<string, string, { state: RootState }>
     const stateStaff = getState().staff;
     let token = '';
 
-    if (stateStudent?.token) {
-      token = stateStudent.token;
-    } else if (stateStaff?.token) {
-      token = stateStaff.token;
-    } else {
-      throw new Error('No token found');
-    }
+    if (stateStudent?.token) token = stateStudent.token;
+    else if (stateStaff?.token) token = stateStaff.token;
+    else throw new Error('No token found');
 
-    try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/delProject/${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return projectId;
-    } catch (error: any) {
-      throw error.response?.data.message;
-    }
+    await api.delete(`/delProject/${projectId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return projectId;
   }
 );
 
-// ✅ now includes Authorization header if available (harmless if server doesn’t require it)
+// Protected on server
 export const updateProjectStatus = createAsyncThunk<void, void, { state: RootState }>(
   'project/updateProjectStatus',
   async (_: void, { getState, rejectWithValue }) => {
     try {
       const token = pickAnyToken(getState());
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/projectStatus`,
-        null,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      await api.put('/projectStatus', null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       return;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error?.message || 'Failed');

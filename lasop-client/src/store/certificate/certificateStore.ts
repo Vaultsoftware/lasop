@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '@/lib/api';
 import { RootState } from '../store';
+import { pickAnyToken } from '@/utils/token';
 import { CertificateMain, CertificatePayload, UpdateCertificate } from '@/interfaces/interface';
 
 interface InitialState {
@@ -10,66 +11,22 @@ interface InitialState {
   error: string | null;
 }
 
-// Try to find a token anywhere: Redux slices, localStorage, cookies
-function pickAnyToken(state: RootState): string {
-  const fromSlices =
-    (state as any)?.student?.token ||
-    (state as any)?.user?.token ||
-    (state as any)?.staff?.token ||
-    (state as any)?.admin?.token ||
-    '';
+const initialState: InitialState = {
+  certificates: [],
+  certificateDetail: null,
+  status: 'idle',
+  error: null,
+};
 
-  if (fromSlices) return fromSlices;
-
-  if (typeof window !== 'undefined') {
-    // common localStorage keys
-    const keys = [
-      'token',
-      'authToken',
-      'jwt',
-      'adminToken',
-      'userToken',
-      'studentToken',
-      'staffToken',
-      'lasop_token',
-    ];
-    for (const k of keys) {
-      const v = localStorage.getItem(k);
-      if (v && /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(v)) return v;
-      // sometimes tokens are stored as JSON
-      try {
-        const parsed = JSON.parse(v || '{}');
-        if (parsed?.token && /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(parsed.token)) {
-          return parsed.token;
-        }
-      } catch {}
-    }
-
-    // try cookies
-    const cookie = document.cookie || '';
-    const match = cookie.match(/(?:^|;\s*)(token|authToken|jwt)=([^;]+)/i);
-    if (match?.[2]) return decodeURIComponent(match[2]);
-  }
-
-  return '';
-}
-
-function authCfg(token: string) {
-  return {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    withCredentials: true, // allow cookie-based auth if used
-  };
-}
-
-// ---- CREATE (multipart) ----
+// ---- CREATE (multipart, unprotected on server; header is harmless) ----
 export const postCertificate = createAsyncThunk<CertificatePayload, FormData, { state: RootState }>(
   'certificate/postCertificate',
   async (formData, { getState }) => {
-    const token = pickAnyToken(getState() as RootState);
-    const res = await axios.post<CertificatePayload>(
-      `${process.env.NEXT_PUBLIC_API_URL}/postCertificate`,
+    const token = pickAnyToken(getState());
+    const res = await api.post<CertificatePayload>(
+      '/postCertificate',
       formData,
-      { ...authCfg(token) }
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} }
     );
     return res.data;
   }
@@ -79,50 +36,50 @@ export const postCertificate = createAsyncThunk<CertificatePayload, FormData, { 
 export const fetchCertificates = createAsyncThunk<CertificateMain[], void, { state: RootState }>(
   'certificate/fetchCertificates',
   async (_, { getState }) => {
-    const token = pickAnyToken(getState() as RootState);
-    const res = await axios.get<CertificateMain[]>(
-      `${process.env.NEXT_PUBLIC_API_URL}/getCertificate`,
-      { ...authCfg(token) }
-    );
+    const token = pickAnyToken(getState());
+    const res = await api.get<CertificateMain[]>('/getCertificate', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     return res.data;
   }
 );
 
-// ---- READ ONE ----
+// ---- READ ONE (protected when REQUIRE_AUTH !== '0') ----
 export const fetchCertificateDetail = createAsyncThunk<CertificateMain, string, { state: RootState }>(
   'certificate/fetchCertificateDetail',
   async (certId, { getState }) => {
-    const token = pickAnyToken(getState() as RootState);
-    const res = await axios.get<CertificateMain>(
-      `${process.env.NEXT_PUBLIC_API_URL}/getCertificateId/${certId}`,
-      { ...authCfg(token) }
-    );
+    const token = pickAnyToken(getState());
+    const res = await api.get<CertificateMain>(`/getCertificateId/${certId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     return res.data;
   }
 );
 
-// ---- UPDATE ----
+// ---- UPDATE (protected) ----
 export const updateCertificate = createAsyncThunk<CertificatePayload, UpdateCertificate, { state: RootState }>(
   'certificate/updateCertificate',
-  async ({ certId, certData }, { getState }) => {
-    const token = pickAnyToken(getState() as RootState);
-    const res = await axios.put<CertificatePayload>(
-      `${process.env.NEXT_PUBLIC_API_URL}/updateCertificate/${certId}`,
-      certData,
-      { ...authCfg(token) }
-    );
-    return res.data;
+  async ({ certId, certData }, { getState, rejectWithValue }) => {
+    try {
+      const token = pickAnyToken(getState());
+      const res = await api.put<CertificatePayload>(`/updateCertificate/${certId}`, certData, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data || { message: err?.message });
+    }
   }
 );
 
-// ---- DELETE ----
+// ---- DELETE (protected) ----
 export const deleteCertificate = createAsyncThunk<string, string, { state: RootState }>(
   'certificate/deleteCertificate',
   async (certId, { getState, rejectWithValue }) => {
-    const token = pickAnyToken(getState() as RootState);
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/deleteCertificate/${certId}`, {
-        ...authCfg(token),
+      const token = pickAnyToken(getState());
+      await api.delete(`/deleteCertificate/${certId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       return certId;
     } catch (err: any) {
@@ -130,13 +87,6 @@ export const deleteCertificate = createAsyncThunk<string, string, { state: RootS
     }
   }
 );
-
-const initialState: InitialState = {
-  certificates: [],
-  certificateDetail: null,
-  status: 'idle',
-  error: null,
-};
 
 const certificateSlice = createSlice({
   name: 'certificate',

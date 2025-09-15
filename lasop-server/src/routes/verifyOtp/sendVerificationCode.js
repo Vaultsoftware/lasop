@@ -56,11 +56,14 @@ If you didn’t request this, you can ignore this email.
       message: 'Verification code sent',
       smtp: info.response || '',
       expiresInMinutes: ttlMinutes,
+      // 👇 ALWAYS return at least the email so the client can keep it
+      data: { email },
     };
 
-    // DEV HELP: return the code so you can paste it
+    // In dev, also surface the code for convenience
     if (process.env.EXPOSE_OTP_IN_DEV === '1') {
-      payload.data = { email, code, codeExpiration };
+      payload.data.code = code;
+      payload.data.codeExpiration = codeExpiration;
     }
 
     return res.status(200).json(payload);
