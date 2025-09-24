@@ -1,6 +1,6 @@
 // lasop-client/src/lib/api.ts
-import axios from 'axios';
-import { getTokenFromStorage } from '@/utils/token';
+import axios, { AxiosHeaders } from "axios";
+import { getTokenFromStorage } from "@/utils/token";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -9,18 +9,26 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const already =
-    (config.headers && (config.headers as any).Authorization) ||
-    (config.headers && (config.headers as any).authorization);
+    (config.headers as any)?.Authorization ||
+    (config.headers as any)?.authorization;
 
   if (!already) {
     const token = getTokenFromStorage();
     if (token) {
-      if (!config.headers) config.headers = {};
-      (config.headers as any).Authorization = token.startsWith('Bearer ')
-        ? token
-        : `Bearer ${token}`;
+      const headers =
+        config.headers instanceof AxiosHeaders
+          ? config.headers
+          : new AxiosHeaders(config.headers);
+
+      headers.set(
+        "Authorization",
+        token.startsWith("Bearer ") ? token : `Bearer ${token}`
+      );
+
+      config.headers = headers;
     }
   }
+
   return config;
 });
 
