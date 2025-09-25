@@ -1,7 +1,7 @@
 'use client';
-
 import React, { useEffect, useRef } from 'react';
 import { ArrowRight, Heart, Star, Trophy, Lightbulb, TrendingUp, Clock, DollarSign, Briefcase, MapPin, User } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StudentSuccessStories() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -395,10 +395,10 @@ export default function StudentSuccessStories() {
           <p className="max-w-3xl mx-auto mb-12 text-xl font-medium opacity-90 leading-relaxed">
             Join thousands who transformed their careers and multiplied their income. Your journey to financial freedom starts with a single decision.
           </p>
-          <button className="group inline-flex items-center gap-4 bg-white text-blue-700 font-black py-6 px-10 rounded-2xl text-xl hover:bg-blue-50 transition-all duration-300 shadow-2xl hover:scale-105 hover:shadow-3xl">
+          <Link className="group inline-flex items-center gap-4 bg-white text-blue-700 font-black py-6 px-10 rounded-2xl text-xl hover:bg-blue-50 transition-all duration-300 shadow-2xl hover:scale-105 hover:shadow-3xl" href='/getStarted'>
             Start Your Transformation 
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
-          </button>
+          </Link>
         </div>
       </section>
     </div>

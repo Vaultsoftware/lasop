@@ -57,7 +57,7 @@ function Footer() {
                         <Link href='/calendar'>Calendar</Link>
                         <Link href='/about'>About</Link>
                         <Link href='https://g.co/kgs/MCvF7Tq' target='blank'>Testimonial</Link>
-                        <Link href='/faqs'>FAQs</Link>
+                        <Link href='/faq'>FAQs</Link>
                         <Link href='/blog'>Blog</Link>
                     </div>
                 </div>
@@ -69,7 +69,6 @@ function Footer() {
                         <Link href='/contact'>Contact us</Link>
                         <Link href=''>Terms & Condition</Link>
                         <Link href='/calendar'>Academic Calendar</Link>
-                        <Link href=''>Hire</Link>
                     </div>
                 </div>
                 <div className="foot_social">

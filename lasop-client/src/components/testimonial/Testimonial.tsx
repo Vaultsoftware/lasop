@@ -128,7 +128,7 @@ export default function ProblemSection() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="text-center mt-16">
+      {/* <div className="text-center mt-16">
         <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/50">
           <span className="text-2xl animate-pulse">⬇️</span>
           <span className="text-gray-700 font-medium">
@@ -136,7 +136,7 @@ export default function ProblemSection() {
           </span>
           <span className="text-2xl animate-pulse">⬇️</span>
         </div>
-      </div>
+      </div> */}
 
       <style jsx>{`
         @keyframes spin-slow {
