@@ -39,8 +39,8 @@ function AboutMain() {
                     </div>
                 </div>
             </section>
-
-            <section className='md:main py-[3rem] px-[30px] bg-lightSec'>
+            {/* meet our team should be commented on  */}
+            {/* <section className='md:main py-[3rem] px-[30px] bg-lightSec'>
                 <div className="team">
                     <div data-aos='fade-down' className="team_head mb-[2rem] flex flex-col items-center">
                         <h1 className='font-bold text-[30px] text-center'>Meet Our Team</h1>
@@ -58,15 +58,7 @@ function AboutMain() {
                         }
                     </div>
                 </div>
-            </section>
-
-            <section className='main bg-secondary'>
-                <div className="sample_video flex items-center justify-center">
-                    <video className='w-[500px] h-[350px] object-cover rounded-3xl' controls>
-                        <source src='../../../asset/course/programming.mp4' type="video/mp4" />
-                    </video>
-                </div>
-            </section>
+            </section> */}
 
             <section className='md:main py-[3rem] px-[30px] bg-lightSec'>
                 <div className="events">

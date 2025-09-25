@@ -64,16 +64,9 @@ function Navbar() {
                         <li className='md:nav_item leading-9 font-semibold'>
                             <Link href='/blog'>Blog</Link>
                         </li>
-                        <li className='md:nav_item leading-9 font-semibold'>
-                            <Link href='/contact'>Contact</Link>
-                        </li>
-                        <li className='md:nav_item leading-9 font-semibold'>
-                            <Link href='/whyStudyAtLasop'>Why LASOP</Link>
-                        </li>
                     </ul>
                     <div className="started md:flex grid gap-3 md:mt-0 mt-auto">
                         <Link href='/getStarted' className='md:nav_btn w-full h-[40px] bg-accent flex items-center text-cyan-50'>Get started</Link>
-                        <button className='md:nav_btn w-full h-[40px] bg-transparent border-2 border-accent text-accent'>Hire</button>
                     </div>
                 </div>
                 <div onClick={handleSidebar} className="burger md:hidden flex items-center text-[25px] text-accent">

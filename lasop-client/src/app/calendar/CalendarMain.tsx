@@ -44,119 +44,73 @@ function CalendarMain() {
     }
 
     return (
-        <main>
-            <section className='md:main py-[3rem] px-[30px]'>
-                <div>
-                    <h1 className='font-bold text-[40px] text-shadow'>Understanding our COHORT code names</h1>
-                </div>
-                <div>
-                    <p>Each COHORT code name is a unique identifier for our course and mode. We use them to help you remember which course is being taught and mode availble for each cohort. Some examples are:</p>
-                    <br />
-                    <ul className='grid gap-1 text-[14px]'>
-                        <li><b className='font-bold'>JAN25FEON</b>: The cohort code for 'Front-end Development (FE)' and mode of studying is online (ON) and (JAN25) stands for the month and year</li>
-                        <li><b className='font-bold'>JAN25CSWE</b>: The cohort code for 'Cyber Security (CS)' and mode of studying is Weekend (WE) and (JAN25) stands for the month and year</li>
-                        <li><b className='font-bold'>JAN25FEONCSWE</b>: The cohort code for 'Front-end Development (FE)' and mode of studying is online (ON), Cyber Security (CS) and Weekend (WE) and (JAN25) stands for the month and year</li>
-                    </ul>
-                </div>
-                <div className='mt-2'>
-                    <p>Below is a table descirbing our code names and their definition</p>
-                    <table className='w-full border-b-2 border-shadow'>
-                        <thead>
-                            <tr>
-                                <th className='text-start py-3 block md:table-cell'>CODE NAME</th>
-                                <th className='text-start py-3 block md:table-cell'>CODE DESCRIPTION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>FE</td>
-                                <td className='text-start py-3'>Front-end Development</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>FS</td>
-                                <td className='text-start py-3'>Fullstack Development</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>CS</td>
-                                <td className='text-start py-3'>Cyber Security</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>DS</td>
-                                <td className='text-start py-3'>Data Science</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>DA</td>
-                                <td className='text-start py-3'>Data Analysis</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>PD</td>
-                                <td className='text-start py-3'>Product Design</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>MA</td>
-                                <td className='text-start py-3'>Mobile App</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>WE</td>
-                                <td className='text-start py-3'>Weekends</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>WD</td>
-                                <td className='text-start py-3'>Weekdays</td>
-                            </tr>
-                            <tr className='border-t border-shadow'>
-                                <td className='text-start py-3'>ON</td>
-                                <td className='text-start py-3'>Online</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            <section className='md:main py-[3rem] px-[30px]'>
-                <div className="academic">
-                    <div className="academics_list flex gap-2 border-2 border-shadow w-full sm:w-fit p-2 mx-auto rounded-md overflow-x-scroll sm:overflow-hidden whitespace-nowrap sm:whitespace-normal">
-                        {
-                            courses.map((cal, ind) => (
-                                <div
-                                    key={cal._id}
-                                    className={cohortId === cal._id ? 'bg-shadow text-cyan-50 package p-2 cursor-pointer' : 'package p-2 border-2 border-shadow text-shadow cursor-pointer'}
-                                    onClick={() => handleCohortId(cal._id)}
-                                >
-                                    <span>{cal.title}</span>
-                                </div>
-                            ))
-                        }
-                    </div>
+        <main className="calendar_main w-full px-6 md:px-12 py-10 bg-[#DAE2FF]">
+            <div className="max-w-6xl mx-auto overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+                <table className="min-w-full bg-[white] rounded-lg overflow-hidden">
+                    <thead className="bg-accent text-[white]">
+                        <tr>
+                            <th className="px-6 py-4 text-left text-base font-bold border-r border-white/20">Cohorts</th>
+                            <th className="px-6 py-4 text-left text-base font-bold border-r border-white/20">Start Date</th>
+                            <th className="px-6 py-4 text-left text-base font-bold">End Date</th>
+                        </tr>
+                    </thead>
 
-                    <div className="academic_cohort mt-6">
-                        <table className='w-full border-b-2 border-shadow'>
-                            <thead>
-                                <tr >
-                                    <th className='text-start py-3 block md:table-cell'>COHORTS</th>
-                                    <th className='text-start py-3 block md:table-cell'>STARTS</th>
-                                    <th className='text-start py-3 block md:table-cell'>ENDS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {
-                                    cohortData.map((coh, ind) => (
-                                        <tr key={coh._id} className='border-t border-shadow text-start block md:table-row mb-3 md:mb-0'>
-                                            <td className='py-3 block md:table-cell'>{coh.cohortName}</td>
-                                            <td className='py-3 block md:table-cell'>{formatDate(coh.startDate)}</td>
-                                            <td className='py-3 block md:table-cell'>{formatDate(coh.endDate)}</td>
-                                            <td className='py-3 flex items-center gap-1 text-[14px]'>
-                                                {
-                                                    coh.isActive && <Link href='/getStarted' className='flex w-fit h-[40px] bg-shadow text-cyan-50 items-center justify-center rounded-md px-3'>Apply now</Link>
-                                                }
-                                            </td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+                    <tbody className="text-gray-700 divide-y divide-gray-200">
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Front-end Development</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Jan 15, 2025</td>
+                            <td className="px-6 py-4">Apr 30, 2025</td>
+                        </tr>
+
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Fullstack Development</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Feb 1, 2025</td>
+                            <td className="px-6 py-4">May 15, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Cyber Security</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Feb 10, 2025</td>
+                            <td className="px-6 py-4">May 25, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Data Science</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Mar 1, 2025</td>
+                            <td className="px-6 py-4">Jun 10, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Data Analysis</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Mar 15, 2025</td>
+                            <td className="px-6 py-4">Jun 30, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Product Design</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Apr 5, 2025</td>
+                            <td className="px-6 py-4">Jul 20, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Mobile App Development</td>
+                            <td className="px-6 py-4 border-r border-gray-200">Apr 20, 2025</td>
+                            <td className="px-6 py-4">Aug 1, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Weekends Cohort</td>
+                            <td className="px-6 py-4 border-r border-gray-200">May 3, 2025</td>
+                            <td className="px-6 py-4">Aug 15, 2025</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Weekdays</td>
+                            <td className="px-6 py-4 border-r border-gray-200">May 10, 2025</td>
+                            <td className="px-6 py-4">Aug 25, 2025</td>
+                        </tr>
+
+                        <tr className="hover:bg-gray-50 transition">
+                            <td className="px-6 py-4 font-medium border-r border-gray-200">Online</td>
+                            <td className="px-6 py-4 border-r border-gray-200">May 10, 2025</td>
+                            <td className="px-6 py-4">Aug 25, 2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </main>
     )
 }

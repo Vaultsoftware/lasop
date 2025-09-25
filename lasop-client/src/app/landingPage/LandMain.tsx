@@ -3,6 +3,7 @@ import { ChevronDown, Users, Clock, Award, Code, DollarSign, BookOpen, Zap, Mess
 import { blog, courseOffer, faqs, learn, programs, testimony } from '@/data/data';
 import { FaChevronRight, FaRegCalendarAlt, FaRegClock } from "react-icons/fa";
 import Slider from '../../components/faceOfstudents/faceOfStudents'
+import StudentSuccessStories from "@/components/successstories/Success";
 import Testimonial from '../../components/testimonial/Testimonial'
 import outline from '../../asset/landPage/outline.png';
 import outline2 from '../../asset/landPage/double.png';
@@ -26,7 +27,7 @@ function LandMain() {
         );
     };
 
-    
+
     const modernFaqData = [
         {
             icon: <BookOpen className="w-6 h-6" />,
@@ -153,52 +154,12 @@ function LandMain() {
                 </div>
             </section>
             {/* courses */}
-            <section className='md:main py-[3rem] px-[30px]'>
-                <div className="courses">
-                    <div className="courses_head mb-[2rem] flex flex-col items-center">
-                        <h1 className='font-bold text-[40px] mb-2'>Courses</h1>
-                        <Image src={outline} alt="outline" />
-                    </div>
-                    <div className="courses_body grid md:grid-cols-3 xsm:grid-cols-2 gap-6">
-                        {
-                            courseOffer.map((card, index) => (
-                                <div
-                                    data-aos="fade-up"
-                                    key={card.id}
-                                    className="courses_list relative shadow-md hover:shadow-lg transition-shadow duration-300 p-[20px] rounded-md flex flex-col items-center bg-white border border-gray-100 hover:border-accent/20"
-                                >
-                                    {/* Simple top accent line */}
-                                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent to-shadow rounded-t-md"></div>
-
-                                    <div className="course_icon mb-4 relative">
-                                        <div className="bg-gray-50 p-3 rounded-lg">
-                                            <Image
-                                                src={card.icon}
-                                                className='w-[45px] h-[45px] object-cover'
-                                                alt='icon'
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="course_info mt-auto text-center">
-                                        <h3 className='head3 mb-3'>{card.title.toUpperCase()}</h3>
-                                        <p className="mb-6">{card.info}</p>
-                                        <Link
-                                            className='nav_btn bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-white transition-colors duration-300 flex items-center gap-3 mt-6 mx-auto md:mx-0'
-                                            href={card.link}
-                                        >
-                                            <span>Learn more</span>
-                                            <FaChevronRight />
-                                        </Link>
-                                    </div>
-                                </div>
-                            ))
-                        }
-                    </div>
-                </div>
+            <section className="">
+                <StudentSuccessStories />
             </section>
+
             {/* Learn and Ear  */}
-            <section className='md:main py-[3rem] px-[30px] bg-accent text-cyan-50'>
+            <section className='md:main py-[3rem] px-[30px] bg-accent text-cyan-50 mt-10'>
                 <div className="learn">
                     <div data-aos="fade-down" className="learn_head mb-[2rem] flex flex-col items-center">
                         <h1 className='font-bold text-[60px]'>Learn & Earn</h1>
@@ -267,7 +228,7 @@ function LandMain() {
             </section>
 
             <section>
-                <Testimonial/>
+                <Testimonial />
             </section>
 
             {/* Modern FAQ Section */}
