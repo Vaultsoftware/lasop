@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import StoreProviderClient from "./StoreProviderClient";
 import AOSInitializer from "@/components/AOSInitializer/AOSInitializer";
-import TawkWidget from "../components/Tawk/TawkWidget";   // live chat
+// import TawkWidget from "../components/Tawk/TawkWidget";   // live chat
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"; // back-to-top
 
 const inter = Inter({ subsets: ["latin"] });
@@ -38,7 +38,7 @@ export default function RootLayout({
             <AOSInitializer />
             {children}
             <ScrollToTop />
-            <TawkWidget />
+            {/* <TawkWidget /> */}
           </StoreProviderClient>
         </Suspense>
       </body>

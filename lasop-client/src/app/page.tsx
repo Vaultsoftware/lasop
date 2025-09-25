@@ -11,20 +11,18 @@ import { fetchCohort } from "@/store/cohortSlice/cohortStore";
 import { fetchCourse } from "@/store/courseSlice/courseStore";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import TawkWidget from "@/components/Tawk/TawkWidget"; // show only on home
 
 export default function Home() {
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     dispatch(fetchCohort());
     dispatch(fetchCourse());
-  }, [dispatch])
+  }, [dispatch]);
 
   useEffect(() => {
-    AOS.init({
-      duration: 1200,
-      once: true,
-    });
+    AOS.init({ duration: 1200, once: true });
   }, []);
   
   return (
@@ -33,6 +31,7 @@ export default function Home() {
       <LandHead />
       <LandMain />
       <Footer />
+      <TawkWidget /> {/* Now only renders on the home page */}
     </>
   );
 }

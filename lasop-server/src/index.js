@@ -5,6 +5,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path"); // why: serve images from /public
 const connection = require("./config/connection");
 
 /* ============================ Route imports ============================ */
@@ -130,8 +131,6 @@ const isAllowed = (origin) => origin && allowedSet.has(normalize(origin));
 const pickACAO = (origin) => (isAllowed(origin) ? origin : "");
 
 /* ------------- Ultra-early universal preflight (OPTIONS) ----------- */
-/* Handles ALL preflight requests before any other middleware.
-   Guarantees 204 + correct headers for allowed origins, so no route/middleware can 404/401 the preflight. */
 app.use((req, res, next) => {
   if (req.method !== 'OPTIONS') return next();
   const origin = req.headers.origin || "";
@@ -148,10 +147,6 @@ app.use((req, res, next) => {
   return res.sendStatus(204);
 });
 
-
-
-
-
 if (process.env.EXPOSE_AUTH_DEBUG === '1') {
   app.get('/__dev/auth-echo', authEcho);
   app.delete('/__dev/auth-echo', authEcho);
@@ -160,7 +155,7 @@ if (process.env.EXPOSE_AUTH_DEBUG === '1') {
 /* ---------------------- Hardened CORS middleware ------------------- */
 const corsOptions = {
   origin(origin, cb) {
-    if (!origin) return cb(null, true);                // non-browser or same-origin tools
+    if (!origin) return cb(null, true);
     if (isAllowed(origin)) return cb(null, true);
     return cb(new Error(`Not allowed by CORS: ${origin}`));
   },
@@ -179,16 +174,23 @@ app.use((req, res, next) => { res.header('Vary', 'Origin'); next(); });
 const corsMiddleware = cors(corsOptions);
 app.use(corsMiddleware);
 
-// Extra explicit preflight on historically-problematic paths (belt & suspenders)
+// Extra explicit preflight
 app.options('/cohortStatus', corsMiddleware);
 app.options('/projectStatus', corsMiddleware);
 app.options('/assessmentStatus', corsMiddleware);
 app.options('/deleteCertificate/:id', corsMiddleware);
-app.options('*', corsMiddleware); // default catch-all
+app.options('*', corsMiddleware);
 
 /* -------------------------- Common middleware ---------------------- */
 app.use(express.json());
 app.use(morgan("dev"));
+
+/* ------------------------ Static assets (EMAIL) -------------------- */
+// why: allow emails to load images via absolute URLs (e.g., https://host/lasop.png)
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  maxAge: '7d',
+  etag: true,
+}));
 
 /* ----------------------------- Health ------------------------------ */
 app.get('/health', (_req, res) => res.status(200).send('ok'));
@@ -206,7 +208,7 @@ app.put('/updateUser/:id', updateUser);
 app.delete('/deleteUser/:id', delUser);
 
 /* ============================ Student ============================ */
-app.post('/signStudent', upload.single('profile'), signStudent); // fixed field name (no trailing space)
+app.post('/signStudent', upload.single('profile'), signStudent);
 app.post('/convertProgram', convertProgramArrayToObject);
 app.post('/logStudent', logStudent);
 app.put('/updateStudent/:id', updateStudent);
