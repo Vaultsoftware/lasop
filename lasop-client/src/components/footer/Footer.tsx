@@ -56,7 +56,7 @@ function Footer() {
                         <Link href='/'>Home</Link>
                         <Link href='/calendar'>Calendar</Link>
                         <Link href='/about'>About</Link>
-                        <Link href='https://g.co/kgs/MCvF7Tq' target='blank'>Testimonial</Link>
+                        <Link href='https://www.google.com/search?sca_esv=3f080a3bfc790179&hl=en-CA&sxsrf=AE3TifOO33Gx8Q995uhUSfiwlucakw7-Ew:1758827943233&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E9I0UjbeQh2PooW1uSNCuJDMZJXtOLF_JvSqspv3X0p4FopweGBjAriEveXoMsLzMhkDa5Ci-umN3vv0DucIAqlBuR3sKLdiF05Wbr3L9JAnU8YWcnnQGxgxZcIXmexvUCvAqCA%3D&q=Lagos+School+of+Programming+%28LASOP%29+Reviews&sa=X&ved=2ahUKEwir8JvW0PSPAxXlQkEAHVvAADUQ0bkNegQIJhAE&cshid=1758827964122899&biw=1358&bih=642&dpr=1' target='blank'>Testimonies</Link>
                         <Link href='/faq'>FAQs</Link>
                         <Link href='/blog'>Blog</Link>
                     </div>
@@ -66,8 +66,7 @@ function Footer() {
                         <h3 className='head3'>Company</h3>
                     </div>
                     <div className="company_list grid gap-2 text-[14px]">
-                        <Link href='/contact'>Contact us</Link>
-                        <Link href=''>Terms & Condition</Link>
+                        <Link href='/terms'>Terms & Condition</Link>
                         <Link href='/calendar'>Academic Calendar</Link>
                     </div>
                 </div>

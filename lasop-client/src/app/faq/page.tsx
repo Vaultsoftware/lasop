@@ -4,6 +4,14 @@ import React, { useState } from "react"
 import { ChevronDown, Users, Clock, Award, Code, DollarSign, BookOpen, Zap, MessageCircle } from "lucide-react"
 import Navbar from "@/components/navbar/Navbar"
 import Footer from "@/components/footer/Footer"
+import Link from "next/link";
+
+
+type TawkApi = { maximize: () => void; minimize?: () => void; toggle?: () => void };
+const getTawkApi = (): TawkApi | undefined =>
+  typeof window !== 'undefined'
+    ? ((window as any)['Tawk_API'] as TawkApi | undefined)
+    : undefined;
 
 const FAQSection = () => {
   const [openItems, setOpenItems] = useState<number[]>([])
@@ -58,6 +66,16 @@ const FAQSection = () => {
       answer: "Students receive 24/7 access to instructors via Slack, weekly one-on-one mentorship sessions, peer study groups, career counseling, and technical support. After graduation, you join our alumni network with continued access to job opportunities, advanced workshops, and community events. We're committed to your long-term success."
     }
   ]
+
+
+   // Open chat if available; otherwise follow the link.
+    const openLiveChat = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      const api = getTawkApi();
+      if (api?.maximize) {
+        e.preventDefault(); // why: keep user on page and open chat
+        api.maximize();
+      }
+    };
 
   return (
     <>
@@ -145,12 +163,20 @@ const FAQSection = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <button className="bg-white text-[#3360FF] px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                  📞 Book a Call
-                </button>
-                <button className="border-2 border-white/30 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+                <Link
+                  href="tel:+234 702 571 3326"
+                  className="bg-white text-[#3360FF] px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  📞 +234 7025713326
+                </Link>
+                {/* Live Chat → open Tawk chat on Home; fallback navigates to /contact */}
+                {/* <Link
+                  href="/contact"
+                  onClick={openLiveChat}
+                  className="border-2 border-white/30 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+                >
                   💬 Live Chat
-                </button>
+                </Link> */}
               </div>
             </div>
           </div>

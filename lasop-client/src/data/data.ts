@@ -1,3 +1,4 @@
+// src/data/data.ts
 import { GoLocation } from "react-icons/go";
 import info from '../asset/landPage/info.jpeg';
 import study from '../asset/landPage/study.jpeg';
@@ -630,8 +631,8 @@ export const course: CourseData[] = [
     },
     {
         id: 3,
-        dpt1: "Cyber",
-        title: 'Backend',
+        dpt1: "Cyber Security",
+        title: 'cybersecurity',
         dpt2: "security",
         bannerText: "Our cyber security course covers general introductory, operating systems, networking, cryptography, web security, compliance, forensic, and ETHICAL HACKING, and it's capped with project/course defence.",
         bannerBtn: [

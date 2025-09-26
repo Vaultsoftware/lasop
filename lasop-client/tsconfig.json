@@ -20,6 +20,6 @@
     "target": "ES2017",
     "types": ["react", "react-dom", "node"] // ✅ fixes JSX underlines
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/scripts/delete-dec-cohorts.ts"],
   "exclude": ["node_modules"]
 }

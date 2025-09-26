@@ -1,10 +1,49 @@
+// File: app/(site)/LasopLandingPage.tsx
 'use client';
-import { ArrowRight, ChevronRight, ExternalLink } from 'lucide-react';
+import { ArrowRight, ChevronRight, ExternalLink, X } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function LasopLandingPage() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+
+  // --- Watch Demo modal state (non-intrusive) ---
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const [activeDemo, setActiveDemo] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Why: keep list explicit; videos must exist in /public/videos.
+  const demoList: { id: string; label: string; src: string }[] = useMemo(
+    () => [
+      { id: 'fullstack',     label: 'Fullstack',     src: '/videos/fullstack.mp4' },
+      { id: 'frontend',      label: 'Frontend',      src: '/videos/frontend.mp4' },
+      { id: 'backend',       label: 'Backend',       src: '/videos/backend.mp4' },
+      { id: 'cybersecurity', label: 'Cybersecurity', src: '/videos/cybersecurity.mp4' },
+      { id: 'datascience',   label: 'Data Science',  src: '/videos/datascience.mp4' },
+      { id: 'dataanalysis',  label: 'Data Analysis', src: '/videos/dataanalysis.mp4' },
+    ],
+    []
+  );
+
+  const openDemoModal = () => {
+    setIsDemoOpen(true);
+    setActiveDemo(demoList[0]?.id ?? null);
+  };
+  const closeDemoModal = () => {
+    setIsDemoOpen(false);
+    setActiveDemo(null);
+    // Why: pause to stop audio continuing in background.
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  };
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeDemoModal();
+    };
+    if (isDemoOpen) document.addEventListener('keydown', onEsc);
+    return () => document.removeEventListener('keydown', onEsc);
+  }, [isDemoOpen]);
 
   const courses = [
     {
@@ -14,11 +53,19 @@ export default function LasopLandingPage() {
       subtitle: 'Modern Web Development',
       borderColor: 'border-blue-500',
       details: {
-        description: 'Master modern web development with React, Node.js, and databases. Build complete applications from frontend to backend.',
-        topics: ['React & Component Architecture', 'Node.js & Express', 'Database Design (SQL & NoSQL)', 'API Development', 'Authentication & Security', 'Deployment & DevOps'],
+        description:
+          'Master modern web development with React, Node.js, and databases. Build complete applications from frontend to backend.',
+        topics: [
+          'React & Component Architecture',
+          'Node.js & Express',
+          'Database Design (SQL & NoSQL)',
+          'API Development',
+          'Authentication & Security',
+          'Deployment & DevOps',
+        ],
         duration: '6 Months',
-        level: 'Intermediate to Advanced'
-      }
+        level: 'Intermediate to Advanced',
+      },
     },
     {
       id: 'python',
@@ -27,11 +74,19 @@ export default function LasopLandingPage() {
       subtitle: 'Server-side programming',
       borderColor: 'border-red-500',
       details: {
-        description: 'Dive deep into Python programming and backend development. Learn to build robust server applications and APIs.',
-        topics: ['Python Fundamentals & OOP', 'Django/Flask Frameworks', 'Database Integration', 'RESTful API Design', 'Testing & Debugging', 'Performance Optimization'],
+        description:
+          'Dive deep into Python programming and backend development. Learn to build robust server applications and APIs.',
+        topics: [
+          'Python Fundamentals & OOP',
+          'Django/Flask Frameworks',
+          'Database Integration',
+          'RESTful API Design',
+          'Testing & Debugging',
+          'Performance Optimization',
+        ],
         duration: '3 Months',
-        level: 'Beginner to Intermediate'
-      }
+        level: 'Beginner to Intermediate',
+      },
     },
     {
       id: 'datascience',
@@ -40,17 +95,24 @@ export default function LasopLandingPage() {
       subtitle: 'Machine Learning & Analytics',
       borderColor: 'border-green-500',
       details: {
-        description: 'Explore the world of data science and artificial intelligence. Learn to analyze data, build predictive models, and create intelligent systems.',
-        topics: ['Python for Data Science', 'Machine Learning Algorithms', 'Deep Learning & Neural Networks', 'Data Visualization', 'Statistical Analysis', 'AI Model Deployment'],
+        description:
+          'Explore the world of data science and artificial intelligence. Learn to analyze data, build predictive models, and create intelligent systems.',
+        topics: [
+          'Python for Data Science',
+          'Machine Learning Algorithms',
+          'Deep Learning & Neural Networks',
+          'Data Visualization',
+          'Statistical Analysis',
+          'AI Model Deployment',
+        ],
         duration: '5 Months',
-        level: 'Intermediate to Advanced'
-      }
-    }
+        level: 'Intermediate to Advanced',
+      },
+    },
   ];
 
   const handleCourseClick = (courseId: string, e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.expand-toggle') ||
-      (e.target as HTMLElement).closest('button')) {
+    if ((e.target as HTMLElement).closest('.expand-toggle') || (e.target as HTMLElement).closest('button')) {
       return;
     }
 
@@ -66,10 +128,6 @@ export default function LasopLandingPage() {
   const handleExpandToggle = (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedCourse(selectedCourse === courseId ? null : courseId);
-  };
-
-  const handleViewAllCourses = () => {
-    window.location.href = '/course';
   };
 
   const handleEnrollNow = (courseId: string, e: React.MouseEvent) => {
@@ -94,19 +152,32 @@ export default function LasopLandingPage() {
     }
   };
 
+  // --- FIX hydration mismatch: generate dots client-side once ---
+  type Dot = { left: string; top: string; animationDelay: string; animationDuration: string };
+  const [dots, setDots] = useState<Dot[]>([]);
+  useEffect(() => {
+    const gen = Array.from({ length: 30 }, () => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 4}s`,
+      animationDuration: `${2 + Math.random() * 3}s`,
+    }));
+    setDots(gen);
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden">
-
+      {/* background dots – now client-only to avoid hydration drift */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+        {dots.map((d, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-blue-400 rounded-full opacity-40 animate-pulse"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
+              left: d.left,
+              top: d.top,
+              animationDelay: d.animationDelay,
+              animationDuration: d.animationDuration,
             }}
           />
         ))}
@@ -114,7 +185,6 @@ export default function LasopLandingPage() {
 
       <div className="w-full h-full px-[30px] md:px-12 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen py-12">
-
           {/* Left Content */}
           <div className="space-y-8 text-white">
             <div className="inline-block px-4 py-2 bg-blue-500/20 rounded-full text-blue-300 text-sm border border-blue-400/30">
@@ -128,20 +198,23 @@ export default function LasopLandingPage() {
             </h1>
 
             <p className="text-xl text-slate-300 leading-relaxed">
-              Transform your career with industry-leading programming courses.
-              Join Nigeria's most trusted coding school.
+              Transform your career with industry-leading programming courses. Join Nigeria&apos;s most trusted coding school.
             </p>
 
             <div className="flex gap-6 flex-wrap">
               <button
-                onClick={() => window.location.href = '/getStarted'}
+                onClick={() => (window.location.href = '/getStarted')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center transition-all shadow-lg shadow-blue-800/30 group"
               >
                 Start Learning Today
                 <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button className="border-2 border-blue-400/50 hover:border-blue-400 text-blue-300 hover:text-white px-8 py-4 rounded-lg font-semibold flex items-center transition-all">
+              {/* Watch Demo → opens modal */}
+              <button
+                onClick={openDemoModal}
+                className="border-2 border-blue-400/50 hover:border-blue-400 text-blue-300 hover:text-white px-8 py-4 rounded-lg font-semibold flex items-center transition-all"
+              >
                 <video className="mr-2 w-5 h-5" />
                 Watch Demo
               </button>
@@ -151,15 +224,13 @@ export default function LasopLandingPage() {
           {/* Right Content */}
           <div className="relative">
             <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border-2 border-blue-500/30 shadow-xl animate-fadeInUp">
-
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-blue-400">What You'll Learn</h3>
+                <h3 className="text-2xl font-bold text-blue-400">What You&apos;ll Learn</h3>
               </div>
 
               <div className="space-y-3 mb-8">
                 {courses.map((course) => (
                   <div key={course.id} className="transition-all duration-300">
-
                     <div
                       className={`flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border-l-4 ${course.borderColor} cursor-pointer hover:bg-slate-700/70 transition-all duration-200 group relative`}
                       onClick={(e) => handleCourseClick(course.id, e)}
@@ -174,10 +245,7 @@ export default function LasopLandingPage() {
                         </div>
                       </div>
 
-                      {/* ✅ Duration placed between title/subtitle and expand icon */}
-                      <div className="text-sm text-blue-300 font-medium mx-4">
-                        {course.details.duration}
-                      </div>
+                      <div className="text-sm text-blue-300 font-medium mx-4">{course.details.duration}</div>
 
                       <div
                         className="expand-toggle text-slate-400 transition-transform group-hover:scale-110 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
@@ -198,13 +266,10 @@ export default function LasopLandingPage() {
                       </div>
                     </div>
 
-                    {/* Expanded Details */}
                     {selectedCourse === course.id && (
                       <div className="mt-3 p-4 bg-slate-800/80 rounded-lg border border-slate-600/50 animate-in slide-in-from-top-2 duration-300">
                         <div className="space-y-4">
-                          <p className="text-slate-300 text-sm leading-relaxed">
-                            {course.details.description}
-                          </p>
+                          <p className="text-slate-300 text-sm leading-relaxed">{course.details.description}</p>
 
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="bg-slate-700/50 p-2 rounded">
@@ -226,9 +291,7 @@ export default function LasopLandingPage() {
                                 </span>
                               ))}
                               {course.details.topics.length > 3 && (
-                                <span className="text-xs text-slate-400 px-2 py-1">
-                                  +{course.details.topics.length - 3} more
-                                </span>
+                                <span className="text-xs text-slate-400 px-2 py-1">+{course.details.topics.length - 3} more</span>
                               )}
                             </div>
                           </div>
@@ -255,21 +318,87 @@ export default function LasopLandingPage() {
                 ))}
               </div>
 
-              {/* ✅ Replaced "6 Months" box with View All button */}
               <div className="text-center bg-gradient-to-r from-blue-500/20 to-red-500/20 border border-blue-400/50 rounded-xl p-4">
                 <Link
                   href="/coursecard"
                   className="text-blue-400 hover:text-blue-300 text-base font-medium flex items-center justify-center gap-1 transition-colors group mx-auto"
                 >
-                  View All
+                  View All Courses
                   <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </Link>
               </div>
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* --- Modal for Watch Demo --- */}
+      {isDemoOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeDemoModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Watch demo videos"
+        >
+          <div
+            className="w-full max-w-4xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+              <h4 className="text-blue-300 font-semibold">Watch Demo</h4>
+              <button
+                onClick={closeDemoModal}
+                className="p-2 rounded hover:bg-slate-800 text-slate-300"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col md:flex-row">
+              {/* Left: list */}
+              <div className="md:w-56 border-b md:border-b-0 md:border-r border-slate-800">
+                <ul className="max-h-80 md:max-h-[480px] overflow-auto">
+                  {demoList.map((d) => {
+                    const active = d.id === activeDemo;
+                    return (
+                      <li key={d.id}>
+                        <button
+                          className={`w-full text-left px-4 py-3 hover:bg-slate-800 ${
+                            active ? 'bg-slate-800 text-white' : 'text-slate-300'
+                          }`}
+                          onClick={() => setActiveDemo(d.id)}
+                        >
+                          {d.label}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {/* Right: video */}
+              <div className="flex-1 p-4">
+                {activeDemo ? (
+                  <video
+                    key={activeDemo} // forces reload when switching
+                    ref={videoRef}
+                    className="w-full aspect-video bg-black rounded-lg"
+                    src={demoList.find((d) => d.id === activeDemo)?.src}
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <div className="w-full aspect-video bg-black/60 rounded-lg grid place-items-center text-slate-400">
+                    Select a demo
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
