@@ -1,6 +1,4 @@
-// ====================================================================
-// 2) lasop-server/src/routes/student/signStudent.js
-// ====================================================================
+// File: lasop-server/src/routes/student/signStudent.js
 require('dotenv').config();
 
 const path = require('path');
@@ -52,7 +50,7 @@ try {
   console.error('Mail transporter init failed:', e?.message || e);
 }
 
-/* -------- Premium HTML (inline CIDs) -------- */
+/* -------- Email helpers (unchanged) -------- */
 const P = (html) => `<p style="margin:0 0 12px 0;font-size:14px;line-height:22px;color:#3a4152;">${html}</p>`;
 const IMG = (cid, alt) => `<div style="margin:8px 0 14px 0;"><img src="cid:${cid}" alt="${alt}" width="100%" style="max-width:640px;border-radius:12px;border:1px solid #eef1f6;display:block;"></div>`;
 function signatureHtml() {
@@ -98,12 +96,11 @@ function getWelcomeHtml(firstName, courseTitle) {
   const blocks = [];
   blocks.push(P(`Hi ${firstName}! We are glad that you have enrolled to be a student at our school.`));
   blocks.push(P(`Congratulations!`));
-  // removed the "We welcome you to the Lagos School..." line
   blocks.push(P(`At LASOP, we provide high-quality training to equip our students with industry – recognized IT skills and the kind of knowledge that high achieving companies are looking for. Just as with any position, having people interested in the job is not enough for them to get hired. There may be existing programmers on the market, but their inexperience may make employers go for someone older in the game.`));
-  blocks.push(IMG('img1@lasop', 'LASOP image')); // after “game.”
+  blocks.push(IMG('img1@lasop', 'LASOP image'));
   blocks.push(P(`Therefore, it's not just the question of having a talent pool but also of talent level. Lack of practical experience and the lack of workplace experience are some of the problems faced by most first-time hires today.`));
   blocks.push(P(`To make sure you come out well polished, we have in long-term employment; industry experts waiting to be your tutors. This is to ensure that you do not struggle to understand your studies from the first day.`));
-  blocks.push(IMG('img2@lasop', 'LASOP image')); // after “day.”
+  blocks.push(IMG('img2@lasop', 'LASOP image'));
   blocks.push(P(`LASOP MENTORS! We don't just train. We follow up with your development and growth in the tech space by entertaining and providing answers to your questions and counselling you from time to time. As an alumni, you are always welcome to the school, and you can utilise any of our "free to use" facilities when you want to. You can know more about us by visiting <a href="https://www.lasop.net/about" style="color:#0b5fff;text-decoration:none;">lasop.net/about</a> or by visiting our campus.`));
 
   if (courseTitle === 'Fullstack Development') {
@@ -123,9 +120,26 @@ function getWelcomeHtml(firstName, courseTitle) {
   return wrapHtml({ title: `Welcome to ${courseTitle} — LASOP`, tagRight: 'Welcome', bodyHtml: blocks.join('') });
 }
 
-/* -------- Controller (unchanged behavior) -------- */
+/* -------- Controller (updated to houseNo/streetName/city) -------- */
 const signStudent = async (req, res) => {
-  const { firstName, lastName, email, password, contact, address, program, allowed, gender, status } = req.body;
+  // NOTE: `address` removed. Accept split address fields instead.
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    contact,
+    houseNo,
+    streetName,
+    city,
+    program,
+    allowed,
+    gender,
+    status,
+    // Legacy fallback: if some old client still sends `address`
+    address, // optional; used only to derive parts when new fields missing
+  } = req.body;
+
   const profile = req.file;
 
   try {
@@ -155,6 +169,7 @@ const signStudent = async (req, res) => {
         stream.end(profile.buffer);
       }
 
+      // Tutor mapping (unchanged)
       const cohort = await Cohort.findById(program.cohortId).populate({
         path: 'courseTutors',
         match: { course: program.courseId, center: program.center, mode: program.mode },
@@ -167,13 +182,27 @@ const signStudent = async (req, res) => {
         program.tutorId = 'pending';
       }
 
+      // --- Address compatibility: derive parts from legacy `address` if needed ---
+      let _houseNo = (houseNo ?? '').trim();
+      let _streetName = (streetName ?? '').trim();
+      let _city = (city ?? '').trim();
+
+      if ((!_houseNo || !_streetName || !_city) && typeof address === 'string' && address.trim()) {
+        const parts = address.split(',').map(s => s.trim()).filter(Boolean);
+        _houseNo = _houseNo || parts[0] || '';
+        _streetName = _streetName || parts[1] || '';
+        _city = _city || parts[2] || '';
+      }
+
       const newStudent = new Student({
         firstName,
         lastName,
         email,
         password: hashPwd,
         contact,
-        address,
+        houseNo: _houseNo,
+        streetName: _streetName,
+        city: _city,
         program,
         profile: fileUrl || '',
         gender,

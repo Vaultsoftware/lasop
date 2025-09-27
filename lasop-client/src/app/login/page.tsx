@@ -3,7 +3,7 @@
 import { AppDispatch } from '@/store/store';
 import { logStudent } from '@/store/studentStore/studentStore';
 import React, { ChangeEvent, FormEvent, useState } from 'react';
-import form from '../../asset/form/form.jpeg';
+import form from '../../asset/form/reg.jpg';
 import { useDispatch } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'

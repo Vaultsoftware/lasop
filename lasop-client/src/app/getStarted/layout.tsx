@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { ReactNode, useEffect } from 'react';
-import form from '../../asset/form/form.jpeg';
+import form from '../../asset/form/reg.jpg';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
 import { fetchCohort } from '@/store/cohortSlice/cohortStore';

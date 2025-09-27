@@ -7,13 +7,22 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 export default function LasopLandingPage() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
-  // --- Watch Demo modal state (non-intrusive) ---
+  // Modal state
   const [isDemoOpen, setIsDemoOpen] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null);
+  const [activeDemo, setActiveDemo] = useState<string | null>(null); // lazy: null by default
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Why: keep list explicit; videos must exist in /public/videos.
-  const demoList: { id: string; label: string; src: string }[] = useMemo(
+  // Respect OS motion preferences (why: accessibility)
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const apply = () => setReducedMotion(Boolean(mq?.matches));
+    apply();
+    mq?.addEventListener?.('change', apply);
+    return () => mq?.removeEventListener?.('change', apply);
+  }, []);
+
+  const demoList = useMemo(
     () => [
       { id: 'fullstack',     label: 'Fullstack',     src: '/videos/fullstack.mp4' },
       { id: 'frontend',      label: 'Frontend',      src: '/videos/frontend.mp4' },
@@ -27,20 +36,16 @@ export default function LasopLandingPage() {
 
   const openDemoModal = () => {
     setIsDemoOpen(true);
-    setActiveDemo(demoList[0]?.id ?? null);
+    // lazy-load: do NOT preselect; wait for user to click
+    setActiveDemo(null);
   };
   const closeDemoModal = () => {
     setIsDemoOpen(false);
     setActiveDemo(null);
-    // Why: pause to stop audio continuing in background.
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
+    if (videoRef.current) videoRef.current.pause(); // why: avoid background audio
   };
   useEffect(() => {
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDemoModal();
-    };
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDemoModal(); };
     if (isDemoOpen) document.addEventListener('keydown', onEsc);
     return () => document.removeEventListener('keydown', onEsc);
   }, [isDemoOpen]);
@@ -112,17 +117,10 @@ export default function LasopLandingPage() {
   ];
 
   const handleCourseClick = (courseId: string, e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.expand-toggle') || (e.target as HTMLElement).closest('button')) {
-      return;
-    }
-
-    if (courseId === 'fullstack') {
-      window.location.href = '/course/fullstack';
-    } else if (courseId === 'python') {
-      window.location.href = '/course/backend';
-    } else if (courseId === 'datascience') {
-      window.location.href = '/course/datascience';
-    }
+    if ((e.target as HTMLElement).closest('.expand-toggle') || (e.target as HTMLElement).closest('button')) return;
+    if (courseId === 'fullstack') window.location.href = '/course/fullstack';
+    else if (courseId === 'python') window.location.href = '/course/backend';
+    else if (courseId === 'datascience') window.location.href = '/course/datascience';
   };
 
   const handleExpandToggle = (courseId: string, e: React.MouseEvent) => {
@@ -132,27 +130,19 @@ export default function LasopLandingPage() {
 
   const handleEnrollNow = (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (courseId === 'fullstack') {
-      window.location.href = '/course/fullstack?enroll=true';
-    } else if (courseId === 'python') {
-      window.location.href = '/course/backend?enroll=true';
-    } else if (courseId === 'datascience') {
-      window.location.href = '/datascience?enroll=true';
-    }
+    if (courseId === 'fullstack') window.location.href = '/course/fullstack?enroll=true';
+    else if (courseId === 'python') window.location.href = '/course/backend?enroll=true';
+    else if (courseId === 'datascience') window.location.href = '/datascience?enroll=true';
   };
 
   const handleLearnMore = (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (courseId === 'fullstack') {
-      window.location.href = '/course/fullstack';
-    } else if (courseId === 'python') {
-      window.location.href = '/course/backend';
-    } else if (courseId === 'datascience') {
-      window.location.href = '/datascience';
-    }
+    if (courseId === 'fullstack') window.location.href = '/course/fullstack';
+    else if (courseId === 'python') window.location.href = '/course/backend';
+    else if (courseId === 'datascience') window.location.href = '/datascience';
   };
 
-  // --- FIX hydration mismatch: generate dots client-side once ---
+  // client-only decorative dots
   type Dot = { left: string; top: string; animationDelay: string; animationDuration: string };
   const [dots, setDots] = useState<Dot[]>([]);
   useEffect(() => {
@@ -167,186 +157,191 @@ export default function LasopLandingPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 overflow-hidden">
-      {/* background dots – now client-only to avoid hydration drift */}
+      {/* background dots: motion-safe only */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {dots.map((d, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-blue-400 rounded-full opacity-40 animate-pulse"
+            className={`absolute w-1 h-1 bg-blue-400 rounded-full opacity-40 ${reducedMotion ? '' : 'animate-pulse'}`}
             style={{
               left: d.left,
               top: d.top,
-              animationDelay: d.animationDelay,
-              animationDuration: d.animationDuration,
+              animationDelay: reducedMotion ? undefined : d.animationDelay,
+              animationDuration: reducedMotion ? undefined : d.animationDuration,
             }}
           />
         ))}
       </div>
 
-      <div className="w-full h-full px-[30px] md:px-12 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen py-12">
-          {/* Left Content */}
-          <div className="space-y-8 text-white">
-            <div className="inline-block px-4 py-2 bg-blue-500/20 rounded-full text-blue-300 text-sm border border-blue-400/30">
-              Premium Programming Education
-            </div>
-
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="block">Master</span>
-              <span className="block text-blue-400">Programming</span>
-              <span className="block">at LASOP</span>
-            </h1>
-
-            <p className="text-xl text-slate-300 leading-relaxed">
-              Transform your career with industry-leading programming courses. Join Nigeria&apos;s most trusted coding school.
-            </p>
-
-            <div className="flex gap-6 flex-wrap">
-              <button
-                onClick={() => (window.location.href = '/getStarted')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center transition-all shadow-lg shadow-blue-800/30 group"
-              >
-                Start Learning Today
-                <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              {/* Watch Demo → opens modal */}
-              <button
-                onClick={openDemoModal}
-                className="border-2 border-blue-400/50 hover:border-blue-400 text-blue-300 hover:text-white px-8 py-4 rounded-lg font-semibold flex items-center transition-all"
-              >
-                <video className="mr-2 w-5 h-5" />
-                Watch Demo
-              </button>
-            </div>
-          </div>
-
-          {/* Right Content */}
-          <div className="relative">
-            <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border-2 border-blue-500/30 shadow-xl animate-fadeInUp">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-blue-400">What You&apos;ll Learn</h3>
+      <div className="w-full h-full px-4 sm:px-6 md:px-12 relative z-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center min-h-[calc(100vh-6rem)] py-10 sm:py-12">
+            {/* Left Content */}
+            <div className="space-y-6 sm:space-y-8 text-white">
+              <div className="inline-block px-3 sm:px-4 py-2 bg-blue-500/20 rounded-full text-blue-300 text-xs sm:text-sm border border-blue-400/30">
+                Premium Programming Education
               </div>
 
-              <div className="space-y-3 mb-8">
-                {courses.map((course) => (
-                  <div key={course.id} className="transition-all duration-300">
-                    <div
-                      className={`flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border-l-4 ${course.borderColor} cursor-pointer hover:bg-slate-700/70 transition-all duration-200 group relative`}
-                      onClick={(e) => handleCourseClick(course.id, e)}
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <span className="text-2xl">{course.emoji}</span>
-                        <div>
-                          <div className="font-semibold text-white group-hover:text-blue-300 transition-colors">
-                            {course.title}
-                          </div>
-                          <div className="text-sm text-slate-400">{course.subtitle}</div>
-                        </div>
-                      </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+                <span className="block">Master</span>
+                <span className="block text-blue-400">Programming</span>
+                <span className="block">at LASOP</span>
+              </h1>
 
-                      <div className="text-sm text-blue-300 font-medium mx-4">{course.details.duration}</div>
+              <p className="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed">
+                Transform your career with industry-leading programming courses. Join Nigeria&apos;s most trusted coding school.
+              </p>
 
-                      <div
-                        className="expand-toggle text-slate-400 transition-transform group-hover:scale-110 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
-                        onClick={(e) => handleExpandToggle(course.id, e)}
-                        title="Toggle details"
-                      >
-                        {selectedCourse === course.id ? (
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </div>
-
-                      <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none flex items-center justify-center">
-                        <span className="text-blue-300 text-sm font-medium bg-slate-800/90 px-3 py-1 rounded-full">
-                          Click to view course
-                        </span>
-                      </div>
-                    </div>
-
-                    {selectedCourse === course.id && (
-                      <div className="mt-3 p-4 bg-slate-800/80 rounded-lg border border-slate-600/50 animate-in slide-in-from-top-2 duration-300">
-                        <div className="space-y-4">
-                          <p className="text-slate-300 text-sm leading-relaxed">{course.details.description}</p>
-
-                          <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div className="bg-slate-700/50 p-2 rounded">
-                              <span className="text-slate-400">Duration:</span>
-                              <div className="text-white font-medium">{course.details.duration}</div>
-                            </div>
-                            <div className="bg-slate-700/50 p-2 rounded">
-                              <span className="text-slate-400">Level:</span>
-                              <div className="text-white font-medium">{course.details.level}</div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h4 className="text-sm font-semibold text-white mb-2">Key Topics:</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {course.details.topics.slice(0, 3).map((topic, index) => (
-                                <span key={index} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
-                                  {topic}
-                                </span>
-                              ))}
-                              {course.details.topics.length > 3 && (
-                                <span className="text-xs text-slate-400 px-2 py-1">+{course.details.topics.length - 3} more</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2 pt-2">
-                            <button
-                              onClick={(e) => handleEnrollNow(course.id, e)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors"
-                            >
-                              Enroll Now
-                              <ArrowRight className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => handleLearnMore(course.id, e)}
-                              className="border border-slate-600 text-slate-300 hover:text-white hover:border-slate-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              Learn More
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="text-center bg-gradient-to-r from-blue-500/20 to-red-500/20 border border-blue-400/50 rounded-xl p-4">
-                <Link
-                  href="/coursecard"
-                  className="text-blue-400 hover:text-blue-300 text-base font-medium flex items-center justify-center gap-1 transition-colors group mx-auto"
+              <div className="flex gap-3 sm:gap-6 flex-wrap">
+                <button
+                  onClick={() => (window.location.href = '/getStarted')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold flex items-center justify-center transition-all shadow-lg shadow-blue-800/30 group w-full sm:w-auto"
                 >
-                  View All Courses
-                  <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </Link>
+                  Start Learning Today
+                  <ChevronRight className={`ml-2 w-5 h-5 transition-transform ${reducedMotion ? '' : 'group-hover:translate-x-1'}`} />
+                </button>
+
+                <button
+                  onClick={openDemoModal}
+                  className="border-2 border-blue-400/50 hover:border-blue-400 text-blue-300 hover:text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold flex items-center justify-center transition-all w-full sm:w-auto"
+                >
+                  <video className="mr-2 w-5 h-5" />
+                  Watch Demo
+                </button>
+              </div>
+            </div>
+
+            {/* Right Content */}
+            <div className="relative">
+              <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border-2 border-blue-500/30 shadow-xl">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-blue-400">What You&apos;ll Learn</h3>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                  {courses.map((course) => (
+                    <div key={course.id} className="transition-all duration-300">
+                      <div
+                        className={`flex items-center justify-between p-3 sm:p-4 bg-slate-700/50 rounded-lg border-l-4 ${course.borderColor} cursor-pointer hover:bg-slate-700/70 transition-all duration-200 group relative`}
+                        onClick={(e) => handleCourseClick(course.id, e)}
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                          <span className="text-xl sm:text-2xl">{course.emoji}</span>
+                          <div>
+                            <div className="font-semibold text-white">{course.title}</div>
+                            <div className="text-xs sm:text-sm text-slate-400">{course.subtitle}</div>
+                          </div>
+                        </div>
+
+                        <div className="text-xs sm:text-sm text-blue-300 font-medium mx-2 sm:mx-4 whitespace-nowrap">
+                          {course.details.duration}
+                        </div>
+
+                        <div
+                          className="expand-toggle text-slate-400 p-2 hover:bg-slate-600/50 rounded cursor-pointer"
+                          onClick={(e) => handleExpandToggle(course.id, e)}
+                          title="Toggle details"
+                        >
+                          {selectedCourse === course.id ? (
+                            <div className={`w-2 h-2 bg-blue-400 rounded-full ${reducedMotion ? '' : 'animate-pulse'}`} />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </div>
+
+                        <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none hidden sm:flex items-center justify-center">
+                          <span className="text-blue-300 text-sm font-medium bg-slate-800/90 px-3 py-1 rounded-full">
+                            Click to view course
+                          </span>
+                        </div>
+                      </div>
+
+                      {selectedCourse === course.id && (
+                        <div className="mt-3 p-3 sm:p-4 bg-slate-800/80 rounded-lg border border-slate-600/50">
+                          <div className="space-y-3 sm:space-y-4">
+                            <p className="text-slate-300 text-sm sm:text-[15px] leading-relaxed">
+                              {course.details.description}
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              <div className="bg-slate-700/50 p-2 rounded">
+                                <span className="text-slate-400">Duration:</span>
+                                <div className="text-white font-medium">{course.details.duration}</div>
+                              </div>
+                              <div className="bg-slate-700/50 p-2 rounded">
+                                <span className="text-slate-400">Level:</span>
+                                <div className="text-white font-medium">{course.details.level}</div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="text-xs sm:text-sm font-semibold text-white mb-2">Key Topics:</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {course.details.topics.slice(0, 3).map((topic, index) => (
+                                  <span key={index} className="text-[11px] sm:text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
+                                    {topic}
+                                  </span>
+                                ))}
+                                {course.details.topics.length > 3 && (
+                                  <span className="text-[11px] sm:text-xs text-slate-400 px-2 py-1">
+                                    +{course.details.topics.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                              <button
+                                onClick={(e) => handleEnrollNow(course.id, e)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors w-full sm:w-auto justify-center"
+                              >
+                                Enroll Now
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => handleLearnMore(course.id, e)}
+                                className="border border-slate-600 text-slate-300 hover:text-white hover:border-slate-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto justify-center"
+                              >
+                                Learn More
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center bg-gradient-to-r from-blue-500/20 to-red-500/20 border border-blue-400/50 rounded-xl p-3 sm:p-4">
+                  <Link
+                    href="/coursecard"
+                    className="text-blue-400 hover:text-blue-300 text-sm sm:text-base font-medium flex items-center justify-center gap-1 transition-colors group mx-auto"
+                  >
+                    View All Courses
+                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- Modal for Watch Demo --- */}
+      {/* Watch Demo modal */}
       {isDemoOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
           onClick={closeDemoModal}
           role="dialog"
           aria-modal="true"
           aria-label="Watch demo videos"
         >
           <div
-            className="w-full max-w-4xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl"
+            className="w-full max-w-6xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-              <h4 className="text-blue-300 font-semibold">Watch Demo</h4>
+            <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-800">
+              <h4 className="text-blue-300 font-semibold text-sm sm:text-base">Watch Demo</h4>
               <button
                 onClick={closeDemoModal}
                 className="p-2 rounded hover:bg-slate-800 text-slate-300"
@@ -359,15 +354,13 @@ export default function LasopLandingPage() {
             <div className="flex flex-col md:flex-row">
               {/* Left: list */}
               <div className="md:w-56 border-b md:border-b-0 md:border-r border-slate-800">
-                <ul className="max-h-80 md:max-h-[480px] overflow-auto">
+                <ul className="max-h-72 sm:max-h-80 md:max-h-[480px] overflow-auto">
                   {demoList.map((d) => {
                     const active = d.id === activeDemo;
                     return (
                       <li key={d.id}>
                         <button
-                          className={`w-full text-left px-4 py-3 hover:bg-slate-800 ${
-                            active ? 'bg-slate-800 text-white' : 'text-slate-300'
-                          }`}
+                          className={`w-full text-left px-4 py-3 hover:bg-slate-800 ${active ? 'bg-slate-800 text-white' : 'text-slate-300'}`}
                           onClick={() => setActiveDemo(d.id)}
                         >
                           {d.label}
@@ -379,19 +372,26 @@ export default function LasopLandingPage() {
               </div>
 
               {/* Right: video */}
-              <div className="flex-1 p-4">
+              <div className="flex-1 p-3 sm:p-4">
                 {activeDemo ? (
-                  <video
-                    key={activeDemo} // forces reload when switching
-                    ref={videoRef}
-                    className="w-full aspect-video bg-black rounded-lg"
-                    src={demoList.find((d) => d.id === activeDemo)?.src}
-                    controls
-                    playsInline
-                  />
+                  <div className="w-full">
+                    <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+                      <video
+                        key={activeDemo}
+                        ref={videoRef}
+                        className="absolute inset-0 w-full h-full bg-black rounded-lg"
+                        src={demoList.find((d) => d.id === activeDemo)?.src}
+                        controls
+                        preload="metadata"  // lazy: metadata only
+                        playsInline
+                      />
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-full aspect-video bg-black/60 rounded-lg grid place-items-center text-slate-400">
-                    Select a demo
+                  <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
+                    <div className="w-full h-full bg-black/60 rounded-lg grid place-items-center text-slate-400">
+                      Select a demo
+                    </div>
                   </div>
                 )}
               </div>

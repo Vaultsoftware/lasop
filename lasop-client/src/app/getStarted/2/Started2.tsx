@@ -12,7 +12,7 @@ import { MdInfoOutline } from "react-icons/md";
 import lasopLogo from '../../../asset/form/logo.png';
 import ValidateLoading from '@/components/validateLoading/ValidateLoading';
 import CohCode from '@/components/cohortCode/CohCode';
-import { handleCode } from '@/store/dashMenu/dashStore';
+// import { handleCode } from '@/store/dashMenu/dashStore';
 import { CohortMain } from '@/interfaces/interface';
 
 interface CourseDetail {
@@ -28,7 +28,7 @@ function Started2() {
     const course = useSelector((state: RootState) => state.courses.courses);
     const cohort = useSelector((state: RootState) => state.cohort.cohort);
     const centerAvail = useSelector((state: RootState) => state.centers.centers);
-    const codeDet = useSelector((state: RootState) => state.dashMenu.openCode)
+    // const codeDet = useSelector((state: RootState) => state.dashMenu.openCode)
 
     const [courseData, setCourseData] = useState<CourseDetail>({
         courseId: '',
@@ -140,10 +140,7 @@ function Started2() {
                             <div className='mb-3'>
                                 <span className='text-[12px] font-semibold'>Step 1/4</span>
                                 <h3 className='font-bold'>Course of Study</h3>
-                                <div className='flex gap-2 items-center'>
-                                    <p className='text-[10px] text-shadow'>Having problem understanding the cohort name ? click the info icon</p>
-                                    <MdInfoOutline onClick={() => dispatch(handleCode())} className='text-accent ' />
-                                </div>
+                              
                             </div>
                             <div className='grid gap-3'>
                                 <div className='grid gap-2'>
@@ -230,7 +227,7 @@ function Started2() {
                         <span>I have an account. <Link href='/login' className='font-bold text-accent'>Log in</Link></span>
                     </div>
                 </div>
-                {codeDet && <CohCode />}
+                {/* {codeDet && <CohCode />} */}
             </main>
         </>
     )

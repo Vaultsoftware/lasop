@@ -10,14 +10,14 @@ interface Center { _id: ObjectIdLike; name?: string; }
 interface Cohort {
   _id: ObjectIdLike;
   cohortName: string;
-  courseId: Course[];         // populated
+  courseId: Course[];
   startDate: string;          // ISO
   endDate: string;            // ISO
-  center: Center[];           // populated
-  mode: string[];             // ["Weekday","Weekend","Online",...]
+  center: Center[];
+  mode: string[];
   isActive: boolean;
   status: "completed" | "current" | "inactive";
-  createdAt?: string;         // from timestamps: true
+  createdAt?: string;         // ISO
 }
 
 const PAGE_SIZE = 10;
@@ -26,6 +26,30 @@ const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
 const getCourseTitle = (c: Course) => c.title ?? c.name ?? "Untitled Course";
+
+/** Why: single source of truth for the admission window logic. */
+function getAdmissionStatus(
+  createdISO?: string,
+  startISO?: string
+): "open" | "closed" | "none" {
+  if (!createdISO || !startISO) return "none";
+  const created = new Date(createdISO);
+  const start = new Date(startISO);
+  if (Number.isNaN(created.getTime()) || Number.isNaN(start.getTime())) return "none";
+
+  const close = new Date(start);
+  // JS handles month/year rollover and caps day automatically.
+  close.setMonth(close.getMonth() + 1);
+
+  const nowMs = Date.now();
+  const createdMs = created.getTime();
+  const closeMs = close.getTime();
+
+  if (createdMs > closeMs) return "closed"; // created after window ended
+  if (nowMs < createdMs) return "none";     // not yet open
+  if (nowMs <= closeMs) return "open";
+  return "closed";
+}
 
 export default function CalendarMain() {
   const [data, setData] = useState<Cohort[]>([]);
@@ -167,9 +191,9 @@ export default function CalendarMain() {
                   const modesDisplay = modes.length ? `(${modes.join(", ")})` : "(Mode TBA)";
                   const courseTitles = (coh.courseId ?? []).map(getCourseTitle);
                   const courseDisplay =
-                    courseTitles.length > 0
-                      ? courseTitles.join(", ")
-                      : (coh.cohortName || "Cohort");
+                    courseTitles.length > 0 ? courseTitles.join(", ") : (coh.cohortName || "Cohort");
+
+                  const admissionStatus = getAdmissionStatus(coh.createdAt, coh.startDate);
 
                   return (
                     <tr key={coh._id} className="transition hover:bg-gray-50">
@@ -177,7 +201,31 @@ export default function CalendarMain() {
                         <div className="font-medium">{courseDisplay}</div>
                         <div className="mt-1 text-sm text-gray-500">{modesDisplay}</div>
                       </td>
-                      <td className="border-r border-gray-200 px-6 py-4">{start}</td>
+
+                      <td className="border-r border-gray-200 px-6 py-4">
+                        <div>{start}</div>
+                        {admissionStatus === "open" && (
+                          <div
+                            className="mt-2 inline-flex items-center rounded-md bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700"
+                            aria-label="Admission open (from creation until 1 month after start)"
+                            title="Admission open (from creation until 1 month after start)"
+                          >
+                            Admission open
+                          </div>
+                        )}
+                        {admissionStatus === "closed" && (
+                          <button
+                            type="button"
+                            className="mt-2 inline-flex items-center rounded-md bg-red-600 px-2.5 py-1 text-xs font-semibold text-white"
+                            aria-label="Admission closed (after 1 month from start)"
+                            title="Admission closed (after 1 month from start)"
+                            disabled
+                          >
+                            Admission closed
+                          </button>
+                        )}
+                      </td>
+
                       <td className="px-6 py-4">{end}</td>
                     </tr>
                   );

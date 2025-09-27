@@ -1,4 +1,4 @@
-// lasop-client/src/store/studentStore/studentStore.ts
+// File: lasop-client/src/store/studentStore/studentStore.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../store";
@@ -17,7 +17,9 @@ interface StudentData {
   email: string;
   password: string;
   contact: string;
-  address: string;
+  houseNo: string;       // was: address
+  streetName: string;    // new
+  city: string;          // new
   program: {
     courseId: string | any;
     cohortId: string | any;
@@ -101,6 +103,7 @@ export const fetchStudentLogDetails = createAsyncThunk<
 export const postStudent = createAsyncThunk<StudentResponsePayload, StudentData>(
   "student/postStudent",
   async (studentData: StudentData) => {
+    // Backend must accept houseNo/streetName/city now.
     const response = await axios.post<StudentResponsePayload>(
       `${process.env.NEXT_PUBLIC_API_URL}/signStudent`,
       studentData
@@ -117,12 +120,12 @@ export const logStudent = createAsyncThunk<StudentResponsePayload, LogStudent>(
       logStudent
     );
 
-    const { data, token } = response.data;
+    const { data, token } = response.data as any;
     if (!token) {
       throw new Error("Authentication token not provided");
     }
     saveToken(token);
-    return { data, token };
+    return { data, token } as any;
   }
 );
 
@@ -225,7 +228,7 @@ const studentSlice = createSlice({
         state.status = "loading";
       })
       .addCase(postStudent.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data } = action.payload as any;
         if (data) {
           state.student.push(data);
         }
@@ -240,7 +243,7 @@ const studentSlice = createSlice({
         state.status = "loading";
       })
       .addCase(logStudent.fulfilled, (state, action) => {
-        const { data, token } = action.payload;
+        const { data, token } = action.payload as any;
         if (data && token) {
           state.logDetails = data;
           state.token = token;
@@ -256,7 +259,7 @@ const studentSlice = createSlice({
         state.status = "loading";
       })
       .addCase(updateStudent.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data } = action.payload as any;
         if (data) {
           const index = state.student.findIndex((s) => s._id === data._id);
           if (index !== -1) {
@@ -286,7 +289,7 @@ const studentSlice = createSlice({
         state.status = "loading";
       })
       .addCase(addCourse.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data } = action.payload as any;
         if (data) {
           const index = state.student.findIndex((s) => s._id === data._id);
           if (index !== -1) {

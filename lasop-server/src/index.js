@@ -107,6 +107,17 @@ const updateAssessmentStatus = require("./routes/status/assessmentStatus");
 const updateStudentWithoutOtherName = require("./routes/student/updateStudentOther");
 const devPeekOtp = require('./routes/verifyOtp/devPeekOtp');
 
+
+// Blogs
+
+// Blog
+const blogPostBatch = require('./routes/blog/postBlogBatch');
+const blogGet = require('./routes/blog/getBlog');
+const blogGetId = require('./routes/blog/getBlogId');
+const blogUpdate = require('./routes/blog/updateBlog');
+const blogDelete = require('./routes/blog/delBlog');
+
+
 // ✅ GridFS certificate routes
 const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
 const streamFile = require("./routes/files/streamFile");
@@ -216,6 +227,15 @@ app.put('/addCourse/:id', authToken, addCourseStudent);
 app.delete('/deleteStudent/:id', delStudent);
 app.get('/studentDetails/:id', getStudentDet);
 app.get('/getStudent', getStudent);
+
+
+/* ============================== Blog ============================== */
+app.post('/blog/batch', blogPostBatch);
+app.get('/blog', blogGet);
+app.get('/blog/:id', blogGetId);
+app.put('/blog/:id', blogUpdate);
+app.delete('/blog/:id', blogDelete);
+
 
 /* =========================== Assessment ========================== */
 app.post('/postAssessment', postAssessment);
