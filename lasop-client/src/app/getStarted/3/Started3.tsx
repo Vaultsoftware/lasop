@@ -16,6 +16,10 @@ import { useRouter } from 'next/navigation';
 import lasopLogo from '../../../asset/form/logo.png';
 import ValidateLoading from '@/components/validateLoading/ValidateLoading';
 
+/* Types */
+type VerifyMode = 'strict' | 'loose' | 'fuzzy' | 'digits' | 'words';
+type VerifyResult = { matched: boolean; snippet?: string; mode?: VerifyMode };
+
 interface StudentData {
   firstName: string;
   lastName: string;
@@ -39,7 +43,11 @@ interface StudentData {
 const WHATSAPP_E164 = '2347025713326';
 const MIN_PART_PAYMENT = 200_000;
 const LS_KEY = 'lasop_started3_v1';
-const SHARE_TTL_MS = 2 * 60 * 60 * 1000; // why: avoid stale confirmations (2h)
+const SHARE_TTL_MS = 2 * 60 * 60 * 1000;
+
+/* Account name rule: need ≥2 of these tokens present (exact or fuzzy ≤1 edit) */
+const ACCOUNT_TOKENS = ['lagos', 'school', 'programming'] as const;
+const ACCOUNT_NAME_LABEL = 'Lagos School of Programming';
 
 function Started3() {
   const dispatch = useDispatch<AppDispatch>();
@@ -63,6 +71,11 @@ function Started3() {
   const [needsReupload, setNeedsReupload] = useState<boolean>(false);
   const [showRaw, setShowRaw] = useState<boolean>(false);
 
+  // Account name verification (persisted)
+  const [accountNameOK, setAccountNameOK] = useState<boolean>(false);
+  const [accountNameMatched, setAccountNameMatched] = useState<string[]>([]);
+  const [accountNameSnippet, setAccountNameSnippet] = useState<string>('');
+
   // WhatsApp flow controls
   const [shareStartedAt, setShareStartedAt] = useState<number | null>(null);
   const [shareConfirmed, setShareConfirmed] = useState<boolean>(false);
@@ -77,7 +90,7 @@ function Started3() {
     if (course.courseId) dispatch(fetchCourseDetail(course.courseId));
   }, [course.courseId, dispatch]);
 
-  // Restore progress
+  // Restore progress (now includes account-name state)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -90,6 +103,9 @@ function Started3() {
         receiptHasAmount: boolean;
         shareStartedAt?: number | null;
         shareConfirmed?: boolean;
+        accountNameOK?: boolean;
+        accountNameMatched?: string[];
+        accountNameSnippet?: string;
       };
       setIsPartPay(Boolean(s.isPartPay));
       setAmount(String(s.amount ?? ''));
@@ -98,11 +114,14 @@ function Started3() {
       setReceiptHasAmount(Boolean(s.receiptHasAmount));
       setShareStartedAt(s.shareStartedAt ?? null);
       setShareConfirmed(Boolean(s.shareConfirmed));
+      setAccountNameOK(Boolean(s.accountNameOK));
+      setAccountNameMatched(Array.isArray(s.accountNameMatched) ? s.accountNameMatched : []);
+      setAccountNameSnippet(String(s.accountNameSnippet ?? ''));
       if (s.receiptText) setNeedsReupload(true);
     } catch {}
   }, []);
 
-  // Persist progress
+  // Persist progress (now includes account-name state)
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -115,10 +134,24 @@ function Started3() {
           receiptHasAmount,
           shareStartedAt,
           shareConfirmed,
+          accountNameOK,
+          accountNameMatched,
+          accountNameSnippet,
         })
       );
     } catch {}
-  }, [isPartPay, amount, receiptText, matchSnippet, receiptHasAmount, shareStartedAt, shareConfirmed]);
+  }, [
+    isPartPay,
+    amount,
+    receiptText,
+    matchSnippet,
+    receiptHasAmount,
+    shareStartedAt,
+    shareConfirmed,
+    accountNameOK,
+    accountNameMatched,
+    accountNameSnippet,
+  ]);
 
   // Sync amount for Full Payment
   useEffect(() => {
@@ -154,6 +187,9 @@ function Started3() {
     setReceiptHasAmount(false);
     setMatchSnippet('');
     setMatchMode(undefined);
+    setAccountNameOK(false);
+    setAccountNameMatched([]);
+    setAccountNameSnippet('');
     setNeedsReupload(false);
     revokePreview();
     if (!f) return;
@@ -185,13 +221,11 @@ function Started3() {
     setShareStartedAt(now);
     setShareConfirmed(false);
     try {
-      // persist immediately so it's available when user returns
       const raw = localStorage.getItem(LS_KEY);
       const s = raw ? JSON.parse(raw) : {};
       localStorage.setItem(LS_KEY, JSON.stringify({ ...s, shareStartedAt: now, shareConfirmed: false }));
     } catch {}
 
-    // Try native share first (mobile). Keep same-tab behavior for WA web as fallback.
     try {
       // @ts-ignore optional API
       if (navigator.canShare && navigator.canShare({ files: [proof] })) {
@@ -199,11 +233,8 @@ function Started3() {
         toast.success('Share dialog opened. Please send on WhatsApp.');
         return;
       }
-    } catch {
-      /* ignore; fallback below */
-    }
+    } catch {}
 
-    // Fallback: open WhatsApp Web in SAME TAB. User returns via Back.
     window.location.href = `https://wa.me/${WHATSAPP_E164}?text=${encoded}`;
   };
 
@@ -212,6 +243,7 @@ function Started3() {
     return Number.isFinite(n) ? Math.floor(n) : 0;
   }, [amount]);
 
+  // Part-pay amount validation
   useEffect(() => {
     if (!isPartPay) {
       setAmountError('');
@@ -226,17 +258,27 @@ function Started3() {
     }
   }, [amount, isPartPay, normalizedAmount]);
 
+  // Amount + account-name verification when text/amount changes
   useEffect(() => {
     if (!receiptText || !normalizedAmount) {
       setReceiptHasAmount(false);
       setMatchSnippet('');
       setMatchMode(undefined);
+      setAccountNameOK(false);
+      setAccountNameMatched([]);
+      setAccountNameSnippet('');
       return;
     }
+
     const res = verifyAmount(receiptText, normalizedAmount);
     setReceiptHasAmount(res.matched);
     setMatchSnippet(res.snippet || '');
     setMatchMode(res.mode);
+
+    const nameRes = verifyAccountName(receiptText);
+    setAccountNameOK(nameRes.ok);
+    setAccountNameMatched(nameRes.matchedTokens);
+    setAccountNameSnippet(nameRes.snippet || '');
   }, [receiptText, normalizedAmount]);
 
   const rerunVerification = () => {
@@ -250,7 +292,15 @@ function Started3() {
     }
     const { matched } = verifyAmount(receiptText, normalizedAmount);
     setReceiptHasAmount(matched);
-    toast[matched ? 'success' : 'error'](matched ? 'Verified against receipt.' : 'Amount not found on receipt.');
+
+    const nameRes = verifyAccountName(receiptText);
+    setAccountNameOK(nameRes.ok);
+    setAccountNameMatched(nameRes.matchedTokens);
+    setAccountNameSnippet(nameRes.snippet || '');
+
+    toast[
+      matched && nameRes.ok ? 'success' : 'error'
+    ](matched && nameRes.ok ? 'Verified against receipt.' : 'Verification failed: amount and/or account name.');
   };
 
   const handleAmountInput = (e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value);
@@ -274,6 +324,10 @@ function Started3() {
     }
     if (!receiptHasAmount) {
       toast.error('Receipt does not show the typed amount yet.');
+      return;
+    }
+    if (!accountNameOK) {
+      toast.error(`Receipt account name must include at least two of: ${ACCOUNT_NAME_LABEL}.`);
       return;
     }
 
@@ -429,6 +483,9 @@ function Started3() {
                         <button type="button" className="h-8 px-3 rounded-md border text-[12px]" onClick={() => copyToClipboard('Zenith', 'Bank')}>Copy</button>
                       </div>
                     </div>
+                    <p className="text-[11px] text-gray-500 mt-2">
+                      Receipt must include at least two of: <b>Lagos</b>, <b>School</b>, <b>Programming</b> (fuzzy match allowed).
+                    </p>
                   </div>
                 </div>
 
@@ -458,6 +515,7 @@ function Started3() {
                     {parsing && <span className="text-gray-600">Reading receipt…</span>}
                     {!parsing && (proof || receiptText) && (
                       <>
+                        {/* Amount status */}
                         {receiptHasAmount ? (
                           <div className="space-y-1">
                             <span className="text-green-700">
@@ -479,6 +537,27 @@ function Started3() {
                               : 'Receipt does not show the typed amount yet.'}
                           </span>
                         )}
+
+                        {/* Account name status */}
+                        <div className="mt-2">
+                          {accountNameOK ? (
+                            <span className="text-green-700">
+                              ✓ Account name matches ({accountNameMatched.join(', ')}).
+                            </span>
+                          ) : (
+                            <span className="text-red-700">
+                              Account name not confirmed. Must include at least two of: Lagos, School, Programming.
+                            </span>
+                          )}
+                          {accountNameSnippet && (
+                            <div className="mt-1">
+                              <div className="text-gray-500">Name snippet:</div>
+                              <pre className="mt-0.5 bg-gray-50 border rounded px-2 py-1 text-[10px] whitespace-pre-wrap break-words">
+{accountNameSnippet}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -572,10 +651,7 @@ function Started3() {
 
 export default Started3;
 
-/* ================= Helpers (unchanged matching from previous step) ================= */
-
-type VerifyMode = 'strict' | 'loose' | 'fuzzy' | 'digits' | 'words';
-type VerifyResult = { matched: boolean; snippet?: string; mode?: VerifyMode };
+/* ================= Helpers (amount + fuzzy name check) ================= */
 
 function verifyAmount(text: string, amount: number): VerifyResult {
   const strictNorm = normalizeOcrText(text);
@@ -620,6 +696,74 @@ function verifyAmount(text: string, amount: number): VerifyResult {
   }
 
   return { matched: false };
+}
+
+/* === Account name verifier with fuzzy (≤1 edit) === */
+function verifyAccountName(text: string): { ok: boolean; matchedTokens: string[]; snippet?: string } {
+  const norm = normalizeForWords(text); // lowercased, punctuation removed, spaces collapsed
+  const wordsArr = norm.split(' ').filter(Boolean);
+  const wordsSet = new Set(wordsArr);
+
+  const hits: string[] = [];
+
+  for (const tok of ACCOUNT_TOKENS) {
+    // Exact hit
+    if (wordsSet.has(tok)) {
+      hits.push(capitalize(tok));
+      continue;
+    }
+    // Fuzzy hit (≤1 edit distance) against any word in the receipt (short-circuit on first)
+    const foundFuzzy = wordsArr.some((w) => isWithinOneEdit(w, tok));
+    if (foundFuzzy) hits.push(capitalize(tok));
+  }
+
+  // Snippet around first found word (exact or fuzzy)
+  let snippet = '';
+  const firstHitLower = hits[0]?.toLowerCase();
+  if (firstHitLower) {
+    // locate in array with fuzzy again to get an index
+    const idx = wordsArr.findIndex((w) => w === firstHitLower || isWithinOneEdit(w, firstHitLower));
+    if (idx >= 0) {
+      const start = Math.max(0, idx - 6);
+      const end = Math.min(wordsArr.length, idx + 7);
+      snippet = wordsArr.slice(start, end).join(' ');
+    }
+  }
+
+  return { ok: hits.length >= 2, matchedTokens: hits.slice(0, 3), snippet };
+}
+
+/* === ≤1 edit distance check (fast, early-exit). Handles insert/delete/substitute. === */
+function isWithinOneEdit(a: string, b: string): boolean {
+  if (a === b) return true;
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+
+  // Ensure a is the shorter (or equal)
+  if (la > lb) return isWithinOneEdit(b, a);
+
+  let i = 0, j = 0, edits = 0;
+  while (i < la && j < lb) {
+    if (a[i] === b[j]) {
+      i++; j++;
+      continue;
+    }
+    // mismatch
+    if (edits === 1) return false;
+    edits++;
+    if (la === lb) { // substitute
+      i++; j++;
+    } else { // insert into shorter (skip one in longer)
+      j++;
+    }
+  }
+  // Any remaining char in longer counts as at most one edit
+  if (j < lb || i < la) edits++;
+  return edits <= 1;
+}
+
+function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 // Money-like tokens (avoid IDs)
@@ -779,11 +923,17 @@ function numberToWords(num: number): string {
   return res.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+// === OCR safe for SSR/build ===
 async function extractTextFromFile(file: File): Promise<string> {
-  if (file.type === 'application/pdf') {
-    const pdfjsLib: any = await import('pdfjs-dist/build/pdf');
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  try {
+    if (file.type === 'application/pdf') {
+      const pdfjsLib: any = await import('pdfjs-dist/build/pdf');
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
     const data = await file.arrayBuffer();
     const doc = await pdfjsLib.getDocument({ data }).promise;
@@ -795,15 +945,15 @@ async function extractTextFromFile(file: File): Promise<string> {
       const content = await page.getTextContent();
       text += ' ' + content.items.map((it: any) => it.str ?? '').join(' ');
     }
-    return text;
-  }
+    return text.trim();
+    }
 
-  if (file.type.startsWith('image/')) {
-    const mod: any = await import('tesseract.js');
-    const Tesseract: any = mod.default ?? mod;
-    const { data } = await Tesseract.recognize(file, 'eng');
-    return data?.text ?? '';
-  }
-
+    if (file.type.startsWith('image/')) {
+      const mod: any = await import('tesseract.js');
+      const Tesseract: any = mod.default ?? mod;
+      const { data } = await Tesseract.recognize(file, 'eng');
+      return (data?.text ?? '').trim();
+    }
+  } catch {}
   return '';
 }

@@ -1,12 +1,14 @@
 // ====================================================================
-// 1) lasop-server/src/routes/verifyOtp/sendVerificationCode.js
+// lasop-server/src/routes/verifyOtp/sendVerificationCode.js
+// Robust SMTP with IPv4 DNS + 465/587 fallbacks
 // ====================================================================
 require('dotenv').config();
 const path = require('path');
+const dns = require('dns');
 const VerifyOtp = require('../../models/verification');
 const nodemailer = require('nodemailer');
 
-const assetPath = (file) => path.join(process.cwd(), 'public', file); // why: stable path
+const assetPath = (file) => path.join(process.cwd(), 'public', file);
 
 const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 const bool = (v, d = false) => {
@@ -15,22 +17,6 @@ const bool = (v, d = false) => {
   if (s === '0' || s === 'false') return false;
   return d;
 };
-
-async function makeSmtpTransporter() {
-  const host = (process.env.SMTP_HOST || '').trim();
-  const user = (process.env.SMTP_USER || '').trim();
-  const pass = (process.env.SMTP_PASS || '').trim();
-  if (!host || !user || !pass) throw new Error('SMTP not configured');
-  const port = Number(process.env.SMTP_PORT || 587);
-  const secure = bool(process.env.SMTP_SECURE, port === 465);
-  const tls = {};
-  const sni = (process.env.SMTP_TLS_SERVERNAME || '').trim();
-  if (sni) tls.servername = sni;
-  if (process.env.SMTP_REJECT_UNAUTHORIZED != null) tls.rejectUnauthorized = bool(process.env.SMTP_REJECT_UNAUTHORIZED, true);
-  const t = nodemailer.createTransport({ host, port, secure, auth: { user, pass }, tls });
-  await t.verify();
-  return t;
-}
 
 const P = (html) => `<p style="margin:0 0 12px 0;font-size:14px;line-height:22px;color:#3a4152;">${html}</p>`;
 function signatureHtml() {
@@ -82,6 +68,80 @@ function otpHtml({ name, code, ttlMinutes }) {
   return wrapHtml({ title: 'Your verification code', tagRight: 'Verification', bodyHtml: body });
 }
 
+/** Prefer IPv4: some hosts resolve AAAA first; many networks block outbound IPv6 */
+function lookupIPv4(hostname) {
+  return new Promise((resolve, reject) => {
+    dns.lookup(hostname, { family: 4 }, (err, address) => (err ? reject(err) : resolve(address)));
+  });
+}
+
+function buildTransportOptions({ host, port, secure, user, pass, sni, rejectUnauthorized, hostIp }) {
+  return {
+    host: hostIp || host,              // connect to IPv4 address directly if resolved
+    port,
+    secure,                            // 465 => true; 587 => false (STARTTLS)
+    auth: { user, pass },
+    name: undefined,                   // let nodemailer decide
+    tls: {
+      servername: sni || host,         // SNI for proper cert when using hostIp
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized,
+    },
+    connectionTimeout: 12_000,
+    greetingTimeout: 8_000,
+    socketTimeout: 15_000,
+    // pool: false,                    // default false; keep it simple
+    // debug: true,                    // enable for deep SMTP logs
+  };
+}
+
+async function makeSmtpTransporter() {
+  const host = (process.env.SMTP_HOST || '').trim();
+  const user = (process.env.SMTP_USER || '').trim();
+  const pass = (process.env.SMTP_PASS || '').trim();
+  if (!host || !user || !pass) throw new Error('SMTP not configured');
+
+  const envPort = Number(process.env.SMTP_PORT || 0);
+  const envSecure = process.env.SMTP_SECURE;
+  const sni = (process.env.SMTP_TLS_SERVERNAME || '').trim();
+  const rejectUnauthorized = bool(process.env.SMTP_REJECT_UNAUTHORIZED, true);
+
+  // Resolve IPv4 eagerly to avoid IPv6 timeouts / DNS vagaries
+  let hostIp = null;
+  try { hostIp = await lookupIPv4(host); } catch {}
+
+  // Build candidate configs: try env first, then sane fallbacks
+  const candidates = [];
+  const primaryPort = envPort || 587;
+  const primarySecure = envSecure != null ? bool(envSecure, primaryPort === 465) : primaryPort === 465;
+  candidates.push({ port: primaryPort, secure: primarySecure });
+
+  // If env was 465, also try 587
+  if (!(primaryPort === 587 && primarySecure === false)) {
+    candidates.push({ port: 587, secure: false });
+  }
+  // If env was 587, also try 465
+  if (!(primaryPort === 465 && primarySecure === true)) {
+    candidates.push({ port: 465, secure: true });
+  }
+
+  let lastErr;
+  for (const c of candidates) {
+    const opts = buildTransportOptions({
+      host, port: c.port, secure: c.secure, user, pass, sni, rejectUnauthorized, hostIp,
+    });
+    try {
+      const t = nodemailer.createTransport(opts);
+      // Soft verify: try but don't block send if verify times out
+      try { await Promise.race([t.verify(), new Promise((_, r) => setTimeout(() => r(new Error('verify-timeout')), 5000))]); } catch {}
+      return t; // good enough to attempt send
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('All SMTP connection attempts failed');
+}
+
 module.exports = async function sendVerificationCode(req, res) {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -99,7 +159,7 @@ module.exports = async function sendVerificationCode(req, res) {
     );
 
     const transporter = await makeSmtpTransporter();
-    const fromEmail = 'no-reply@lasop.net';
+    const fromEmail = (process.env.FROM_EMAIL || 'no-reply@lasop.net').trim();
     const fromName = (process.env.FROM_NAME || 'LASOP').trim();
 
     await transporter.sendMail({
@@ -110,9 +170,7 @@ module.exports = async function sendVerificationCode(req, res) {
       html: otpHtml({ name, code, ttlMinutes }),
       headers: { 'Auto-Submitted': 'auto-generated', 'X-Auto-Response-Suppress': 'All', Precedence: 'bulk' },
       envelope: { from: fromEmail, to: email },
-      attachments: [
-        { filename: 'lasop.png', path: assetPath('lasop.png'), cid: 'logo@lasop' },
-      ],
+      attachments: [{ filename: 'lasop.png', path: assetPath('lasop.png'), cid: 'logo@lasop' }],
     });
 
     const payload = { message: 'Verification code sent', provider: 'custom-smtp', expiresInMinutes: ttlMinutes, data: { email } };

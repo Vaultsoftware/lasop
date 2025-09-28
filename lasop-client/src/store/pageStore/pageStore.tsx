@@ -1,4 +1,6 @@
-// File: src/store/pageStore/pageStore.ts
+// ==================================================
+// File: src/store/pageStore/pageStore.ts  (FULL FILE)
+// ==================================================
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface ProgramSelection {
@@ -130,4 +132,5 @@ export const {
   updateTab,
 } = pageStoreSlice.actions;
 
+export type ClassroomTab = InitialState["classroomTab"]; // ✅ export the union type
 export default pageStoreSlice.reducer;

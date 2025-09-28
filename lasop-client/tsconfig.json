@@ -1,6 +1,4 @@
-// ==================================================
-// File: tsconfig.json  (replace with this)
-// ==================================================
+// File: tsconfig.json
 {
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -17,8 +15,9 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": { "@/*": ["./src/*"] },
+    "baseUrl": ".",                        // ✅ add this so @/* resolves
     "target": "ES2017",
-    "types": ["react", "react-dom", "node"] // ✅ fixes JSX underlines
+    "types": ["react", "react-dom", "node"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/scripts/delete-dec-cohorts.ts"],
   "exclude": ["node_modules"]
