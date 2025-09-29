@@ -42,7 +42,7 @@ type Blog = {
   createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+const API = process.env.NEXT_PUBLIC_API_URL || '' ;
 
 /** Excerpt helper: returns truncated text and if it needs "continue". */
 function makeExcerpt(text: string | undefined, words = 100) {
@@ -557,7 +557,16 @@ function LandMain() {
         <div className="events_body grid md:grid-cols-3 xsm:grid-cols-2 gap-6">
           {(blogs ?? []).length > 0
             ? (blogs as Blog[]).map((b) => {
-                const img = b.images?.[0]?.url ? `${API}${b.images[0].url}` : null;
+                // ====== ONLY CHANGE: robust absolute URL for blog image ======
+                const raw = b.images?.[0]?.url || '';
+                const base =
+                  (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
+                  (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+                const img = raw
+                  ? (/^https?:\/\//i.test(raw) ? raw : `${base}${raw.startsWith('/') ? '' : '/'}${raw}`)
+                  : null;
+                // =============================================================
+
                 const created = new Date(b.createdAt);
                 const date = created.toLocaleDateString();
                 const time = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

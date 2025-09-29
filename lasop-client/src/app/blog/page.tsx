@@ -17,10 +17,21 @@ type Blog = {
   createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+const RAW_API = process.env.NEXT_PUBLIC_API_URL || '';
+const API = RAW_API.replace(/\/+$/, '');
+const IMAGE_BASE =
+  (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
+  API.replace(/\/api(?:\/v\d+)?$/i, '');
+
+function toImg(p: string): string {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  const path = p.startsWith('/') ? p : `/${p}`;
+  return `${IMAGE_BASE}${path}`;
+}
+
 const PER_PAGE = 5;
 
-/** Return excerpt and whether it was truncated beyond `words`. */
 function makeExcerpt(text: string | undefined, words = 100): { excerpt: string; needsMore: boolean } {
   const clean = (text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return { excerpt: '', needsMore: false };
@@ -29,7 +40,6 @@ function makeExcerpt(text: string | undefined, words = 100): { excerpt: string; 
   return { excerpt: needsMore ? tokens.slice(0, words).join(' ') + '…' : clean, needsMore };
 }
 
-/** Rough reading-time in minutes @200wpm. */
 function readingTime(text: string | undefined): number {
   const w = (text || '').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.ceil(w / 200));
@@ -60,11 +70,9 @@ export default function BlogListPage() {
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
 
-  // current page from URL (defaults to 1)
   const pageFromUrl = Number(searchParams.get('page') || '1');
   const [page, setPage] = React.useState<number>(Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1);
 
-  // keep local page in sync if user navigates back/forward
   React.useEffect(() => {
     const p = Number(searchParams.get('page') || '1');
     setPage(Number.isFinite(p) && p > 0 ? p : 1);
@@ -87,36 +95,26 @@ export default function BlogListPage() {
     })();
   }, []);
 
-  // filter by search query
   const ql = q.toLowerCase();
-  const filtered = data.filter((b) =>
-    (b.title || '').toLowerCase().includes(ql) ||
-    (b.content || '').toLowerCase().includes(ql)
+  const filtered = data.filter(
+    (b) => (b.title || '').toLowerCase().includes(ql) || (b.content || '').toLowerCase().includes(ql)
   );
 
-  // pagination math
-  const totalPages =
-    filtered.length <= PER_PAGE ? 1 : 1 + Math.ceil((filtered.length - PER_PAGE) / PER_PAGE);
-
-  // clamp page to [1, totalPages]
+  const totalPages = filtered.length <= PER_PAGE ? 1 : 1 + Math.ceil((filtered.length - PER_PAGE) / PER_PAGE);
   const safePage = Math.min(Math.max(page, 1), Math.max(totalPages, 1));
 
-  const featured = filtered[0]; // first post
+  const featured = filtered[0];
   const remaining = filtered.slice(1);
 
-  // slice posts for current page
   let gridItems: Blog[] = [];
   if (safePage === 1) {
-    // show first + next (PER_PAGE - 1)
     gridItems = remaining.slice(0, Math.max(PER_PAGE - 1, 0));
   } else {
-    // items already consumed on page 1 from remaining:
     const consumed = Math.max(PER_PAGE - 1, 0);
     const offset = consumed + (safePage - 2) * PER_PAGE;
     gridItems = remaining.slice(offset, offset + PER_PAGE);
   }
 
-  // navigate helper (preserve scroll + clean URL)
   const goToPage = (p: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (p <= 1) params.delete('page');
@@ -124,7 +122,6 @@ export default function BlogListPage() {
     router.push(`?${params.toString()}`, { scroll: true });
   };
 
-  // when search changes, reset to page 1
   const onSearchChange = (val: string) => {
     setQ(val);
     if (safePage !== 1) goToPage(1);
@@ -139,9 +136,7 @@ export default function BlogListPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-sky-500 to-cyan-400" />
         <div className="relative md:main px-[30px] py-14 text-white">
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">Insights & Stories</h1>
-          <p className="mt-2 max-w-2xl text-white/90">
-            Learn with our latest articles, tutorials, and announcements.
-          </p>
+          <p className="mt-2 max-w-2xl text-white/90">Learn with our latest articles, tutorials, and announcements.</p>
 
           <form onSubmit={(e) => e.preventDefault()} className="mt-6 max-w-xl">
             <label className="flex items-center gap-2 rounded-2xl bg-white/10 ring-1 ring-white/30 backdrop-blur px-3 h-12 focus-within:ring-2 focus-within:ring-white">
@@ -159,26 +154,24 @@ export default function BlogListPage() {
         </div>
       </section>
 
-      {/* Featured card (only page 1 and if exists) */}
+      {/* Featured card (no default underline; underline on hover for title only) */}
       <section className="md:main px-[30px] -mt-10">
         {safePage === 1 && featured && (
           <Link
             href={`/blog/${featured._id}`}
-            className="group block overflow-hidden rounded-3xl border bg-white shadow-xl hover:shadow-2xl transition"
+            className="group no-underline block overflow-hidden rounded-3xl border bg-white shadow-xl hover:shadow-2xl transition"
           >
             <div className="grid md:grid-cols-2">
               <div className="relative">
                 {featured.images?.[0] ? (
                   <img
-                    src={`${API}${featured.images[0].url}`}
+                    src={toImg(featured.images[0].url)}
                     alt={featured.title}
                     loading="lazy"
                     className="h-72 md:h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-72 md:h-full w-full grid place-items-center bg-gray-100 text-gray-400">
-                    No image
-                  </div>
+                  <div className="h-72 md:h-full w-full grid place-items-center bg-gray-100 text-gray-400">No image</div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
@@ -200,8 +193,7 @@ export default function BlogListPage() {
                   const { excerpt, needsMore } = makeExcerpt(featured.content, 100);
                   return (
                     <p className="mt-4 text-gray-700">
-                      {excerpt}{' '}
-                      {needsMore && <span className="font-semibold text-indigo-700">Continue reading →</span>}
+                      {excerpt} {needsMore && <span className="font-semibold text-indigo-700">Continue reading →</span>}
                     </p>
                   );
                 })()}
@@ -217,7 +209,9 @@ export default function BlogListPage() {
 
         {loading ? (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           <>
@@ -230,26 +224,17 @@ export default function BlogListPage() {
                     key={blog._id}
                     className="break-inside-avoid mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition"
                   >
-                    <Link href={`/blog/${blog._id}`} className="block">
+                    <Link href={`/blog/${blog._id}`} className="group no-underline block">
                       {img ? (
-                        <img
-                          className="w-full h-52 object-cover"
-                          src={`${API}${img.url}`}
-                          alt={blog.title}
-                          loading="lazy"
-                        />
+                        <img className="w-full h-52 object-cover" src={toImg(img.url)} alt={blog.title} loading="lazy" />
                       ) : (
-                        <div className="w-full h-52 bg-gray-100 grid place-items-center text-gray-400">
-                          No image
-                        </div>
+                        <div className="w-full h-52 bg-gray-100 grid place-items-center text-gray-400">No image</div>
                       )}
                     </Link>
 
                     <div className="p-4">
-                      <Link href={`/blog/${blog._id}`} className="group">
-                        <h3 className="text-lg font-semibold tracking-tight group-hover:underline">
-                          {blog.title}
-                        </h3>
+                      <Link href={`/blog/${blog._id}`} className="group no-underline">
+                        <h3 className="text-lg font-semibold tracking-tight group-hover:underline">{blog.title}</h3>
                       </Link>
 
                       <div className="mt-2 flex items-center gap-4 text-[12px] text-gray-600">
@@ -268,7 +253,7 @@ export default function BlogListPage() {
                         {needsMore && (
                           <Link
                             href={`/blog/${blog._id}`}
-                            className="font-semibold text-indigo-700 hover:underline"
+                            className="font-semibold text-indigo-700 hover:underline no-underline"
                             aria-label={`Continue reading ${blog.title}`}
                           >
                             Continue reading →
@@ -281,14 +266,9 @@ export default function BlogListPage() {
               })}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <nav className="mt-8 flex items-center justify-center gap-2" aria-label="Pagination">
-                <button
-                  onClick={() => goToPage(safePage - 1)}
-                  disabled={safePage <= 1}
-                  className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50"
-                >
+                <button onClick={() => goToPage(safePage - 1)} disabled={safePage <= 1} className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50">
                   Prev
                 </button>
 
@@ -297,19 +277,13 @@ export default function BlogListPage() {
                     key={p}
                     onClick={() => goToPage(p)}
                     aria-current={p === safePage ? 'page' : undefined}
-                    className={`px-3 h-10 rounded-xl border ${
-                      p === safePage ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'
-                    }`}
+                    className={`px-3 h-10 rounded-xl border ${p === safePage ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
                   >
                     {p}
                   </button>
                 ))}
 
-                <button
-                  onClick={() => goToPage(safePage + 1)}
-                  disabled={safePage >= totalPages}
-                  className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50"
-                >
+                <button onClick={() => goToPage(safePage + 1)} disabled={safePage >= totalPages} className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50">
                   Next
                 </button>
               </nav>
@@ -334,10 +308,7 @@ export default function BlogListPage() {
                 placeholder="you@example.com"
                 className="h-12 w-full rounded-xl border px-4 outline-none focus:ring-2 focus:ring-indigo-200"
               />
-              <button
-                type="submit"
-                className="h-12 px-6 rounded-xl font-semibold bg-gray-900 text-white hover:opacity-90"
-              >
+              <button type="submit" className="h-12 px-6 rounded-xl font-semibold bg-gray-900 text-white hover:opacity-90">
                 Join
               </button>
             </form>

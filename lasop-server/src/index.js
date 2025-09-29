@@ -1,11 +1,12 @@
-// src/index.js (server entry)
+// File: src/index.js
 require('dotenv').config();
 
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const path = require("path"); // why: serve images from /public
+const path = require("path");
+const fs = require("fs");
 const connection = require("./config/connection");
 
 /* ============================ Route imports ============================ */
@@ -107,16 +108,12 @@ const updateAssessmentStatus = require("./routes/status/assessmentStatus");
 const updateStudentWithoutOtherName = require("./routes/student/updateStudentOther");
 const devPeekOtp = require('./routes/verifyOtp/devPeekOtp');
 
-
 // Blogs
-
-// Blog
 const blogPostBatch = require('./routes/blog/postBlogBatch');
 const blogGet = require('./routes/blog/getBlog');
 const blogGetId = require('./routes/blog/getBlogId');
 const blogUpdate = require('./routes/blog/updateBlog');
 const blogDelete = require('./routes/blog/delBlog');
-
 
 // ✅ GridFS certificate routes
 const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
@@ -197,8 +194,23 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 /* ------------------------ Static assets (EMAIL) -------------------- */
-// why: allow emails to load images via absolute URLs (e.g., https://host/lasop.png)
+// Absolute assets served from /public
 app.use(express.static(path.join(__dirname, '..', 'public'), {
+  maxAge: '7d',
+  etag: true,
+}));
+
+/* ------------------------ Static assets (UPLOADS) ------------------- */
+// Serve uploaded media (e.g., blog images) at /uploads/**
+const UPLOADS_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch {}
+}
+
+app.use('/uploads', express.static(UPLOADS_DIR, {
   maxAge: '7d',
   etag: true,
 }));
@@ -228,14 +240,12 @@ app.delete('/deleteStudent/:id', delStudent);
 app.get('/studentDetails/:id', getStudentDet);
 app.get('/getStudent', getStudent);
 
-
 /* ============================== Blog ============================== */
 app.post('/blog/batch', blogPostBatch);
 app.get('/blog', blogGet);
 app.get('/blog/:id', blogGetId);
 app.put('/blog/:id', blogUpdate);
 app.delete('/blog/:id', blogDelete);
-
 
 /* =========================== Assessment ========================== */
 app.post('/postAssessment', postAssessment);
@@ -293,7 +303,7 @@ if (requireAuth) {
 
 app.get('/files/:id', streamFile);
 
-/* ================================ Exam ========================= */
+/* ================================ Exam ========================== */
 app.post('/postExam', authToken, postExam);
 app.get('/getExam', authToken, getExam);
 app.put('/updateExam/:id', authToken, updateExam);

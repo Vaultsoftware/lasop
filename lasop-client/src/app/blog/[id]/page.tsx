@@ -1,4 +1,3 @@
-
 // File: src/app/blog/[id]/page.tsx
 'use client';
 
@@ -18,7 +17,18 @@ type Blog = {
   updatedAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+const RAW_API = process.env.NEXT_PUBLIC_API_URL || '';
+const API = RAW_API.replace(/\/+$/, '');
+const IMAGE_BASE =
+  (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
+  API.replace(/\/api(?:\/v\d+)?$/i, '');
+
+function toImg(p: string): string {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  const path = p.startsWith('/') ? p : `/${p}`;
+  return `${IMAGE_BASE}${path}`;
+}
 
 function readingTime(text: string | undefined): number {
   const w = (text || '').trim().split(/\s+/).filter(Boolean).length;
@@ -85,11 +95,11 @@ export default function BlogDetailPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
 
-      {/* Banner with overlay */}
-      <section className="relative h-[40vh] min-h-[280px] max-h-[520px]">
+      {/* Banner with overlay; added top padding so title clears navbar */}
+      <section className="relative h-[40vh] min-h-[320px] max-h-[560px] pt-24 md:pt-28">
         {banner ? (
           <img
-            src={`${API}${banner.url}`}
+            src={toImg(banner.url)}
             alt={data.title}
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
@@ -100,7 +110,9 @@ export default function BlogDetailPage() {
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative md:main px-[30px] h-full grid content-end pb-8">
           <div className="max-w-3xl text-white">
-            <Link href="/blog" className="text-sm text-white/80 hover:text-white">← Back to Blog</Link>
+            <Link href="/blog" className="text-sm text-white/80 hover:text-white no-underline">
+              ← Back to Blog
+            </Link>
             <h1 className="mt-2 text-3xl md:text-5xl font-extrabold leading-tight">{data.title}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-white/90">
               <span className="inline-flex items-center gap-2">
@@ -116,25 +128,18 @@ export default function BlogDetailPage() {
         </div>
       </section>
 
-      {/* Gallery: all images */}
+      {/* Gallery */}
       <section className="md:main px-[30px] py-8">
         {Array.isArray(data.images) && data.images.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.images.map((img) => (
               <figure key={img.filename} className="rounded-2xl overflow-hidden border bg-white">
-                <img
-                  src={`${API}${img.url}`}
-                  alt={data.title}
-                  className="w-full h-60 object-cover"
-                  loading="lazy"
-                />
+                <img src={toImg(img.url)} alt={data.title} className="w-full h-60 object-cover" loading="lazy" />
               </figure>
             ))}
           </div>
         ) : (
-          <div className="w-full h-56 rounded-2xl bg-gray-100 grid place-items-center text-gray-400">
-            No image
-          </div>
+          <div className="w-full h-56 rounded-2xl bg-gray-100 grid place-items-center text-gray-400">No image</div>
         )}
       </section>
 
@@ -145,10 +150,9 @@ export default function BlogDetailPage() {
         </article>
       </section>
 
-      {/* Simple JSON-LD for better SEO */}
+      {/* JSON-LD */}
       <script
         type="application/ld+json"
-        // why: helps search engines understand article; no PII
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
@@ -156,7 +160,7 @@ export default function BlogDetailPage() {
             headline: data.title,
             datePublished: data.createdAt,
             dateModified: data.updatedAt,
-            image: (data.images || []).map((i) => `${API}${i.url}`),
+            image: (data.images || []).map((i) => toImg(i.url)),
           }),
         }}
       />

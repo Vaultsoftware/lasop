@@ -350,8 +350,14 @@ function Started3() {
       const response = await dispatch(postStudent(payload as any));
       if (postStudent.fulfilled.match(response)) {
         localStorage.removeItem(LS_KEY);
-        toast.success('Application complete');
-        router.push('/login');
+        // show success FIRST so the user actually sees it; navigate when toast closes
+        toast.success('Application complete', {
+          autoClose: 2500, // brief; avoids user missing it
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          onClose: () => router.push('/login'), // navigate after toast
+        });
       } else {
         toast.error(response.error?.message || 'Failed to complete application.');
       }
@@ -815,7 +821,7 @@ function canonicalDigits(s: string): string {
   return unicodeSpaceCollapse(s)
     .normalize('NFKD')
     .replace(/\u0660/g, '0').replace(/\u0661/g, '1').replace(/\u0662/g, '2').replace(/\u0663/g, '3').replace(/\u0664/g, '4')
-    .replace(/\u0665/g, '5').replace(/\u0666/g, '6').replace(/\u0667/g, '7').replace(/\u0668/g, '8').replace(/\u0669/g, '9')
+    .replace(/\u0665/g, '5').replace(/\u0666/g, '6').replace(/\u0667/g, '7').replace(/\u0668/g, '8').replace(/\u06F9/g, '9')
     .replace(/\u06F0/g, '0').replace(/\u06F1/g, '1').replace(/\u06F2/g, '2').replace(/\u06F3/g, '3').replace(/\u06F4/g, '4')
     .replace(/\u06F5/g, '5').replace(/\u06F6/g, '6').replace(/\u06F7/g, '7').replace(/\u06F8/g, '8').replace(/\u06F9/g, '9')
     .replace(/O/g, '0').replace(/o/g, '0');

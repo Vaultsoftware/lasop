@@ -14,7 +14,18 @@ type BlogDoc = {
   createdAt?: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+const RAW_API = process.env.NEXT_PUBLIC_API_URL || '';
+const API = RAW_API.replace(/\/+$/, '');
+const IMAGE_BASE =
+  (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
+  API.replace(/\/api(?:\/v\d+)?$/i, '');
+
+function toImg(p: string): string {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  const path = p.startsWith('/') ? p : `/${p}`;
+  return `${IMAGE_BASE}${path}`;
+}
 
 function BlogMain() {
   const [posts, setPosts] = React.useState<BlogDoc[]>([]);
@@ -83,7 +94,7 @@ function BlogMain() {
                   {firstImg ? (
                     <img
                       className="w-full h-[250px] object-cover rounded-md"
-                      src={`${API}${firstImg.url}`}
+                      src={toImg(firstImg.url)}
                       alt={blog.title}
                       loading="lazy"
                     />
