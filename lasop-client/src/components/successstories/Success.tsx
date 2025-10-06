@@ -42,7 +42,7 @@ const sliderStudents: SliderStudent[] = [
   { name: 'Peter Moradeyo', course: 'Fullstack software development', image: '/5.jpg', achievement: 'React Specialist', duration: '6 months', progress: 88, rating: 4.9 },
   { name: 'Justice Adiele', course: 'Fullstack software development', image: '/6.jpg', achievement: 'ML Engineer', duration: '6 months', progress: 90, rating: 4.8 },
   { name: 'Ridwan Ojikutu', course: 'Fullstack software development', image: '/7.jpg', achievement: 'Published 2 Apps', duration: '6 months', progress: 83, rating: 4.7 },
-  { name: 'MARVELOUS EMAMURHO', course: 'Fullstack software development', image: '/8.jpg', achievement: 'React and Django expert', duration: '6 months', progress: 89, rating: 4.8 },
+  { name: 'Marvelous Emamurho', course: 'Fullstack software development', image: '/8.jpg', achievement: 'React and Django expert', duration: '6 months', progress: 89, rating: 4.8 },
   { name: 'Idoga Ene', course: 'Cyber-Security', image: '/9.jpg', achievement: 'SOC Analyst Intern → Junior', duration: '6 months', progress: 87, rating: 4.7 },
   { name: 'Victoria Nwogo ', course: 'Backend', image: '/10.jpg', achievement: 'Node.js,Express.js,Sql', duration: '3 months', progress: 91, rating: 4.9 },
 ];
