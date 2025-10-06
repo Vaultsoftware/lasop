@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 type ObjectIdLike = string;
 
@@ -120,14 +121,14 @@ export default function CalendarMain() {
     const numbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
     return (
-      <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 sm:px-6">
         <div className="text-sm text-gray-600">
           Showing <span className="font-semibold">{totalCohorts === 0 ? 0 : startIndex + 1}</span>–
           <span className="font-semibold">{endIndex}</span> of{" "}
           <span className="font-semibold">{totalCohorts}</span> cohorts
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             className={`${btnBase} ${inactive} ${page === 1 ? disabled : ""}`}
@@ -165,22 +166,87 @@ export default function CalendarMain() {
   };
 
   return (
-    <main className="calendar_main w-full bg-[#DAE2FF] px-6 py-10 md:px-12">
-      <div className="mx-auto max-w-6xl overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+    <main className="calendar_main w-full bg-[#DAE2FF] px-4 sm:px-6 md:px-12 py-8 md:py-10">
+      <div className="mx-auto max-w-6xl rounded-lg border border-gray-200 bg-white shadow-lg">
         {loading && <div className="p-6 text-sm text-gray-600">Loading cohorts…</div>}
         {!loading && err && <div className="p-6 text-sm text-red-600">{err}</div>}
         {!loading && !err && totalCohorts === 0 && (
           <div className="p-6 text-sm text-gray-600">No cohorts available.</div>
         )}
 
+        {/* ===== Mobile Cards (< md) ===== */}
         {!loading && !err && totalCohorts > 0 && (
-          <>
-            <table className="min-w-full overflow-hidden rounded-lg">
+          <div className="block md:hidden">
+            <ul className="divide-y divide-gray-200">
+              {pageCohorts.map((coh) => {
+                const start = formatDate(coh.startDate);
+                const end = formatDate(coh.endDate);
+                const modes = (coh.mode ?? []).filter(Boolean);
+                const modesDisplay = modes.length ? modes.join(", ") : "Mode TBA";
+                const courseTitles = (coh.courseId ?? []).map(getCourseTitle);
+                const courseDisplay = courseTitles.length ? courseTitles.join(", ") : (coh.cohortName || "Cohort");
+                const admissionStatus = getAdmissionStatus(coh.createdAt, coh.startDate);
+                const isOpen = admissionStatus === "open";
+
+                return (
+                  <li key={coh._id} className="p-4">
+                    <div className="flex flex-col gap-1">
+                      <h3 className="text-base font-semibold text-gray-900">{courseDisplay}</h3>
+                      <p className="text-sm text-gray-600">{modesDisplay}</p>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <div className="text-gray-500">Start</div>
+                          <div className="font-medium">{start}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">End</div>
+                          <div className="font-medium">{end}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-3">
+                        {isOpen ? (
+                          <>
+                            <span className="inline-flex items-center rounded-md bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                              Admission open
+                            </span>
+                            <Link
+                              href={`/getStarted?cohortId=${encodeURIComponent(coh._id)}`}
+                              className="inline-flex items-center rounded-md bg-accent text-white px-3 py-2 text-xs font-semibold hover:opacity-90"
+                              aria-label={`Apply for ${courseDisplay}`}
+                            >
+                              Apply
+                            </Link>
+                          </>
+                        ) : (
+                          <span
+                            className="inline-flex items-center rounded-md bg-red-600 px-2.5 py-1 text-xs font-semibold text-white"
+                            aria-label="Admission closed"
+                          >
+                            Admission closed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <Pager />
+          </div>
+        )}
+
+        {/* ===== Desktop Table (md+) ===== */}
+        {!loading && !err && totalCohorts > 0 && (
+          <div className="hidden md:block overflow-x-auto rounded-b-lg">
+            <table className="min-w-full">
               <thead className="bg-accent text-white">
                 <tr>
                   <th className="border-r border-white/20 px-6 py-4 text-left text-base font-bold">Cohorts</th>
                   <th className="border-r border-white/20 px-6 py-4 text-left text-base font-bold">Start Date</th>
-                  <th className="px-6 py-4 text-left text-base font-bold">End Date</th>
+                  <th className="border-r border-white/20 px-6 py-4 text-left text-base font-bold">End Date</th>
+                  <th className="px-6 py-4 text-left text-base font-bold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-700">
@@ -194,9 +260,10 @@ export default function CalendarMain() {
                     courseTitles.length > 0 ? courseTitles.join(", ") : (coh.cohortName || "Cohort");
 
                   const admissionStatus = getAdmissionStatus(coh.createdAt, coh.startDate);
+                  const isOpen = admissionStatus === "open";
 
                   return (
-                    <tr key={coh._id} className="transition hover:bg-gray-50">
+                    <tr key={coh._id} className="transition hover:bg-gray-50 align-top">
                       <td className="border-r border-gray-200 px-6 py-4">
                         <div className="font-medium">{courseDisplay}</div>
                         <div className="mt-1 text-sm text-gray-500">{modesDisplay}</div>
@@ -214,19 +281,38 @@ export default function CalendarMain() {
                           </div>
                         )}
                         {admissionStatus === "closed" && (
-                          <button
-                            type="button"
-                            className="mt-2 inline-flex items-center rounded-md bg-red-600 px-2.5 py-1 text-xs font-semibold text-white"
-                            aria-label="Admission closed (after 1 month from start)"
-                            title="Admission closed (after 1 month from start)"
-                            disabled
+                          <div
+                            className="mt-2 inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700"
+                            aria-label="Admission closed"
+                            title="Admission closed"
                           >
                             Admission closed
-                          </button>
+                          </div>
                         )}
                       </td>
 
-                      <td className="px-6 py-4">{end}</td>
+                      <td className="border-r border-gray-200 px-6 py-4">{end}</td>
+
+                      <td className="px-6 py-4">
+                        {isOpen ? (
+                          <Link
+                            href={`/getStarted?cohortId=${encodeURIComponent(coh._id)}`}
+                            className="inline-flex items-center rounded-md bg-accent text-white px-3 py-2 text-sm font-semibold hover:opacity-90"
+                            aria-label={`Apply for ${courseDisplay}`}
+                          >
+                            Apply
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            className="inline-flex items-center rounded-md bg-gray-200 text-gray-600 px-3 py-2 text-sm font-semibold cursor-not-allowed"
+                            aria-label="Apply (disabled - admission closed)"
+                          >
+                            Apply
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -234,7 +320,7 @@ export default function CalendarMain() {
             </table>
 
             <Pager />
-          </>
+          </div>
         )}
       </div>
     </main>

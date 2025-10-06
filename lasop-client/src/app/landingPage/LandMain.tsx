@@ -25,6 +25,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import Image from 'next/image';
 import Link from 'next/link';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 /* Chat API helper to avoid lint on non-camelCase global */
 type TawkApi = { maximize: () => void; minimize?: () => void; toggle?: () => void };
@@ -42,7 +44,7 @@ type Blog = {
   createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || '' ;
+const API = process.env.NEXT_PUBLIC_API_URL || '';
 
 /** Excerpt helper: returns truncated text and if it needs "continue". */
 function makeExcerpt(text: string | undefined, words = 100) {
@@ -150,32 +152,28 @@ function LandMain() {
 
   /* ---- Backend blogs state ---- */
   const [blogs, setBlogs] = useState<Blog[] | null>(null);
-  const [blogsErr, setBlogsErr] = useState<string | null>(null);
+  const [, setBlogsErr] = useState<string | null>(null);
 
+  /* AOS init (UI only) */
+  useEffect(() => {
+    AOS.init({ duration: 700, easing: 'ease-out', once: true, offset: 40 });
+  }, []);
+  useEffect(() => {
+    AOS.refresh();
+  }, [cohortAd, blogs]);
+
+  /* === SHOW ONLY THE LATEST (SOONEST UPCOMING) COHORT FROM CALENDAR === */
   useEffect(() => {
     const now = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(now.getMonth() + 1);
-
-    const activeCohort = cohorts
+    const upcoming = (cohorts || [])
       .filter((coh) => {
-        if (coh.isActive) {
-          const startDate = new Date(coh.startDate);
-          return startDate >= now && startDate <= oneMonthLater;
-        }
-        return false;
+        if (!coh?.isActive) return false;
+        const startDate = new Date(coh.startDate);
+        return startDate >= now;
       })
-      .sort((a, b) => new Date(b.startDate).getMonth() - new Date(a.startDate).getMonth());
-
-    const adDisplay: CohortMain[] = [];
-    const pool = [...activeCohort];
-    while (adDisplay.length < 3 && pool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * pool.length);
-      const selectedCohort = pool.splice(randomIndex, 1)[0];
-      adDisplay.push(selectedCohort);
-    }
-
-    setCohortAd(adDisplay);
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      .slice(0, 1); // <<< single latest cohort only
+    setCohortAd(upcoming);
   }, [cohorts]);
 
   /* Fetch latest blogs for the "Upcoming Events, News & Blogs" section */
@@ -188,7 +186,6 @@ function LandMain() {
         if (!res.ok) throw new Error(await res.text());
         const json: Blog[] = await res.json();
 
-        // sort newest first and take first 3
         const sorted = (Array.isArray(json) ? json : [])
           .slice()
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -216,20 +213,69 @@ function LandMain() {
   const openLiveChat = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const api = getTawkApi();
     if (api?.maximize) {
-      e.preventDefault(); // why: keep user on page and open chat
+      e.preventDefault();
       api.maximize();
     }
   };
+
+  const visibleCohorts = cohortAd.slice(0, 1); // <<< render one card
 
   return (
     <main className="overflow-hidden">
       <section data-aos="fade-right" className="md:main py-[3rem] px-4 sm:px-6 md:px-[30px]">
         <div className="grid gap-5">
-          {cohortAd.slice(0, 3).map((coh, ind) => (
-            <div
-              key={ind}
-              className="next_cohort grid md:grid-cols-2 items-center px-4 sm:px-5 py-[30px] rounded-[5px] border border-accent w-full max-w-5xl mx-auto shadow-lg shadow-shadow"
-            >
+          {visibleCohorts.length > 0 ? (
+            visibleCohorts.map((coh, ind) => (
+              <div
+                key={ind}
+                className="next_cohort grid md:grid-cols-2 items-center px-4 sm:px-5 py-[30px] rounded-[5px] border border-accent w-full max-w-5xl mx-auto shadow-lg shadow-shadow"
+              >
+                <div className="cohort_cont grid w-full md:pr-[16px] p-6 md:border-r-2 md:border-b-0 border-b-2 border-shadow md:flex md:justify-between md:items-center gap-6">
+                  <div className="cohort_date w-full md:w-[70%]">
+                    <div className="cohort_head flex items-center gap-2">
+                      <FaRegCalendarAlt />
+                      <h3 className="text-base sm:text-lg">Next Cohort starts</h3>
+                    </div>
+                    <div className="cohort_body">
+                      <div className="cohort_start w-full">
+                        <h1 className="font-bold text-2xl sm:text-3xl md:text-[30px]">{formatDate(coh.startDate)}</h1>
+                        <span className="font-semibold text-[12px]">9:30 AM - 2:30 PM WAT</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1 text-[14px] mt-2 font-bold">
+                      {Array.isArray(coh.mode) &&
+                        coh.mode.map((mod, i) => (
+                          <React.Fragment key={i}>
+                            <span>{mod}</span>
+                            {i < coh.mode.length - 1 && <span>|</span>}
+                          </React.Fragment>
+                        ))}
+                    </div>
+                  </div>
+                  <div className="cohort_time">
+                    <Link
+                      href="/getStarted"
+                      className="flex w-[130px] h-[40px] bg-accent text-cyan-50 items-center justify-center rounded-md"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
+                <div className="next_cohort grid md:flex md:justify-between md:gap-2 gap-6 items-center w-full md:pl-[16px] p-6">
+                  <h4 className="font-semibold text-lg sm:text-xl md:text-[22px] md:w-[60%] w-full">
+                    Find another cohort that fits your schedule
+                  </h4>
+                  <Link
+                    href="/calendar"
+                    className="flex items-center justify-center rounded-md w-fit h-[40px] bg-transparent border-2 border-accent text-accent px-3"
+                  >
+                    See All Cohorts
+                  </Link>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="next_cohort grid md:grid-cols-2 items-center px-4 sm:px-5 py-[30px] rounded-[5px] border border-accent w-full max-w-5xl mx-auto shadow-lg shadow-shadow">
               <div className="cohort_cont grid w-full md:pr-[16px] p-6 md:border-r-2 md:border-b-0 border-b-2 border-shadow md:flex md:justify-between md:items-center gap-6">
                 <div className="cohort_date w-full md:w-[70%]">
                   <div className="cohort_head flex items-center gap-2">
@@ -238,17 +284,16 @@ function LandMain() {
                   </div>
                   <div className="cohort_body">
                     <div className="cohort_start w-full">
-                      <h1 className="font-bold text-2xl sm:text-3xl md:text-[30px]">{formatDate(coh.startDate)}</h1>
-                      <span className="font-semibold text-[12px]">9:30 AM - 2:30 PM WAT</span>
+                      <h1 className="font-bold text-2xl sm:text-3xl md:text-[30px]">No upcoming cohort this month</h1>
+                      <span className="font-semibold text-[12px]">Check other available cohorts</span>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1 text-[14px] mt-2 font-bold">
-                    {coh.mode.map((mod, i) => (
-                      <React.Fragment key={i}>
-                        <span>{mod}</span>
-                        {i < coh.mode.length - 1 && <span>|</span>}
-                      </React.Fragment>
-                    ))}
+                    <span>Online</span>
+                    <span>|</span>
+                    <span>Onsite</span>
+                    <span>|</span>
+                    <span>Hybrid</span>
                   </div>
                 </div>
                 <div className="cohort_time">
@@ -265,14 +310,14 @@ function LandMain() {
                   Find another cohort that fits your schedule
                 </h4>
                 <Link
-                  href="calendar"
+                  href="/calendar"
                   className="flex items-center justify-center rounded-md w-fit h-[40px] bg-transparent border-2 border-accent text-accent px-3"
                 >
                   See All Cohorts
                 </Link>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -292,11 +337,7 @@ function LandMain() {
             {learn.map((earn) => (
               <div key={earn.order} className="learn_list grid xsm:flex xsm:items-center gap-6">
                 <div data-aos="fade-right" className="learn_img w-full xsm:w-[40%]">
-                  <Image
-                    className="w-full h-auto max-h-[360px] rounded-md object-cover"
-                    src={earn.img}
-                    alt=""
-                  />
+                  <Image className="w-full h-auto max-h=[360px] rounded-md object-cover" src={earn.img} alt="" />
                 </div>
                 <div data-aos="fade-left" className="learn_info w-full xsm:w-[60%]">
                   <Image src={earn.icon} alt="" className="mb-3 w-10 h-10" />
@@ -357,7 +398,10 @@ function LandMain() {
                 style={{ boxShadow: `6px 6px 0 ${test.color}` }}
               >
                 <div className="testimonial_author mb-3">
-                  <h3 className="head3 text-xl sm:text-2xl" style={{ borderBottom: `2px solid ${test.color}`, width: 'fit-content' }}>
+                  <h3
+                    className="head3 text-xl sm:text-2xl"
+                    style={{ borderBottom: `2px solid ${test.color}`, width: 'fit-content' }}
+                  >
                     {test.name}
                   </h3>
                 </div>
@@ -553,19 +597,16 @@ function LandMain() {
           </div>
         </div>
 
-        {/* UI unchanged: same grid/classes; data from backend or fallback */}
         <div className="events_body grid md:grid-cols-3 xsm:grid-cols-2 gap-6">
           {(blogs ?? []).length > 0
             ? (blogs as Blog[]).map((b) => {
-                // ====== ONLY CHANGE: robust absolute URL for blog image ======
                 const raw = b.images?.[0]?.url || '';
                 const base =
                   (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
                   (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
                 const img = raw
-                  ? (/^https?:\/\//i.test(raw) ? raw : `${base}${raw.startsWith('/') ? '' : '/'}${raw}`)
+                  ? (/^https?:\/\/|^data:/i.test(raw) ? raw : `${base}${raw.startsWith('/') ? '' : '/'}${raw}`)
                   : null;
-                // =============================================================
 
                 const created = new Date(b.createdAt);
                 const date = created.toLocaleDateString();
@@ -578,12 +619,7 @@ function LandMain() {
                     key={b._id}
                     className="events_list w-full p-3 rounded-md flex flex-col gap-2 relative"
                   >
-                    {/* Full-card clickable overlay */}
-                    <Link
-                      href={`/blog/${b._id}`}
-                      aria-label={`Open blog: ${b.title}`}
-                      className="absolute inset-0 z-10"
-                    />
+                    <Link href={`/blog/${b._id}`} aria-label={`Open blog: ${b.title}`} className="absolute inset-0 z-10" />
 
                     <div className="events_img w-full">
                       {img ? (
@@ -663,7 +699,6 @@ function LandMain() {
         <div className="programs">
           <div className="program_head mb-[2rem]">
             <SectionHeading
-              // kbd="OUR PROGRAMS"
               title="Launch your career in the world’s fastest-growing industries"
               subtitle="Industry-driven curriculum, real projects, and the support you need to go from learner to job-ready."
             />
@@ -676,7 +711,7 @@ function LandMain() {
                 key={pro.order}
                 className={`program_list grid md:flex ${ind % 2 === 0 ? '' : 'flex-row-reverse'} md:w-[70vw] w-full md:mx-auto`}
               >
-                <div className="program_img relative z-10 md:block hidden w-full max-w-[450px]">
+                <div className="program_img relative z-10 md:block hidden w/full max-w-[450px]">
                   <Image src={pro.img} alt="Icon" className="w-full h-auto object-cover rounded" />
                 </div>
                 <div
