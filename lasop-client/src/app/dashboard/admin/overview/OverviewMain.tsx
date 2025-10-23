@@ -1,13 +1,13 @@
 // File: C:\Users\USER\Desktop\lasop\lasop-client\src\app\dashboard\admin\overview\OverviewMain.tsx
 'use client';
 
-import cohort from '../../../../asset/dashIcon/cohort.png';
+import cohortIcon from '../../../../asset/dashIcon/cohort.png';
 import center from '../../../../asset/dashIcon/center.png';
 import complete from '../../../../asset/dashIcon/complete.png';
 import courses from '../../../../asset/dashIcon/course.png';
 import graduate from '../../../../asset/dashIcon/graduate.png';
 import newApp from '../../../../asset/dashIcon/new.png';
-import student from '../../../../asset/dashIcon/student.png';
+import studentIcon from '../../../../asset/dashIcon/student.png';
 import staff from '../../../../asset/dashIcon/staff.png';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -15,7 +15,8 @@ import user from '../../../../asset/dashIcon/user.png';
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { StudentDataMain, CohortMain } from '@/interfaces/interface';
-import BlogManagerModal from '@/components/blog/BlogManagerModal'; // <-- modal to manage blog
+import BlogManagerModal from '@/components/blog/BlogManagerModal';
+import GuestManagerModal from '../../../../components/guest/GuestManagerModal'; // <-- NEW
 
 interface Colleagues {
   id: number;
@@ -52,7 +53,7 @@ function OverviewMain() {
   }, [studentAvail, convertCohort]);
 
   const colleague: Colleagues[] = [
-    { id: 1, title: 'No of students', numCol: studentData.length, icon: student },
+    { id: 1, title: 'No of students', numCol: studentData.length, icon: studentIcon },
     { id: 2, title: 'No of staffs', numCol: convertCohort?.courseTutors.length, icon: staff },
     { id: 3, title: 'No of centers', numCol: convertCohort?.center.length, icon: center },
     { id: 4, title: 'Courses', numCol: convertCohort?.courseId.length, icon: courses },
@@ -60,7 +61,7 @@ function OverviewMain() {
       id: 5,
       title: 'Current cohorts',
       numCol: cohort.filter((coh) => coh.status === 'current').length,
-      icon: cohort,
+      icon: cohortIcon,
     },
     {
       id: 6,
@@ -72,14 +73,36 @@ function OverviewMain() {
     { id: 8, title: 'Graduates', numCol: graduates.length, icon: graduate },
   ];
 
-  // --- Manage Blog modal ---
+  // Modals
   const [openBlog, setOpenBlog] = useState(false);
+  const [openGuest, setOpenGuest] = useState(false);
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   return (
     <main className='w-full p-5'>
+
       <div className="staff_info grid grid-cols-2 md:grid-cols-4 gap-3">
-        {/* Manage blog card */}
+        {/* Manage guests card (FIRST) */}
+        <div
+          className="staffs p-3 border border-secondary flex flex-col gap-2 rounded-md cursor-pointer hover:bg-secondary transition"
+          onClick={() => setOpenGuest(true)}
+          title="Create, search and email guests"
+          aria-label="Manage guests"
+        >
+          <div>
+            <span className='font-semibold'>Manage guests</span>
+          </div>
+          <div className='flex justify-between items-center'>
+            <div className="count">
+              <h3 className='font-bold text-[18px] text-shadow'>Open Manager</h3>
+            </div>
+            <div className="staff_icon">
+              <Image className='w-[30px] h-[30px]' src={user} alt='Manage guests' />
+            </div>
+          </div>
+        </div>
+
+        {/* Manage blog card (SECOND) */}
         <div
           className="staffs p-3 border border-secondary flex flex-col gap-2 rounded-md cursor-pointer hover:bg-secondary transition"
           onClick={() => setOpenBlog(true)}
@@ -99,7 +122,7 @@ function OverviewMain() {
           </div>
         </div>
 
-        {/* Existing KPI cards */}
+        {/* KPIs */}
         {colleague.map((col) => (
           <div key={col.id} className="staffs p-3 border border-secondary flex flex-col gap-2 rounded-md">
             <div>
@@ -117,6 +140,7 @@ function OverviewMain() {
         ))}
       </div>
 
+      {/* ---- existing Overview content unchanged ---- */}
       <div className="notification grid md:grid-cols-2 lmd:grid-cols-3 gap-3 mt-10">
         <div className="not_list p-3 border border-secondary rounded-md">
           <div className='flex justify-between'>
@@ -227,7 +251,13 @@ function OverviewMain() {
         </div>
       </div>
 
-      {/* Blog Manager modal */}
+      {/* Modals */}
+      {openGuest && (
+        <GuestManagerModal
+          apiBase={API_BASE}
+          onClose={() => setOpenGuest(false)}
+        />
+      )}
       {openBlog && (
         <BlogManagerModal
           apiBase={API_BASE}

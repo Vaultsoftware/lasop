@@ -1,4 +1,4 @@
-// File: src/index.js
+// File: lasop-server/src/index.js
 require('dotenv').config();
 
 const express = require("express");
@@ -121,6 +121,14 @@ const streamFile = require("./routes/files/streamFile");
 const delCert = require("./routes/certificate/delCert.gridfs");
 const authEcho = require('./routes/__dev/authEcho');
 
+// ---- Guests (admin)
+const guestList = require('./routes/guest/listGuests');
+const guestCreate = require('./routes/guest/createGuest');
+const guestGet = require('./routes/guest/getGuest');
+const guestGetEmails = require('./routes/guest/getGuestEmails');
+const guestSendEmail = require('./routes/guest/sendGuestEmail');
+const syncGuestReplies = require('./routes/guest/syncGuestReplies');
+
 /* ============================ App setup ============================ */
 const app = express();
 
@@ -194,14 +202,12 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 /* ------------------------ Static assets (EMAIL) -------------------- */
-// Absolute assets served from /public
 app.use(express.static(path.join(__dirname, '..', 'public'), {
   maxAge: '7d',
   etag: true,
 }));
 
 /* ------------------------ Static assets (UPLOADS) ------------------- */
-// Serve uploaded media (e.g., blog images) at /uploads/**
 const UPLOADS_DIR = process.env.UPLOADS_DIR
   ? path.resolve(process.env.UPLOADS_DIR)
   : path.join(__dirname, 'uploads');
@@ -378,6 +384,15 @@ app.get('/getChat', authToken, getMsg);
 
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
+
+/* ============================== Guests ============================== */
+const guestGuard = requireAuth ? authToken : (_req, _res, next) => next();
+app.get('/admin/guests', guestGuard, guestList);
+app.post('/admin/guests', guestGuard, guestCreate);
+app.get('/admin/guests/:id', guestGuard, guestGet);
+app.get('/admin/guests/:id/emails', guestGuard, guestGetEmails);
+app.post('/admin/guests/:id/emails', guestGuard, guestSendEmail);
+app.post('/admin/guests/:id/replies/sync', guestGuard, syncGuestReplies);
 
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
