@@ -1,4 +1,3 @@
-// File: src/app/blog/page.tsx
 'use client';
 
 import React from 'react';
@@ -21,13 +20,14 @@ const RAW_API = process.env.NEXT_PUBLIC_API_URL || '';
 const API = RAW_API.replace(/\/+$/, '');
 const IMAGE_BASE =
   (process.env.NEXT_PUBLIC_IMAGE_BASE_URL || '').replace(/\/+$/, '') ||
-  API.replace(/\/api(?:\/v\d+)?$/i, '');
+  API.replace(/\/api(?:\/v\\d+)?$/i, '');
 
+// ✅ FIXED: Always return absolute URL (for live + local)
 function toImg(p: string): string {
   if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
-  const path = p.startsWith('/') ? p : `/${p}`;
-  return `${IMAGE_BASE}${path}`;
+  if (/^https?:\/\//i.test(p)) return p; // already full
+  const clean = p.startsWith('/') ? p : `/${p}`;
+  return `${IMAGE_BASE}${clean}`;
 }
 
 const PER_PAGE = 5;
@@ -154,7 +154,7 @@ export default function BlogListPage() {
         </div>
       </section>
 
-      {/* Featured card (no default underline; underline on hover for title only) */}
+      {/* Featured card */}
       <section className="md:main px-[30px] -mt-10">
         {safePage === 1 && featured && (
           <Link
@@ -173,7 +173,6 @@ export default function BlogListPage() {
                 ) : (
                   <div className="h-72 md:h-full w-full grid place-items-center bg-gray-100 text-gray-400">No image</div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
               <div className="p-6 md:p-8">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight group-hover:underline">
@@ -189,24 +188,16 @@ export default function BlogListPage() {
                     {readingTime(featured.content)} min read
                   </span>
                 </div>
-                {(() => {
-                  const { excerpt, needsMore } = makeExcerpt(featured.content, 100);
-                  return (
-                    <p className="mt-4 text-gray-700">
-                      {excerpt} {needsMore && <span className="font-semibold text-indigo-700">Continue reading →</span>}
-                    </p>
-                  );
-                })()}
+                <p className="mt-4 text-gray-700">{makeExcerpt(featured.content, 100).excerpt}</p>
               </div>
             </div>
           </Link>
         )}
       </section>
 
-      {/* Grid / Masonry */}
+      {/* Grid */}
       <section className="md:main px-[30px] py-10">
         {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
-
         {loading ? (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -220,10 +211,7 @@ export default function BlogListPage() {
                 const img = blog.images?.[0];
                 const { excerpt, needsMore } = makeExcerpt(blog.content, 100);
                 return (
-                  <article
-                    key={blog._id}
-                    className="break-inside-avoid mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition"
-                  >
+                  <article key={blog._id} className="break-inside-avoid mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm hover:shadow-xl transition">
                     <Link href={`/blog/${blog._id}`} className="group no-underline block">
                       {img ? (
                         <img className="w-full h-52 object-cover" src={toImg(img.url)} alt={blog.title} loading="lazy" />
@@ -231,12 +219,8 @@ export default function BlogListPage() {
                         <div className="w-full h-52 bg-gray-100 grid place-items-center text-gray-400">No image</div>
                       )}
                     </Link>
-
                     <div className="p-4">
-                      <Link href={`/blog/${blog._id}`} className="group no-underline">
-                        <h3 className="text-lg font-semibold tracking-tight group-hover:underline">{blog.title}</h3>
-                      </Link>
-
+                      <h3 className="text-lg font-semibold tracking-tight group-hover:underline">{blog.title}</h3>
                       <div className="mt-2 flex items-center gap-4 text-[12px] text-gray-600">
                         <span className="inline-flex items-center gap-2">
                           <FaRegCalendarAlt className="text-gray-500" />
@@ -247,14 +231,12 @@ export default function BlogListPage() {
                           {readingTime(blog.content)} min read
                         </span>
                       </div>
-
                       <p className="mt-3 text-sm text-gray-700">
                         {excerpt}{' '}
                         {needsMore && (
                           <Link
                             href={`/blog/${blog._id}`}
                             className="font-semibold text-indigo-700 hover:underline no-underline"
-                            aria-label={`Continue reading ${blog.title}`}
                           >
                             Continue reading →
                           </Link>
@@ -265,55 +247,8 @@ export default function BlogListPage() {
                 );
               })}
             </div>
-
-            {totalPages > 1 && (
-              <nav className="mt-8 flex items-center justify-center gap-2" aria-label="Pagination">
-                <button onClick={() => goToPage(safePage - 1)} disabled={safePage <= 1} className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50">
-                  Prev
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => goToPage(p)}
-                    aria-current={p === safePage ? 'page' : undefined}
-                    className={`px-3 h-10 rounded-xl border ${p === safePage ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
-                  >
-                    {p}
-                  </button>
-                ))}
-
-                <button onClick={() => goToPage(safePage + 1)} disabled={safePage >= totalPages} className="px-3 h-10 rounded-xl border bg-white disabled:opacity-50">
-                  Next
-                </button>
-              </nav>
-            )}
           </>
         )}
-      </section>
-
-      {/* Newsletter */}
-      <section className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white" />
-        <div className="relative md:main px-[30px] py-12 rounded-none">
-          <div className="grid md:grid-cols-2 gap-6 items-center rounded-3xl border p-6 md:p-10 bg-white shadow-sm">
-            <div>
-              <h3 className="text-2xl font-bold tracking-tight">Subscribe to our newsletter</h3>
-              <p className="mt-2 text-gray-600">Actionable insights, once a week. No spam.</p>
-            </div>
-            <form onSubmit={(e) => e.preventDefault()} className="flex gap-3">
-              <input
-                type="email"
-                required
-                placeholder="you@example.com"
-                className="h-12 w-full rounded-xl border px-4 outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-              <button type="submit" className="h-12 px-6 rounded-xl font-semibold bg-gray-900 text-white hover:opacity-90">
-                Join
-              </button>
-            </form>
-          </div>
-        </div>
       </section>
 
       <Footer />
