@@ -17,12 +17,21 @@ RUN apt-get update -qq && \
 COPY package*.json ./
 RUN npm ci --omit=dev
 
+# Copy all app source files (including uploads)
 COPY . .
+
+# ✅ Ensure uploads directory exists and stays bundled
+RUN mkdir -p /app/public/uploads/blog
 
 # --- Final stage ---
 FROM base
 COPY --from=build /app /app
 
+# ✅ Make sure uploads folder is kept
+RUN mkdir -p /app/public/uploads/blog
+
+# Fly.io port
 ENV PORT=3000
 EXPOSE 3000
-CMD [ "npm", "start" ]
+
+CMD ["npm", "start"]
