@@ -133,6 +133,7 @@ const syncGuestReplies = require('./routes/guest/syncGuestReplies');
 
 // ✅ Facebook Conversion API
 const facebookRoutes = require("./routes/facebook.js");
+const cookieParser = require("cookie-parser"); // why: module exports a function; calling it requires default import
 
 /* ============================ App setup ============================ */
 const app = express();
@@ -199,6 +200,7 @@ app.options('*', corsMiddleware);
 /* -------------------------- Common middleware ---------------------- */
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(cookieParser()); // why: must run before routes/middleware that read cookies
 
 /* ------------------------ Static assets ---------------------------- */
 app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '7d', etag: true }));
