@@ -11,9 +11,6 @@ const path = require("path");
 const fs = require("fs");
 const connection = require("./config/connection");
 
-// ✅ NEW: Facebook Conversion API utility
-const { sendFacebookEvent } = require("./utils/facebookEvent");
-
 /* ============================ Route imports ============================ */
 const signStudent = require("./routes/student/signStudent");
 const signUser = require("./routes/admin/signUser");
@@ -134,6 +131,9 @@ const guestGetEmails = require('./routes/guest/getGuestEmails');
 const guestSendEmail = require('./routes/guest/sendGuestEmail');
 const syncGuestReplies = require('./routes/guest/syncGuestReplies');
 
+// ✅ Facebook Conversion API
+const facebookRoutes = require("./routes/facebook.js");
+
 /* ============================ App setup ============================ */
 const app = express();
 
@@ -222,6 +222,11 @@ app.get('/ready', (_req, res) => {
 });
 app.get('/', (_req, res) => res.status(200).json({ service: 'lasopnext-server', status: 'ok' }));
 
+/* ============================ Main Routes ============================ */
+
+// ✅ Facebook Conversion API
+app.use("/facebook", facebookRoutes);
+
 /* ============= Admin / Accountant / Super admin ============= */
 app.post('/user', signUser);
 app.post('/logUser', logUser);
@@ -268,7 +273,6 @@ app.get('/getCohortDetail/:id', getCohortDetails);
 app.put('/updateCohort/:id', updateCohort);
 app.put('/assignCohort/:id', assignCohort);
 app.delete('/deleteCohort/:id', delCohort);
-
 app.post('/postCohortExam', authToken, postCohortExam);
 app.get('/getCohortExam', authToken, getCohortExam);
 app.get('/getCohortExamDet/:id', authToken, getCohortExamDet);
@@ -385,17 +389,6 @@ app.get('/admin/guests/:id', guestGuard, guestGet);
 app.get('/admin/guests/:id/emails', guestGuard, guestGetEmails);
 app.post('/admin/guests/:id/emails', guestGuard, guestSendEmail);
 app.post('/admin/guests/:id/replies/sync', guestGuard, syncGuestReplies);
-
-/* ✅ FACEBOOK CONVERSION API ROUTE */
-app.post('/facebook/conversion', async (req, res) => {
-  try {
-    await sendFacebookEvent(req.body);
-    res.status(200).json({ success: true });
-  } catch (err) {
-    console.error('❌ Facebook Conversion route error:', err);
-    res.status(500).json({ success: false, error: 'Failed to send conversion event' });
-  }
-});
 
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
