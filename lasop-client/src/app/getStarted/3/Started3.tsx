@@ -1,4 +1,6 @@
-// File: src/components/.../Started3.tsx
+// =============================================================
+// File: src/components/.../Started3.tsx (FULLY SYNCED)
+// =============================================================
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -16,7 +18,6 @@ import { useRouter } from 'next/navigation';
 import lasopLogo from '../../../asset/form/logo.png';
 import ValidateLoading from '@/components/validateLoading/ValidateLoading';
 
-/* Types */
 type VerifyMode = 'strict' | 'loose' | 'fuzzy' | 'digits' | 'words';
 type VerifyResult = { matched: boolean; snippet?: string; mode?: VerifyMode };
 
@@ -44,23 +45,16 @@ const WHATSAPP_E164 = '2347025713326';
 const MIN_PART_PAYMENT = 200_000;
 const LS_KEY = 'lasop_started3_v1';
 const SHARE_TTL_MS = 2 * 60 * 60 * 1000;
-
-/* Account name rule: need ≥2 of these tokens present (exact or fuzzy ≤1 edit) */
 const ACCOUNT_TOKENS = ['lagos', 'school', 'programming'] as const;
 const ACCOUNT_NAME_LABEL = 'Lagos School of Programming';
 
 function Started3() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
-
-  // Payment controls
   const [isPartPay, setIsPartPay] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
-
-  // Receipt controls
   const [proof, setProof] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [parsing, setParsing] = useState<boolean>(false);
@@ -70,17 +64,11 @@ function Started3() {
   const [matchMode, setMatchMode] = useState<VerifyMode | undefined>(undefined);
   const [needsReupload, setNeedsReupload] = useState<boolean>(false);
   const [showRaw, setShowRaw] = useState<boolean>(false);
-
-  // Account name verification (persisted)
   const [accountNameOK, setAccountNameOK] = useState<boolean>(false);
   const [accountNameMatched, setAccountNameMatched] = useState<string[]>([]);
   const [accountNameSnippet, setAccountNameSnippet] = useState<string>('');
-
-  // WhatsApp flow controls
   const [shareStartedAt, setShareStartedAt] = useState<number | null>(null);
   const [shareConfirmed, setShareConfirmed] = useState<boolean>(false);
-
-  // Store data
   const course = useSelector((state: RootState) => state.pageData.payment);
   const courseDetail = useSelector((state: RootState) => state.courses.courseDetail);
   const studentDataSub = useSelector((state: RootState) => state.pageData.studentData) as Partial<StudentData>;
@@ -90,23 +78,11 @@ function Started3() {
     if (course.courseId) dispatch(fetchCourseDetail(course.courseId));
   }, [course.courseId, dispatch]);
 
-  // Restore progress (now includes account-name state)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (!raw) return;
-      const s = JSON.parse(raw) as {
-        isPartPay: boolean;
-        amount: string;
-        receiptText: string;
-        matchSnippet: string;
-        receiptHasAmount: boolean;
-        shareStartedAt?: number | null;
-        shareConfirmed?: boolean;
-        accountNameOK?: boolean;
-        accountNameMatched?: string[];
-        accountNameSnippet?: string;
-      };
+      const s = JSON.parse(raw);
       setIsPartPay(Boolean(s.isPartPay));
       setAmount(String(s.amount ?? ''));
       setReceiptText(String(s.receiptText ?? ''));
@@ -121,7 +97,6 @@ function Started3() {
     } catch {}
   }, []);
 
-  // Persist progress (now includes account-name state)
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -153,7 +128,6 @@ function Started3() {
     accountNameSnippet,
   ]);
 
-  // Sync amount for Full Payment
   useEffect(() => {
     if (!isPartPay) {
       setAmount(price ? String(price) : '');
@@ -193,10 +167,8 @@ function Started3() {
     setNeedsReupload(false);
     revokePreview();
     if (!f) return;
-
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
-
     setParsing(true);
     try {
       const text = await extractTextFromFile(f);
@@ -208,7 +180,6 @@ function Started3() {
     }
   };
 
-  // open WA in same tab; mark attempt time
   const shareToWhatsApp = async () => {
     if (!proof) {
       toast.error('Select a file first');
@@ -216,7 +187,6 @@ function Started3() {
     }
     const text = `Hello LASOP, please find my proof of payment for ${title || 'my application'}.`;
     const encoded = encodeURIComponent(`${text}\nApplicant: ${studentDataSub.firstName || ''} ${studentDataSub.lastName || ''}`);
-
     const now = Date.now();
     setShareStartedAt(now);
     setShareConfirmed(false);
@@ -225,16 +195,14 @@ function Started3() {
       const s = raw ? JSON.parse(raw) : {};
       localStorage.setItem(LS_KEY, JSON.stringify({ ...s, shareStartedAt: now, shareConfirmed: false }));
     } catch {}
-
     try {
-      // @ts-ignore optional API
+      // @ts-ignore
       if (navigator.canShare && navigator.canShare({ files: [proof] })) {
         await navigator.share({ files: [proof], text, title: 'Proof of Payment' });
         toast.success('Share dialog opened. Please send on WhatsApp.');
         return;
       }
     } catch {}
-
     window.location.href = `https://wa.me/${WHATSAPP_E164}?text=${encoded}`;
   };
 
@@ -243,7 +211,6 @@ function Started3() {
     return Number.isFinite(n) ? Math.floor(n) : 0;
   }, [amount]);
 
-  // Part-pay amount validation
   useEffect(() => {
     if (!isPartPay) {
       setAmountError('');
@@ -258,7 +225,6 @@ function Started3() {
     }
   }, [amount, isPartPay, normalizedAmount]);
 
-  // Amount + account-name verification when text/amount changes
   useEffect(() => {
     if (!receiptText || !normalizedAmount) {
       setReceiptHasAmount(false);
@@ -269,12 +235,10 @@ function Started3() {
       setAccountNameSnippet('');
       return;
     }
-
     const res = verifyAmount(receiptText, normalizedAmount);
     setReceiptHasAmount(res.matched);
     setMatchSnippet(res.snippet || '');
     setMatchMode(res.mode);
-
     const nameRes = verifyAccountName(receiptText);
     setAccountNameOK(nameRes.ok);
     setAccountNameMatched(nameRes.matchedTokens);
@@ -292,24 +256,20 @@ function Started3() {
     }
     const { matched } = verifyAmount(receiptText, normalizedAmount);
     setReceiptHasAmount(matched);
-
     const nameRes = verifyAccountName(receiptText);
     setAccountNameOK(nameRes.ok);
     setAccountNameMatched(nameRes.matchedTokens);
     setAccountNameSnippet(nameRes.snippet || '');
-
-    toast[
-      matched && nameRes.ok ? 'success' : 'error'
-    ](matched && nameRes.ok ? 'Verified against receipt.' : 'Verification failed: amount and/or account name.');
+    toast[matched && nameRes.ok ? 'success' : 'error'](
+      matched && nameRes.ok ? 'Verified against receipt.' : 'Verification failed: amount and/or account name.'
+    );
   };
 
   const handleAmountInput = (e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value);
-
   const isShareRecent = (ts: number | null) => !!ts && Date.now() - ts < SHARE_TTL_MS;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!validateStudentData(studentDataSub)) {
       toast.error('Please fill out all required fields.');
       return;
@@ -330,8 +290,6 @@ function Started3() {
       toast.error(`Receipt account name must include at least two of: ${ACCOUNT_NAME_LABEL}.`);
       return;
     }
-
-    // Enforce WhatsApp flow
     if (!isShareRecent(shareStartedAt)) {
       toast.error('Please send your receipt to WhatsApp first.');
       return;
@@ -340,7 +298,6 @@ function Started3() {
       toast.error('Please confirm you have sent it on WhatsApp.');
       return;
     }
-
     setLoading(true);
     try {
       const payload: StudentData = {
@@ -350,13 +307,36 @@ function Started3() {
       const response = await dispatch(postStudent(payload as any));
       if (postStudent.fulfilled.match(response)) {
         localStorage.removeItem(LS_KEY);
-        // show success FIRST so the user actually sees it; navigate when toast closes
+
+        // ✅ Facebook Pixel + Conversion API
+        try {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'Purchase', {
+              value: normalizedAmount || Number(price) || 0,
+              currency: 'NGN',
+            });
+          }
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lasop-server-vault.fly.dev'}/facebook/conversion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event_name: 'Purchase',
+              value: normalizedAmount || Number(price) || 0,
+              currency: 'NGN',
+              email: studentDataSub.email,
+              event_source_url: typeof window !== 'undefined' ? window.location.href : '',
+            }),
+          });
+        } catch (err) {
+          console.error('⚠️ Facebook tracking failed:', err);
+        }
+
         toast.success('Application complete', {
-          autoClose: 2500, // brief; avoids user missing it
+          autoClose: 2500,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          onClose: () => router.push('/login'), // navigate after toast
+          onClose: () => router.push('/login'),
         });
       } else {
         toast.error(response.error?.message || 'Failed to complete application.');

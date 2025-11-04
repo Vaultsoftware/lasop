@@ -1,5 +1,5 @@
 // =============================================================
-// File: src/app/layout.tsx
+// File: src/app/layout.tsx   (UPDATED)
 // =============================================================
 import "swiper/css";
 import "./globals.css";
@@ -11,10 +11,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import StoreProviderClient from "./StoreProviderClient";
 import AOSInitializer from "@/components/AOSInitializer/AOSInitializer";
-// import TawkWidget from "../components/Tawk/TawkWidget";   // live chat
-import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"; // back-to-top
+import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
+import FacebookPixel from "@/components/FacebookPixel";   // ✅ NEW
 
 const inter = Inter({ subsets: ["latin"] });
+const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || 'YOUR_PIXEL_ID'; // ✅ NEW
 
 export const metadata: Metadata = {
   title: "Lagos School Of Programming",
@@ -36,9 +37,10 @@ export default function RootLayout({
         <Suspense fallback={<Loading />}>
           <StoreProviderClient>
             <AOSInitializer />
+            {/* ✅ Facebook Pixel globally available */}
+            <FacebookPixel pixelId={PIXEL_ID} />
             {children}
             <ScrollToTop />
-            {/* <TawkWidget /> */}
           </StoreProviderClient>
         </Suspense>
       </body>

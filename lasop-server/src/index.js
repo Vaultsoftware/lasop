@@ -1,4 +1,6 @@
-// File: lasop-server/src/index.js
+// =============================================================
+// File: lasop-server/src/index.js  — FULLY SYNCED + FACEBOOK API
+// =============================================================
 require('dotenv').config();
 
 const express = require("express");
@@ -8,6 +10,9 @@ const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
 const connection = require("./config/connection");
+
+// ✅ NEW: Facebook Conversion API utility
+const { sendFacebookEvent } = require("./utils/facebookEvent");
 
 /* ============================ Route imports ============================ */
 const signStudent = require("./routes/student/signStudent");
@@ -189,25 +194,15 @@ app.use((req, res, next) => { res.header('Vary', 'Origin'); next(); });
 
 const corsMiddleware = cors(corsOptions);
 app.use(corsMiddleware);
-
-// Extra explicit preflight
-app.options('/cohortStatus', corsMiddleware);
-app.options('/projectStatus', corsMiddleware);
-app.options('/assessmentStatus', corsMiddleware);
-app.options('/deleteCertificate/:id', corsMiddleware);
 app.options('*', corsMiddleware);
 
 /* -------------------------- Common middleware ---------------------- */
 app.use(express.json());
 app.use(morgan("dev"));
 
-/* ------------------------ Static assets (EMAIL) -------------------- */
-app.use(express.static(path.join(__dirname, '..', 'public'), {
-  maxAge: '7d',
-  etag: true,
-}));
+/* ------------------------ Static assets ---------------------------- */
+app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '7d', etag: true }));
 
-/* ------------------------ Static assets (UPLOADS) ------------------- */
 const UPLOADS_DIR = process.env.UPLOADS_DIR
   ? path.resolve(process.env.UPLOADS_DIR)
   : path.join(__dirname, 'uploads');
@@ -216,10 +211,7 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch {}
 }
 
-app.use('/uploads', express.static(UPLOADS_DIR, {
-  maxAge: '7d',
-  etag: true,
-}));
+app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d', etag: true }));
 
 /* ----------------------------- Health ------------------------------ */
 app.get('/health', (_req, res) => res.status(200).send('ok'));
@@ -393,6 +385,17 @@ app.get('/admin/guests/:id', guestGuard, guestGet);
 app.get('/admin/guests/:id/emails', guestGuard, guestGetEmails);
 app.post('/admin/guests/:id/emails', guestGuard, guestSendEmail);
 app.post('/admin/guests/:id/replies/sync', guestGuard, syncGuestReplies);
+
+/* ✅ FACEBOOK CONVERSION API ROUTE */
+app.post('/facebook/conversion', async (req, res) => {
+  try {
+    await sendFacebookEvent(req.body);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('❌ Facebook Conversion route error:', err);
+    res.status(500).json({ success: false, error: 'Failed to send conversion event' });
+  }
+});
 
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
