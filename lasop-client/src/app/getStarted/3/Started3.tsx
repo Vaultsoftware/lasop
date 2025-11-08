@@ -1,5 +1,6 @@
 // =============================================================
 // File: src/components/.../Started3.tsx (FULLY SYNCED + SPINNER + >= AMOUNT)
+// Enhanced: event_id + fbp/fbc + richer customer → better CAPI EMQ (add-only)
 // =============================================================
 'use client';
 
@@ -74,6 +75,33 @@ const LS_KEY = 'lasop_started3_v1';
 const SHARE_TTL_MS = 2 * 60 * 60 * 1000;
 const ACCOUNT_TOKENS = ['lagos', 'school', 'programming'] as const;
 const ACCOUNT_NAME_LABEL = 'Lagos School of Programming';
+
+/* ------- tiny local helpers for Pixel↔CAPI dedupe (add-only) ------- */
+// Why: ensure dedupe + cookie match; isolated to avoid touching other modules.
+const readCookie = (name: string): string | undefined => {
+  if (typeof document === 'undefined') return undefined;
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]+)`));
+  return m ? decodeURIComponent(m[1]) : undefined;
+};
+const buildFbcFromUrl = (): string | undefined => {
+  try {
+    const u = new URL(typeof window !== 'undefined' ? window.location.href : '');
+    const fbclid = u.searchParams.get('fbclid');
+    if (!fbclid) return undefined;
+    const ts = Math.floor(Date.now() / 1000);
+    return `fb.1.${ts}.${fbclid}`;
+  } catch { return undefined; }
+};
+const getFbpFbc = (): { fbp?: string; fbc?: string } => {
+  const fbp = readCookie('_fbp');
+  const fbc = readCookie('_fbc') || buildFbcFromUrl();
+  return { fbp, fbc };
+};
+const safeUUID = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  const r = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return `${Date.now().toString(16)}-${r(16)}`;
+};
 
 function Started3() {
   const dispatch = useDispatch<AppDispatch>();
@@ -399,14 +427,20 @@ function Started3() {
       if (postStudent.fulfilled.match(response)) {
         localStorage.removeItem(LS_KEY);
 
-        // ✅ Facebook Pixel + Conversion API
+        // ✅ Facebook Pixel + Conversion API (add-only dedupe + cookies + customer)
         try {
+          const amountVal = normalizedAmount || Number(price) || 0;
+
+          // Generate event_id + read cookies for fbp/fbc
+          const event_id = safeUUID();
+          const { fbp, fbc } = getFbpFbc();
+
+          // Fire browser Pixel WITH eventID for dedupe
           if (typeof window !== 'undefined' && (window as any).fbq) {
-            (window as any).fbq('track', 'Purchase', {
-              value: normalizedAmount || Number(price) || 0,
-              currency: 'NGN',
-            });
+            (window as any).fbq('track', 'Purchase', { value: amountVal, currency: 'NGN' }, { eventID: event_id });
           }
+
+          // Send CAPI with same event_id and cookies + richer customer fields (optional)
           await fetch(
             `${process.env.NEXT_PUBLIC_API_URL || 'https://lasop-server-vault.fly.dev'}/facebook/conversion`,
             {
@@ -414,10 +448,19 @@ function Started3() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 event_name: 'Purchase',
-                value: normalizedAmount || Number(price) || 0,
+                event_id,               // <-- dedupe
+                fbp, fbc,               // <-- cookies
+                value: amountVal,
                 currency: 'NGN',
-                email: studentDataSub.email,
                 event_source_url: typeof window !== 'undefined' ? window.location.href : '',
+                customer: {
+                  email: studentDataSub.email,
+                  phone: studentDataSub.contact,
+                  first_name: studentDataSub.firstName,
+                  last_name: studentDataSub.lastName,
+                  city: studentDataSub.city,
+                  country: 'NG',
+                },
               }),
             }
           );
@@ -964,16 +1007,20 @@ function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-// Money-like tokens for fuzzy path
+// Money-like tokens for fuzzy path (drop-in fix)
 function getMoneyLikeTokens(s: string): string[] {
+  if (!s) return [];
   const raw = s.match(/[0-9][0-9\.\,\s_:-]*/g) || [];
-  return raw.filter((tok) => {
-    const hasSep = /[.,]/.test(tok);
-    const hasDot00 = /\.\s*0{2}\b|,\s*0{2}\b/.test(tok);
-    const digits = tok.replace(/[^0-9]/g, '');
-    return (hasSep || hasDot00) && digits.length >= 4 && digits.length <= 10;
-  });
+  return raw
+    .map((tok) => tok.trim())
+    .filter((tok) => {
+      const hasSep = /[.,]/.test(tok);
+      const hasDot00 = /\.\s*0{2}\b|,\s*0{2}\b/.test(tok);
+      const digits = tok.replace(/[^0-9]/g, '');
+      return (hasSep || hasDot00) && digits.length >= 4 && digits.length <= 10;
+    });
 }
+
 
 // Exact or ≤1 digit difference
 function closeEnoughDigits(a: string, b: string): boolean {
@@ -1013,7 +1060,7 @@ function canonicalDigits(s: string): string {
   return unicodeSpaceCollapse(s)
     .normalize('NFKD')
     .replace(/\u0660/g, '0').replace(/\u0661/g, '1').replace(/\u0662/g, '2').replace(/\u0663/g, '3').replace(/\u0664/g, '4')
-    .replace(/\u0665/g, '5').replace(/\u0666/g, '6').replace(/\u0667/g, '7').replace(/\u0668/g, '8').replace(/\u06F9/g, '9')
+    .replace(/\u06F9/g, '9')
     .replace(/\u06F0/g, '0').replace(/\u06F1/g, '1').replace(/\u06F2/g, '2').replace(/\u06F3/g, '3').replace(/\u06F4/g, '4')
     .replace(/\u06F5/g, '5').replace(/\u06F6/g, '6').replace(/\u06F7/g, '7').replace(/\u06F8/g, '8').replace(/\u06F9/g, '9')
     .replace(/O/g, '0').replace(/o/g, '0');

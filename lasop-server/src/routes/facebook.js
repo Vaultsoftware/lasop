@@ -1,5 +1,5 @@
 // =============================================================
-// File: lasop-server/src/routes/facebook.js — Enhanced CAPI
+// File: lasop-server/src/routes/facebook.js — Enhanced CAPI (add-only)
 // CommonJS, node-fetch v2 compatible
 // =============================================================
 const express = require("express");
@@ -21,15 +21,32 @@ const PIXEL_ID =
   process.env.FACEBOOK_PIXEL_ID ||
   "";
 
+const APP_SECRET =
+  process.env.META_APP_SECRET ||
+  process.env.FB_APP_SECRET ||
+  process.env.FACEBOOK_APP_SECRET ||
+  ""; // optional but recommended
+
 const FB_VERSION = process.env.META_GRAPH_VERSION || process.env.FB_API_VERSION || "v21.0";
 const ENV_TEST_CODE =
   process.env.META_TEST_EVENT_CODE || process.env.FB_TEST_EVENT_CODE || "";
 const PROD = String(process.env.NODE_ENV || "").toLowerCase() === "production";
 const DEBUG = process.env.META_CAPI_DEBUG === "1";
 
+/** Optional GDPR/EEA toggles (no effect if not set) */
+const DPO_ENABLED = process.env.META_DPO === "1";
+const DPO_COUNTRY = process.env.META_DPO_COUNTRY || "";  // e.g. "US"
+const DPO_STATE = process.env.META_DPO_STATE || "";      // e.g. "CA"
+
 /* --------------------------- Utils --------------------------- */
 const sha256 = (v) =>
   v ? crypto.createHash("sha256").update(String(v).trim().toLowerCase()).digest("hex") : undefined;
+
+/** Why: secure token usage without changing your body shape. */
+function appSecretProof(token, secret) {
+  if (!token || !secret) return undefined;
+  return crypto.createHmac("sha256", secret).update(token).digest("hex");
+}
 
 function parseCookie(header = "") {
   return header.split(";").reduce((acc, part) => {
@@ -43,17 +60,15 @@ function parseCookie(header = "") {
 function getClientIp(req) {
   const xff = req.headers["x-forwarded-for"];
   if (!xff) return req.socket?.remoteAddress || undefined;
-  // first IP in the list
   return String(xff).split(",")[0].trim() || undefined;
 }
 
 function getFbcFbp(req, explicit = {}) {
-  // allow explicit override (from body), then cookies, then fbclid
   const cookies = parseCookie(req.headers.cookie || "");
   let fbp = explicit.fbp || cookies["_fbp"];
   let fbc = explicit.fbc || cookies["_fbc"];
 
-  // Build _fbc from fbclid if present in URL (referer or body url)
+  // Build _fbc from fbclid if present in event_source_url (or referer)
   try {
     const rawUrl =
       explicit.event_source_url ||
@@ -67,12 +82,25 @@ function getFbcFbp(req, explicit = {}) {
       const ts = Math.floor(Date.now() / 1000);
       fbc = `fb.1.${ts}.${fbclid}`;
     }
-  } catch {
-    /* ignore */
-  }
+  } catch { /* ignore */ }
+
   return { fbc, fbp };
 }
 
+/** Why: better EMQ on phone matching; keeps add-only behavior. */
+function normalizePhoneForHash(phone, countryHint = "NG") {
+  if (!phone) return undefined;
+  let s = String(phone).replace(/[^\d+]/g, "");
+  // If starts with 0 and we know country, prepend dial code heuristically (Nigeria example).
+  if (s.startsWith("0")) {
+    if ((countryHint || "").toUpperCase() === "NG") s = "234" + s.slice(1);
+  }
+  if (s.startsWith("+")) s = s.slice(1);
+  return s || undefined;
+}
+
+// Meta expects arrays for: em, ph, external_id
+// and single hash strings for: fn, ln, ct, st, zp, country
 function buildUserData(req, extras = {}, explicit = {}) {
   const ip = getClientIp(req);
   const ua = req.headers["user-agent"] || undefined;
@@ -85,21 +113,27 @@ function buildUserData(req, extras = {}, explicit = {}) {
     ...(fbp ? { fbp } : {}),
   };
 
-  // Hashed identifiers (arrays as required by Meta)
-  const addHash = (key, val) => {
+  const addArrayHash = (key, val) => {
     const h = sha256(val);
     if (h) out[key] = [h];
   };
+  const addSingleHash = (key, val) => {
+    const h = sha256(val);
+    if (h) out[key] = h;
+  };
 
-  addHash("em", extras.email);
-  addHash("ph", extras.phone);
-  addHash("external_id", extras.external_id);
-  addHash("fn", extras.first_name);
-  addHash("ln", extras.last_name);
-  addHash("ct", extras.city);
-  addHash("st", extras.state);
-  addHash("zp", extras.zip);
-  addHash("country", extras.country);
+  // Arrays
+  addArrayHash("em", extras.email);
+  addArrayHash("ph", normalizePhoneForHash(extras.phone, extras.country || "NG"));
+  addArrayHash("external_id", extras.external_id);
+
+  // Singles
+  addSingleHash("fn", extras.first_name || extras.fn);
+  addSingleHash("ln", extras.last_name || extras.ln);
+  addSingleHash("ct", extras.city || extras.ct);
+  addSingleHash("st", extras.state || extras.st);
+  addSingleHash("zp", extras.zip || extras.zp);
+  addSingleHash("country", extras.country || "NG");
 
   return out;
 }
@@ -123,7 +157,6 @@ function mapItemsToContents(items = []) {
 
 function sanitizeCurrency(cur) {
   const s = String(cur || "NGN").trim().toUpperCase();
-  // If someone passes 3+ letter code or ₦, normalize to NGN
   if (s === "₦" || s === "N") return "NGN";
   return s;
 }
@@ -134,10 +167,22 @@ function coerceValue(val) {
 }
 
 /* ---------------------- Payload builders ---------------------- */
+function safeEventTime(event_time) {
+  const now = Math.floor(Date.now() / 1000);
+  const t = Number(event_time);
+  if (!Number.isFinite(t)) return now;
+  // Why: Meta allows up to 7 days delay; guard bad clocks.
+  const sevenDays = 7 * 24 * 60 * 60;
+  if (t > now + 300) return now;          // future by >5min → now
+  if (t < now - sevenDays) return now;    // too old → now
+  return Math.floor(t);
+}
+
 function buildSingleEvent(req, body) {
   const {
     event_name,
     event_id,
+    event_time,                 // optional from client
     value = 0,
     currency = "NGN",
     items = [],
@@ -163,7 +208,7 @@ function buildSingleEvent(req, body) {
 
   return {
     event_name: String(event_name),
-    event_time: Math.floor(Date.now() / 1000),
+    event_time: safeEventTime(event_time),
     ...(event_id ? { event_id: String(event_id) } : {}),
     action_source: "website",
     event_source_url:
@@ -175,8 +220,8 @@ function buildSingleEvent(req, body) {
 
 /**
  * Accepts either:
- *  - a single event object (classic)
- *  - { events: [ ... ] } to send multiple in one request
+ *  - a single event object
+ *  - { events: [ ... ] } to send multiple at once
  */
 function buildBody(req) {
   const src = req.body || {};
@@ -188,30 +233,35 @@ function buildBody(req) {
     data.push(buildSingleEvent(req, src));
   }
 
-  // test_event_code precedence:
-  //  - if body provides test_event_code AND not in production → use it
-  //  - else if env has it AND not in production → use env
-  //  - in production: force off (Meta best practice)
+  // test_event_code: allowed in non-prod only
   let test_event_code;
   if (!PROD) {
     test_event_code = src.test_event_code || ENV_TEST_CODE || undefined;
   }
 
+  /** Optional DPO block (no-op unless enabled) */
+  const dpo = DPO_ENABLED
+    ? {
+        data_processing_options: ["LDU"],
+        ...(DPO_COUNTRY ? { data_processing_options_country: DPO_COUNTRY } : {}),
+        ...(DPO_STATE ? { data_processing_options_state: DPO_STATE } : {}),
+      }
+    : {};
+
   const payload = {
     data,
-    access_token: ACCESS_TOKEN, // preferred placement
+    access_token: ACCESS_TOKEN, // allowed in body (kept for compatibility)
     ...(test_event_code ? { test_event_code: String(test_event_code) } : {}),
+    partner_agent: "lasop-server-capi/1.1",
+    ...dpo
   };
-
-  // Optional hint: who is sending
-  payload.partner_agent = "lasop-server-capi/1.0";
 
   return payload;
 }
 
 /* -------------------------- Routes --------------------------- */
 
-// Health check for config (useful during deploys)
+// Health check for config
 router.get("/conversion/health", (_req, res) => {
   if (!ACCESS_TOKEN || !PIXEL_ID) {
     return res.status(503).json({
@@ -224,6 +274,7 @@ router.get("/conversion/health", (_req, res) => {
     pixel: PIXEL_ID ? "set" : "missing",
     version: FB_VERSION,
     prod: PROD,
+    appsecret_proof: APP_SECRET ? "enabled" : "disabled",
   });
 });
 
@@ -235,7 +286,15 @@ router.post("/conversion", async (req, res) => {
     }
 
     const payload = buildBody(req);
-    const url = `https://graph.facebook.com/${FB_VERSION}/${encodeURIComponent(PIXEL_ID)}/events`;
+
+    // Add appsecret_proof if APP_SECRET is present (additive hardening)
+    const proof = appSecretProof(ACCESS_TOKEN, APP_SECRET);
+    const qs = new URLSearchParams();
+    if (ACCESS_TOKEN) qs.set("access_token", ACCESS_TOKEN);
+    if (proof) qs.set("appsecret_proof", proof);
+
+    const urlBase = `https://graph.facebook.com/${FB_VERSION}/${encodeURIComponent(PIXEL_ID)}/events`;
+    const url = qs.toString() ? `${urlBase}?${qs.toString()}` : urlBase;
 
     const fbRes = await fetch(url, {
       method: "POST",
@@ -260,7 +319,7 @@ router.post("/conversion", async (req, res) => {
   }
 });
 
-// Optional: lightweight debug echo (headers/cookies), guarded
+// Optional: lightweight debug echo
 if (DEBUG) {
   router.get("/conversion/__debug", (req, res) => {
     const cookies = parseCookie(req.headers.cookie || "");
