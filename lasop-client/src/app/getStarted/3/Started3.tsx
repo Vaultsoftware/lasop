@@ -1,5 +1,5 @@
 // =============================================================
-// File: src/components/.../Started3.tsx (FULLY SYNCED)
+// File: src/components/.../Started3.tsx (FULLY SYNCED + SPINNER + >= AMOUNT)
 // =============================================================
 'use client';
 
@@ -16,10 +16,37 @@ import { FaArrowLeft } from 'react-icons/fa6';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import lasopLogo from '../../../asset/form/logo.png';
-import ValidateLoading from '@/components/validateLoading/ValidateLoading';
 
-type VerifyMode = 'strict' | 'loose' | 'fuzzy' | 'digits' | 'words';
-type VerifyResult = { matched: boolean; snippet?: string; mode?: VerifyMode };
+// Spinner icon (no external lib needed)
+function BigSpinner() {
+  return (
+    <svg
+      className="animate-spin h-8 w-8 text-white"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-100"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
+  );
+}
+
+type VerifyMode = 'strict' | 'loose' | 'fuzzy' | 'digits' | 'words' | 'parsed';
+type VerifyResult =
+  | { matched: true; snippet?: string; mode?: VerifyMode; detectedAmount?: number }
+  | { matched: false };
 
 interface StudentData {
   firstName: string;
@@ -51,7 +78,7 @@ const ACCOUNT_NAME_LABEL = 'Lagos School of Programming';
 function Started3() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // drives the big overlay spinner
   const [isPartPay, setIsPartPay] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
@@ -62,6 +89,7 @@ function Started3() {
   const [receiptHasAmount, setReceiptHasAmount] = useState<boolean>(false);
   const [matchSnippet, setMatchSnippet] = useState<string>('');
   const [matchMode, setMatchMode] = useState<VerifyMode | undefined>(undefined);
+  const [detectedAmount, setDetectedAmount] = useState<number | undefined>(undefined);
   const [needsReupload, setNeedsReupload] = useState<boolean>(false);
   const [showRaw, setShowRaw] = useState<boolean>(false);
   const [accountNameOK, setAccountNameOK] = useState<boolean>(false);
@@ -69,6 +97,7 @@ function Started3() {
   const [accountNameSnippet, setAccountNameSnippet] = useState<string>('');
   const [shareStartedAt, setShareStartedAt] = useState<number | null>(null);
   const [shareConfirmed, setShareConfirmed] = useState<boolean>(false);
+
   const course = useSelector((state: RootState) => state.pageData.payment);
   const courseDetail = useSelector((state: RootState) => state.courses.courseDetail);
   const studentDataSub = useSelector((state: RootState) => state.pageData.studentData) as Partial<StudentData>;
@@ -78,6 +107,7 @@ function Started3() {
     if (course.courseId) dispatch(fetchCourseDetail(course.courseId));
   }, [course.courseId, dispatch]);
 
+  // Restore persisted state
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -93,10 +123,14 @@ function Started3() {
       setAccountNameOK(Boolean(s.accountNameOK));
       setAccountNameMatched(Array.isArray(s.accountNameMatched) ? s.accountNameMatched : []);
       setAccountNameSnippet(String(s.accountNameSnippet ?? ''));
+      setDetectedAmount(
+        typeof s.detectedAmount === 'number' && Number.isFinite(s.detectedAmount) ? s.detectedAmount : undefined
+      );
       if (s.receiptText) setNeedsReupload(true);
     } catch {}
   }, []);
 
+  // Persist state
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -112,6 +146,7 @@ function Started3() {
           accountNameOK,
           accountNameMatched,
           accountNameSnippet,
+          detectedAmount,
         })
       );
     } catch {}
@@ -126,8 +161,10 @@ function Started3() {
     accountNameOK,
     accountNameMatched,
     accountNameSnippet,
+    detectedAmount,
   ]);
 
+  // Full vs Part pay
   useEffect(() => {
     if (!isPartPay) {
       setAmount(price ? String(price) : '');
@@ -137,7 +174,17 @@ function Started3() {
 
   const validateStudentData = (s: Partial<StudentData>) => {
     const hasProgram = !!(s.program?.courseId && s.program?.cohortId && s.program?.center && s.program?.mode);
-    return !!(s.firstName && s.lastName && s.email && s.password && s.contact && s.houseNo && s.streetName && s.city && hasProgram);
+    return !!(
+      s.firstName &&
+      s.lastName &&
+      s.email &&
+      s.password &&
+      s.contact &&
+      s.houseNo &&
+      s.streetName &&
+      s.city &&
+      hasProgram
+    );
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -161,6 +208,7 @@ function Started3() {
     setReceiptHasAmount(false);
     setMatchSnippet('');
     setMatchMode(undefined);
+    setDetectedAmount(undefined);
     setAccountNameOK(false);
     setAccountNameMatched([]);
     setAccountNameSnippet('');
@@ -186,7 +234,9 @@ function Started3() {
       return;
     }
     const text = `Hello LASOP, please find my proof of payment for ${title || 'my application'}.`;
-    const encoded = encodeURIComponent(`${text}\nApplicant: ${studentDataSub.firstName || ''} ${studentDataSub.lastName || ''}`);
+    const encoded = encodeURIComponent(
+      `${text}\nApplicant: ${studentDataSub.firstName || ''} ${studentDataSub.lastName || ''}`
+    );
     const now = Date.now();
     setShareStartedAt(now);
     setShareConfirmed(false);
@@ -211,6 +261,7 @@ function Started3() {
     return Number.isFinite(n) ? Math.floor(n) : 0;
   }, [amount]);
 
+  // Validate part-pay amount input
   useEffect(() => {
     if (!isPartPay) {
       setAmountError('');
@@ -225,20 +276,36 @@ function Started3() {
     }
   }, [amount, isPartPay, normalizedAmount]);
 
+  // === Core receipt verification: PASS if receipt amount >= typed/course amount ===
   useEffect(() => {
     if (!receiptText || !normalizedAmount) {
       setReceiptHasAmount(false);
       setMatchSnippet('');
       setMatchMode(undefined);
+      setDetectedAmount(undefined);
       setAccountNameOK(false);
       setAccountNameMatched([]);
       setAccountNameSnippet('');
       return;
     }
-    const res = verifyAmount(receiptText, normalizedAmount);
-    setReceiptHasAmount(res.matched);
-    setMatchSnippet(res.snippet || '');
-    setMatchMode(res.mode);
+    // First try strict/loose/fuzzy matching; then fall back to parsed numeric >= check
+    const direct = verifyAmount(receiptText, normalizedAmount);
+    if (direct.matched) {
+      setReceiptHasAmount(true);
+      setMatchSnippet(direct.snippet || '');
+      setMatchMode(direct.mode);
+      setDetectedAmount(
+        typeof direct.detectedAmount === 'number' ? direct.detectedAmount : normalizedAmount
+      );
+    } else {
+      // Parse all money tokens and accept if any >= normalizedAmount (supports tips)
+      const parsed = detectReceiptAmountAtLeast(receiptText, normalizedAmount);
+      setReceiptHasAmount(parsed.ok);
+      setMatchSnippet(parsed.snippet || '');
+      setMatchMode(parsed.ok ? 'parsed' : undefined);
+      setDetectedAmount(parsed.bestAmount ?? undefined);
+    }
+
     const nameRes = verifyAccountName(receiptText);
     setAccountNameOK(nameRes.ok);
     setAccountNameMatched(nameRes.matchedTokens);
@@ -254,14 +321,37 @@ function Started3() {
       toast.error('Enter an amount.');
       return;
     }
-    const { matched } = verifyAmount(receiptText, normalizedAmount);
-    setReceiptHasAmount(matched);
+    const direct = verifyAmount(receiptText, normalizedAmount);
+    let ok = false;
+    let snip = '';
+    let mode: VerifyMode | undefined = undefined;
+    let det: number | undefined = undefined;
+
+    if (direct.matched) {
+      ok = true;
+      snip = direct.snippet || '';
+      mode = direct.mode;
+      det = typeof direct.detectedAmount === 'number' ? direct.detectedAmount : normalizedAmount;
+    } else {
+      const parsed = detectReceiptAmountAtLeast(receiptText, normalizedAmount);
+      ok = parsed.ok;
+      snip = parsed.snippet || '';
+      mode = ok ? 'parsed' : undefined;
+      det = parsed.bestAmount ?? undefined;
+    }
+
+    setReceiptHasAmount(ok);
+    setMatchSnippet(snip);
+    setMatchMode(mode);
+    setDetectedAmount(det);
+
     const nameRes = verifyAccountName(receiptText);
     setAccountNameOK(nameRes.ok);
     setAccountNameMatched(nameRes.matchedTokens);
     setAccountNameSnippet(nameRes.snippet || '');
-    toast[matched && nameRes.ok ? 'success' : 'error'](
-      matched && nameRes.ok ? 'Verified against receipt.' : 'Verification failed: amount and/or account name.'
+
+    toast[ok && nameRes.ok ? 'success' : 'error'](
+      ok && nameRes.ok ? 'Verified against receipt.' : 'Verification failed: amount and/or account name.'
     );
   };
 
@@ -283,7 +373,7 @@ function Started3() {
       return;
     }
     if (!receiptHasAmount) {
-      toast.error('Receipt does not show the typed amount yet.');
+      toast.error('Receipt amount does not meet the required amount yet.');
       return;
     }
     if (!accountNameOK) {
@@ -298,7 +388,8 @@ function Started3() {
       toast.error('Please confirm you have sent it on WhatsApp.');
       return;
     }
-    setLoading(true);
+
+    setLoading(true); // show big overlay spinner
     try {
       const payload: StudentData = {
         ...(studentDataSub as StudentData),
@@ -316,17 +407,20 @@ function Started3() {
               currency: 'NGN',
             });
           }
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lasop-server-vault.fly.dev'}/facebook/conversion`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event_name: 'Purchase',
-              value: normalizedAmount || Number(price) || 0,
-              currency: 'NGN',
-              email: studentDataSub.email,
-              event_source_url: typeof window !== 'undefined' ? window.location.href : '',
-            }),
-          });
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || 'https://lasop-server-vault.fly.dev'}/facebook/conversion`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event_name: 'Purchase',
+                value: normalizedAmount || Number(price) || 0,
+                currency: 'NGN',
+                email: studentDataSub.email,
+                event_source_url: typeof window !== 'undefined' ? window.location.href : '',
+              }),
+            }
+          );
         } catch (err) {
           console.error('⚠️ Facebook tracking failed:', err);
         }
@@ -340,10 +434,10 @@ function Started3() {
         });
       } else {
         toast.error(response.error?.message || 'Failed to complete application.');
+        setLoading(false);
       }
     } catch (error: any) {
       toast.error(error?.message || 'Unexpected error.');
-    } finally {
       setLoading(false);
     }
   };
@@ -352,11 +446,46 @@ function Started3() {
 
   return (
     <>
-      {loading && <ValidateLoading />}
+      {/* Full-screen blocking spinner while submitting */}
+      {loading && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90">
+          <div className="w-[90%] max-w-md rounded-2xl border border-white/20 bg-slate-900 p-6 text-center text-slate-100 shadow-xl">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800">
+              <BigSpinner />
+            </div>
+            <h3 className="text-lg font-semibold">Verifying payment…</h3>
+            <p className="mt-1 text-sm text-slate-300">
+              Please hold while we verify your receipt and sync your application.
+            </p>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-700">
+              <div
+                className="h-full"
+                style={{
+                  width: '100%',
+                  background:
+                    'linear-gradient(90deg, rgba(59,130,246,1) 0%, rgba(99,102,241,1) 100%)',
+                  animation: 'loadbar 1.8s ease-in-out infinite',
+                }}
+              />
+            </div>
+            <style>{`
+              @keyframes loadbar {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(0%); }
+                100% { transform: translateX(100%); }
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+
       <main className="w-full md:w-[45vw] h-full">
         <div className="p-10 flex flex-col justify-center">
           <div className="mb-5">
-            <FaArrowLeft className="text-[20px] text-accent mb-3 cursor-pointer" onClick={() => dispatch(goBack())} />
+            <FaArrowLeft
+              className="text-[20px] text-accent mb-3 cursor-pointer"
+              onClick={() => dispatch(goBack())}
+            />
             <h1 className="font-bold text-[25px]">
               <Image className="w-[120px] h-[80px]" src={lasopLogo} alt="" />
             </h1>
@@ -365,7 +494,8 @@ function Started3() {
 
           {needsReupload && (
             <div className="mb-4 text-[12px] p-3 rounded border border-amber-300 bg-amber-50 text-amber-700">
-              You previously uploaded a receipt. For security reasons, please re-upload the file to complete verification.
+              You previously uploaded a receipt. For security reasons, please re-upload the file to
+              complete verification.
             </div>
           )}
 
@@ -384,14 +514,18 @@ function Started3() {
                     <button
                       type="button"
                       onClick={() => setIsPartPay(false)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${!isPartPay ? 'bg-accent text-white border-accent' : ''}`}
+                      className={`h-8 px-3 rounded-md border text-[12px] ${
+                        !isPartPay ? 'bg-accent text-white border-accent' : ''
+                      }`}
                     >
                       Full Payment
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsPartPay(true)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${isPartPay ? 'bg-accent text-white border-accent' : ''}`}
+                      className={`h-8 px-3 rounded-md border text-[12px] ${
+                        isPartPay ? 'bg-accent text-white border-accent' : ''
+                      }`}
                     >
                       Part Payment
                     </button>
@@ -410,11 +544,14 @@ function Started3() {
                           placeholder="Enter amount e.g. 200,000"
                           value={amount}
                           onChange={handleAmountInput}
-                          className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${receiptHasAmount ? 'border-green-500' : 'border-shadow'}`}
+                          className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${
+                            receiptHasAmount ? 'border-green-500' : 'border-shadow'
+                          }`}
                         />
                         {receiptHasAmount && (
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[12px]">
-                            <FaCheckCircle className="text-green-600" /> {matchMode === 'strict' ? 'Matched' : `Matched (${matchMode})`}
+                            <FaCheckCircle className="text-green-600" />{' '}
+                            {matchMode === 'strict' ? 'Matched' : `Matched (${matchMode})`}
                           </span>
                         )}
                       </div>
@@ -430,7 +567,9 @@ function Started3() {
                         </button>
                         {amountError && <p className="text-[11px] text-red-600">{amountError}</p>}
                       </div>
-                      <p className="text-[11px] text-gray-500 mt-1">Minimum part payment: ₦{MIN_PART_PAYMENT.toLocaleString()}</p>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Minimum part payment: ₦{MIN_PART_PAYMENT.toLocaleString()}
+                      </p>
                     </div>
                   ) : (
                     <span className="w-full h-[35px] px-2 outline-none border border-shadow text-[12px] rounded-md font-bold flex items-center">
@@ -450,7 +589,13 @@ function Started3() {
                           <div className="text-[12px]">Account No:</div>
                           <div className="font-bold select-all">1223017613</div>
                         </div>
-                        <button type="button" className="h-8 px-3 rounded-md border text-[12px]" onClick={() => copyToClipboard('1223017613', 'Account No')}>Copy</button>
+                        <button
+                          type="button"
+                          className="h-8 px-3 rounded-md border text-[12px]"
+                          onClick={() => copyToClipboard('1223017613', 'Account No')}
+                        >
+                          Copy
+                        </button>
                       </div>
 
                       <div className="flex items-center justify-between gap-3">
@@ -458,7 +603,15 @@ function Started3() {
                           <div className="text-[12px]">Name:</div>
                           <div className="font-bold select-all">Lagos School of Programming Ltd</div>
                         </div>
-                        <button type="button" className="h-8 px-3 rounded-md border text-[12px]" onClick={() => copyToClipboard('Lagos School of Programming Ltd', 'Name')}>Copy</button>
+                        <button
+                          type="button"
+                          className="h-8 px-3 rounded-md border text-[12px]"
+                          onClick={() =>
+                            copyToClipboard('Lagos School of Programming Ltd', 'Name')
+                          }
+                        >
+                          Copy
+                        </button>
                       </div>
 
                       <div className="flex items-center justify-between gap-3">
@@ -466,11 +619,18 @@ function Started3() {
                           <div className="text-[12px]">Bank:</div>
                           <div className="font-bold select-all">Zenith</div>
                         </div>
-                        <button type="button" className="h-8 px-3 rounded-md border text-[12px]" onClick={() => copyToClipboard('Zenith', 'Bank')}>Copy</button>
+                        <button
+                          type="button"
+                          className="h-8 px-3 rounded-md border text-[12px]"
+                          onClick={() => copyToClipboard('Zenith', 'Bank')}
+                        >
+                          Copy
+                        </button>
                       </div>
                     </div>
                     <p className="text-[11px] text-gray-500 mt-2">
-                      Receipt must include at least two of: <b>Lagos</b>, <b>School</b>, <b>Programming</b> (fuzzy match allowed).
+                      Receipt must include at least two of: <b>Lagos</b>, <b>School</b>,{' '}
+                      <b>Programming</b> (fuzzy match allowed).
                     </p>
                   </div>
                 </div>
@@ -491,7 +651,11 @@ function Started3() {
                       {proof?.type === 'application/pdf' ? (
                         <embed src={previewUrl} type="application/pdf" className="w-full h-64 rounded" />
                       ) : (
-                        <img src={previewUrl} alt="Receipt preview" className="w-full max-h-64 object-contain rounded" />
+                        <img
+                          src={previewUrl}
+                          alt="Receipt preview"
+                          className="w-full max-h-64 object-contain rounded"
+                        />
                       )}
                     </div>
                   )}
@@ -501,11 +665,16 @@ function Started3() {
                     {parsing && <span className="text-gray-600">Reading receipt…</span>}
                     {!parsing && (proof || receiptText) && (
                       <>
-                        {/* Amount status */}
+                        {/* Amount status (>= check) */}
                         {receiptHasAmount ? (
                           <div className="space-y-1">
                             <span className="text-green-700">
-                              ✓ Receipt shows the amount ₦{normalizedAmount.toLocaleString()} ({matchMode}).
+                              ✓ Receipt amount{' '}
+                              {typeof detectedAmount === 'number'
+                                ? `₦${detectedAmount.toLocaleString()}`
+                                : `₦${normalizedAmount.toLocaleString()}`}
+                              {' '}meets requirement (≥ ₦{normalizedAmount.toLocaleString()}).
+                              {matchMode ? ` (${matchMode})` : ''}
                             </span>
                             {matchSnippet && (
                               <div className="mt-1">
@@ -520,7 +689,7 @@ function Started3() {
                           <span className="text-red-700">
                             {!normalizedAmount
                               ? 'Type an amount to verify against the receipt.'
-                              : 'Receipt does not show the typed amount yet.'}
+                              : 'Receipt does not yet show an amount that meets the required amount.'}
                           </span>
                         )}
 
@@ -563,7 +732,9 @@ function Started3() {
                   <div className="text-[11px]">
                     {isShareRecent(shareStartedAt) ? (
                       <div className="mt-1">
-                        <div className="text-green-700">WhatsApp opened. After sending, come back and confirm below.</div>
+                        <div className="text-green-700">
+                          WhatsApp opened. After sending, come back and confirm below.
+                        </div>
                         <label className="mt-2 flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -582,8 +753,8 @@ function Started3() {
                   </div>
 
                   <p className="text-[11px] text-gray-500">
-                    On mobile devices, the system may open a native share dialog. On desktop, WhatsApp Web opens in the same tab.
-                    Use the Back button to return here after sending.
+                    On mobile devices, the system may open a native share dialog. On desktop, WhatsApp Web opens in
+                    the same tab. Use the Back button to return here after sending.
                   </p>
 
                   {/* Debug toggle */}
@@ -637,8 +808,14 @@ function Started3() {
 
 export default Started3;
 
-/* ================= Helpers (amount + fuzzy name check) ================= */
+/* ================= Helpers (amount >= check + fuzzy name check) ================= */
 
+/**
+ * Primary verifier:
+ * - First tries to match the EXACT typed amount via strict/loose/fuzzy/words (for nice UX).
+ * - If not found, a secondary pass (detectReceiptAmountAtLeast) will parse all monetary tokens
+ *   and PASS if any detected amount >= required (supports tips/overpayment).
+ */
 function verifyAmount(text: string, amount: number): VerifyResult {
   const strictNorm = normalizeOcrText(text);
   const amt = Math.floor(Math.abs(amount));
@@ -647,13 +824,13 @@ function verifyAmount(text: string, amount: number): VerifyResult {
 
   for (const rx of buildAmountRegexes(amt)) {
     const m = strictNorm.match(rx);
-    if (m?.[0]) return { matched: true, snippet: liftToOriginalSnippet(text, m[0]), mode: 'strict' };
+    if (m?.[0]) return { matched: true, snippet: liftToOriginalSnippet(text, m[0]), mode: 'strict', detectedAmount: amt };
   }
 
   {
     const looseRx = buildLooseDigitRegex(amt);
     const loose = text.match(looseRx);
-    if (loose?.[0]) return { matched: true, snippet: loose[0], mode: 'loose' };
+    if (loose?.[0]) return { matched: true, snippet: loose[0], mode: 'loose', detectedAmount: amt };
   }
 
   {
@@ -662,26 +839,72 @@ function verifyAmount(text: string, amount: number): VerifyResult {
     for (const t of tokens) {
       const compact = t.replace(/[^0-9]/g, '').replace(/^0+/, '');
       if (closeEnoughDigits(compact, amtStr) || closeEnoughDigits(compact, amtStrCents)) {
-        return { matched: true, snippet: t.trim(), mode: 'fuzzy' };
+        return { matched: true, snippet: t.trim(), mode: 'fuzzy', detectedAmount: amt };
       }
     }
   }
 
   {
     const digitsOnly = canonicalDigits(text).replace(/[^0-9]/g, '');
-    if (digitsOnly.includes(amtStr)) return { matched: true, snippet: amtStr, mode: 'digits' };
-    if (digitsOnly.includes(amtStrCents)) return { matched: true, snippet: amtStrCents, mode: 'digits' };
+    if (digitsOnly.includes(amtStr)) return { matched: true, snippet: amtStr, mode: 'digits', detectedAmount: amt };
+    if (digitsOnly.includes(amtStrCents)) return { matched: true, snippet: amtStrCents, mode: 'digits', detectedAmount: amt };
   }
 
   {
     const wordsRx = buildAmountInWordsRegex(amt);
     if (wordsRx) {
       const m = normalizeForWords(text).match(wordsRx);
-      if (m?.[0]) return { matched: true, snippet: m[0], mode: 'words' };
+      if (m?.[0]) return { matched: true, snippet: m[0], mode: 'words', detectedAmount: amt };
     }
   }
 
   return { matched: false };
+}
+
+/**
+ * Secondary verifier:
+ * - Parse ALL money-like tokens in the receipt and PASS if any amount >= required.
+ * - Returns the best (largest) qualifying amount + a snippet.
+ */
+function detectReceiptAmountAtLeast(text: string, required: number): { ok: boolean; bestAmount: number | null; snippet: string } {
+  const tokens = collectMoneyCandidates(text);
+  const candidates: Array<{ val: number; tok: string; idx: number; score: number }> = [];
+  const seen = new Set<string>();
+  const hay = text.toLowerCase();
+
+  const posHints = ['total', 'amount', 'amount paid', 'paid', 'debit', 'credit', 'ngn', '₦', 'you paid', 'cash received', 'grand total'];
+  const negHints = ['transaction id', 'rrn', 'stan', 'reference', 'ref', 'account', 'acct', 'terminal', 'pos', 'auth', 'card', 'pan'];
+
+  for (const { tok, idx } of tokens) {
+    const n = parseMoneyTokenToNaira(tok);
+    if (n == null) continue;
+    const whole = Math.floor(Math.abs(n));
+    const key = `${tok}@${idx}:${whole}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    let score = 0;
+    if (/[₦]|NGN/i.test(tok)) score += 6;
+    if (/\d+[.,]\d{2}\b/.test(tok)) score += 2;
+
+    const tail = hay.slice(Math.max(0, idx - 50), Math.min(hay.length, idx + tok.length + 50));
+    if (posHints.some((p) => tail.includes(p))) score += 4;
+    if (negHints.some((p) => tail.includes(p))) score -= 6;
+
+    // prefer values near or above required
+    if (whole >= required) score += 6;
+    else if (whole >= required * 0.9) score += 2;
+
+    candidates.push({ val: whole, tok, idx, score });
+  }
+
+  if (!candidates.length) return { ok: false, bestAmount: null, snippet: '' };
+
+  // sort: score desc, value desc
+  candidates.sort((a, b) => (b.score - a.score) || (b.val - a.val));
+  const best = candidates[0];
+  const ok = best.val >= Math.floor(Math.abs(required));
+  return { ok, bestAmount: best.val, snippet: best.tok.trim() };
 }
 
 /* === Account name verifier with fuzzy (≤1 edit) === */
@@ -693,21 +916,18 @@ function verifyAccountName(text: string): { ok: boolean; matchedTokens: string[]
   const hits: string[] = [];
 
   for (const tok of ACCOUNT_TOKENS) {
-    // Exact hit
     if (wordsSet.has(tok)) {
       hits.push(capitalize(tok));
       continue;
     }
-    // Fuzzy hit (≤1 edit distance) against any word in the receipt (short-circuit on first)
     const foundFuzzy = wordsArr.some((w) => isWithinOneEdit(w, tok));
     if (foundFuzzy) hits.push(capitalize(tok));
   }
 
-  // Snippet around first found word (exact or fuzzy)
+  // Snippet around first found token
   let snippet = '';
   const firstHitLower = hits[0]?.toLowerCase();
   if (firstHitLower) {
-    // locate in array with fuzzy again to get an index
     const idx = wordsArr.findIndex((w) => w === firstHitLower || isWithinOneEdit(w, firstHitLower));
     if (idx >= 0) {
       const start = Math.max(0, idx - 6);
@@ -719,13 +939,11 @@ function verifyAccountName(text: string): { ok: boolean; matchedTokens: string[]
   return { ok: hits.length >= 2, matchedTokens: hits.slice(0, 3), snippet };
 }
 
-/* === ≤1 edit distance check (fast, early-exit). Handles insert/delete/substitute. === */
+/* === ≤1 edit distance (insert/delete/substitute) === */
 function isWithinOneEdit(a: string, b: string): boolean {
   if (a === b) return true;
   const la = a.length, lb = b.length;
   if (Math.abs(la - lb) > 1) return false;
-
-  // Ensure a is the shorter (or equal)
   if (la > lb) return isWithinOneEdit(b, a);
 
   let i = 0, j = 0, edits = 0;
@@ -734,16 +952,10 @@ function isWithinOneEdit(a: string, b: string): boolean {
       i++; j++;
       continue;
     }
-    // mismatch
     if (edits === 1) return false;
     edits++;
-    if (la === lb) { // substitute
-      i++; j++;
-    } else { // insert into shorter (skip one in longer)
-      j++;
-    }
+    if (la === lb) { i++; j++; } else { j++; }
   }
-  // Any remaining char in longer counts as at most one edit
   if (j < lb || i < la) edits++;
   return edits <= 1;
 }
@@ -752,7 +964,7 @@ function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-// Money-like tokens (avoid IDs)
+// Money-like tokens for fuzzy path
 function getMoneyLikeTokens(s: string): string[] {
   const raw = s.match(/[0-9][0-9\.\,\s_:-]*/g) || [];
   return raw.filter((tok) => {
@@ -909,7 +1121,70 @@ function numberToWords(num: number): string {
   return res.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-// === OCR safe for SSR/build ===
+/* -------- Money parsing helpers for >= check -------- */
+
+function collectMoneyCandidates(s: string): Array<{ tok: string; idx: number }> {
+  const out: Array<{ tok: string; idx: number }> = [];
+  const Usp = '\u00A0\u2007\u2009\u202F';
+  const src = String(s || '');
+
+  const patterns = [
+    new RegExp(`(?:₦|NGN|N)[${Usp}\\s]*[\\d${Usp}\\s.,]+(?:[.,]\\d{1,2})?`, 'gi'),
+    new RegExp(`\\b\\d{1,3}(?:[${Usp}\\s.,]\\d{3})+(?:[.,]\\d{2})?\\b`, 'g'),
+    /\b\d{4,}(?:[.,]\d{2})\b/g,
+    /\b\d{5,}\b/g,
+    /\b\d{1,3}(?:[.,]\d{1,2})?\s*[kK]\b/g, // 120.5k
+  ];
+
+  for (const pat of patterns) {
+    for (const m of src.matchAll(pat)) {
+      const tok = m[0];
+      const idx = m.index ?? -1;
+      out.push({ tok, idx });
+    }
+  }
+  return out;
+}
+
+function parseMoneyTokenToNaira(tok: string): number | null {
+  if (!tok) return null;
+  let s = String(tok);
+
+  const hasK = /k$/i.test(s.replace(/\s+/g, ''));
+
+  s = s
+    .replace(/[\u00A0\u2007\u2009\u202F]/g, ' ')
+    .replace(/[Oo]/g, '0')
+    .replace(/[Il|]/g, '1')
+    .replace(/S/g, '5')
+    .replace(/B/g, '8')
+    .replace(/Z/g, '2');
+
+  s = s
+    .replace(/\s+/g, '')
+    .replace(/₦/g, '')
+    .replace(/N\s*G\s*N/gi, 'NGN')
+    .replace(/NGN/gi, '')
+    .replace(/\bN\b/gi, '');
+
+  let multiplier = 1;
+  if (hasK) { s = s.replace(/k$/i, ''); multiplier = 1000; }
+
+  const hasComma = s.includes(','), hasDot = s.includes('.');
+  if (hasComma && hasDot) {
+    const lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.');
+    const decSep = lastDot > lastComma ? '.' : ',';
+    s = s.replace(decSep === '.' ? /,/g : /\./g, '');
+    if (decSep === ',') s = s.replace(',', '.');
+  } else {
+    s = s.replace(/,/g, '');
+  }
+
+  const n = Number.parseFloat(s.replace(/[^\d.]/g, ''));
+  return Number.isFinite(n) ? n * multiplier : null;
+}
+
+/* ---------- OCR safe for SSR/build ---------- */
 async function extractTextFromFile(file: File): Promise<string> {
   if (typeof window === 'undefined') {
     return '';
@@ -921,17 +1196,17 @@ async function extractTextFromFile(file: File): Promise<string> {
       pdfjsLib.GlobalWorkerOptions.workerSrc =
         `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-    const data = await file.arrayBuffer();
-    const doc = await pdfjsLib.getDocument({ data }).promise;
+      const data = await file.arrayBuffer();
+      const doc = await pdfjsLib.getDocument({ data }).promise;
 
-    let text = '';
-    const pages = Math.min(doc.numPages, 5);
-    for (let i = 1; i <= pages; i++) {
-      const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      text += ' ' + content.items.map((it: any) => it.str ?? '').join(' ');
-    }
-    return text.trim();
+      let text = '';
+      const pages = Math.min(doc.numPages, 5);
+      for (let i = 1; i <= pages; i++) {
+        const page = await doc.getPage(i);
+        const content = await page.getTextContent();
+        text += ' ' + content.items.map((it: any) => it.str ?? '').join(' ');
+      }
+      return text.trim();
     }
 
     if (file.type.startsWith('image/')) {
