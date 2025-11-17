@@ -1,6 +1,6 @@
 // =============================================================
-// File: src/components/.../Started3.tsx (FULLY SYNCED + SPINNER + >= AMOUNT)
-// Enhanced: event_id + fbp/fbc + richer customer → better CAPI EMQ (add-only)
+// File: src/components/.../Started3.tsx (FULLY SYNCED + OVERLAY SPINNERS)
+// Unified overlay spinner for parsing/submitting; safe disables while busy
 // =============================================================
 'use client';
 
@@ -77,7 +77,6 @@ const ACCOUNT_TOKENS = ['lagos', 'school', 'programming'] as const;
 const ACCOUNT_NAME_LABEL = 'Lagos School of Programming';
 
 /* ------- tiny local helpers for Pixel↔CAPI dedupe (add-only) ------- */
-// Why: ensure dedupe + cookie match; isolated to avoid touching other modules.
 const readCookie = (name: string): string | undefined => {
   if (typeof document === 'undefined') return undefined;
   const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]+)`));
@@ -106,7 +105,7 @@ const safeUUID = (): string => {
 function Started3() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // drives the big overlay spinner
+  const [loading, setLoading] = useState(false);
   const [isPartPay, setIsPartPay] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
@@ -245,7 +244,7 @@ function Started3() {
     if (!f) return;
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
-    setParsing(true);
+    setParsing(true); // overlay will show "Verifying payment…"
     try {
       const text = await extractTextFromFile(f);
       setReceiptText(text || '');
@@ -316,7 +315,6 @@ function Started3() {
       setAccountNameSnippet('');
       return;
     }
-    // First try strict/loose/fuzzy matching; then fall back to parsed numeric >= check
     const direct = verifyAmount(receiptText, normalizedAmount);
     if (direct.matched) {
       setReceiptHasAmount(true);
@@ -326,7 +324,6 @@ function Started3() {
         typeof direct.detectedAmount === 'number' ? direct.detectedAmount : normalizedAmount
       );
     } else {
-      // Parse all money tokens and accept if any >= normalizedAmount (supports tips)
       const parsed = detectReceiptAmountAtLeast(receiptText, normalizedAmount);
       setReceiptHasAmount(parsed.ok);
       setMatchSnippet(parsed.snippet || '');
@@ -417,7 +414,7 @@ function Started3() {
       return;
     }
 
-    setLoading(true); // show big overlay spinner
+    setLoading(true); // overlay will show "Submitting application…"
     try {
       const payload: StudentData = {
         ...(studentDataSub as StudentData),
@@ -485,18 +482,21 @@ function Started3() {
     }
   };
 
-  const completeDisabled = loading;
+  const overlayVisible = loading || parsing;
+  const completeDisabled = overlayVisible;
 
   return (
     <>
-      {/* Full-screen blocking spinner while submitting */}
-      {loading && (
+      {/* Full-screen overlay used for BOTH parsing and submitting */}
+      {overlayVisible && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90">
           <div className="w-[90%] max-w-md rounded-2xl border border-white/20 bg-slate-900 p-6 text-center text-slate-100 shadow-xl">
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800">
               <BigSpinner />
             </div>
-            <h3 className="text-lg font-semibold">Verifying payment…</h3>
+            <h3 className="text-lg font-semibold">
+              {loading ? 'Submitting application…' : 'Verifying payment…'}
+            </h3>
             <p className="mt-1 text-sm text-slate-300">
               Please hold while we verify your receipt and sync your application.
             </p>
@@ -560,6 +560,8 @@ function Started3() {
                       className={`h-8 px-3 rounded-md border text-[12px] ${
                         !isPartPay ? 'bg-accent text-white border-accent' : ''
                       }`}
+                      disabled={overlayVisible}
+                      aria-disabled={overlayVisible}
                     >
                       Full Payment
                     </button>
@@ -569,6 +571,8 @@ function Started3() {
                       className={`h-8 px-3 rounded-md border text-[12px] ${
                         isPartPay ? 'bg-accent text-white border-accent' : ''
                       }`}
+                      disabled={overlayVisible}
+                      aria-disabled={overlayVisible}
                     >
                       Part Payment
                     </button>
@@ -587,9 +591,10 @@ function Started3() {
                           placeholder="Enter amount e.g. 200,000"
                           value={amount}
                           onChange={handleAmountInput}
+                          disabled={overlayVisible}
                           className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${
                             receiptHasAmount ? 'border-green-500' : 'border-shadow'
-                          }`}
+                          } ${overlayVisible ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         />
                         {receiptHasAmount && (
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[12px]">
@@ -603,8 +608,12 @@ function Started3() {
                         <button
                           type="button"
                           onClick={rerunVerification}
-                          className="h-8 px-3 rounded-md border text-[12px]"
+                          disabled={overlayVisible}
+                          className={`h-8 px-3 rounded-md border text-[12px] ${
+                            overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
                           title="Re-run verification"
+                          aria-disabled={overlayVisible}
                         >
                           Re-run verification
                         </button>
@@ -636,6 +645,8 @@ function Started3() {
                           type="button"
                           className="h-8 px-3 rounded-md border text-[12px]"
                           onClick={() => copyToClipboard('1223017613', 'Account No')}
+                          disabled={overlayVisible}
+                          aria-disabled={overlayVisible}
                         >
                           Copy
                         </button>
@@ -652,6 +663,8 @@ function Started3() {
                           onClick={() =>
                             copyToClipboard('Lagos School of Programming Ltd', 'Name')
                           }
+                          disabled={overlayVisible}
+                          aria-disabled={overlayVisible}
                         >
                           Copy
                         </button>
@@ -666,6 +679,8 @@ function Started3() {
                           type="button"
                           className="h-8 px-3 rounded-md border text-[12px]"
                           onClick={() => copyToClipboard('Zenith', 'Bank')}
+                          disabled={overlayVisible}
+                          aria-disabled={overlayVisible}
                         >
                           Copy
                         </button>
@@ -686,6 +701,8 @@ function Started3() {
                     accept="image/*,application/pdf"
                     onChange={handleProofChange}
                     className="w-full h-[35px] px-2 outline-none border border-shadow text-[12px] rounded-md bg-white"
+                    disabled={overlayVisible}
+                    aria-disabled={overlayVisible}
                   />
 
                   {/* Preview */}
@@ -703,9 +720,8 @@ function Started3() {
                     </div>
                   )}
 
-                  {/* Parsing status + match */}
+                  {/* Parsing status + match (inline parsing message removed; overlay covers it) */}
                   <div className="text-[11px]">
-                    {parsing && <span className="text-gray-600">Reading receipt…</span>}
                     {!parsing && (proof || receiptText) && (
                       <>
                         {/* Amount status (>= check) */}
@@ -763,10 +779,14 @@ function Started3() {
                   {/* WhatsApp flow */}
                   <button
                     type="button"
-                    className="mt-2 h-9 w-full rounded-md border text-[12px]"
+                    className={`mt-2 h-9 w-full rounded-md border text-[12px] ${
+                      overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                     onClick={shareToWhatsApp}
                     aria-label="Send to WhatsApp"
                     title="Send to WhatsApp"
+                    disabled={overlayVisible}
+                    aria-disabled={overlayVisible}
                   >
                     Send to WhatsApp (+{WHATSAPP_E164})
                   </button>
@@ -784,6 +804,8 @@ function Started3() {
                             checked={shareConfirmed}
                             onChange={(e) => setShareConfirmed(e.target.checked)}
                             className="h-3 w-3"
+                            disabled={overlayVisible}
+                            aria-disabled={overlayVisible}
                           />
                           <span>I have sent the receipt via WhatsApp to +{WHATSAPP_E164}.</span>
                         </label>
@@ -808,6 +830,8 @@ function Started3() {
                         onClick={() => setShowRaw((s) => !s)}
                         className="h-7 px-2 rounded-md border text-[11px]"
                         title="Toggle extracted text for debugging"
+                        disabled={overlayVisible}
+                        aria-disabled={overlayVisible}
                       >
                         {showRaw ? 'Hide extracted text' : 'Show extracted text'}
                       </button>
@@ -934,7 +958,6 @@ function detectReceiptAmountAtLeast(text: string, required: number): { ok: boole
     if (posHints.some((p) => tail.includes(p))) score += 4;
     if (negHints.some((p) => tail.includes(p))) score -= 6;
 
-    // prefer values near or above required
     if (whole >= required) score += 6;
     else if (whole >= required * 0.9) score += 2;
 
@@ -943,7 +966,6 @@ function detectReceiptAmountAtLeast(text: string, required: number): { ok: boole
 
   if (!candidates.length) return { ok: false, bestAmount: null, snippet: '' };
 
-  // sort: score desc, value desc
   candidates.sort((a, b) => (b.score - a.score) || (b.val - a.val));
   const best = candidates[0];
   const ok = best.val >= Math.floor(Math.abs(required));
@@ -952,7 +974,7 @@ function detectReceiptAmountAtLeast(text: string, required: number): { ok: boole
 
 /* === Account name verifier with fuzzy (≤1 edit) === */
 function verifyAccountName(text: string): { ok: boolean; matchedTokens: string[]; snippet?: string } {
-  const norm = normalizeForWords(text); // lowercased, punctuation removed, spaces collapsed
+  const norm = normalizeForWords(text);
   const wordsArr = norm.split(' ').filter(Boolean);
   const wordsSet = new Set(wordsArr);
 
@@ -967,7 +989,6 @@ function verifyAccountName(text: string): { ok: boolean; matchedTokens: string[]
     if (foundFuzzy) hits.push(capitalize(tok));
   }
 
-  // Snippet around first found token
   let snippet = '';
   const firstHitLower = hits[0]?.toLowerCase();
   if (firstHitLower) {
@@ -1020,7 +1041,6 @@ function getMoneyLikeTokens(s: string): string[] {
       return (hasSep || hasDot00) && digits.length >= 4 && digits.length <= 10;
     });
 }
-
 
 // Exact or ≤1 digit difference
 function closeEnoughDigits(a: string, b: string): boolean {
@@ -1251,7 +1271,7 @@ async function extractTextFromFile(file: File): Promise<string> {
       for (let i = 1; i <= pages; i++) {
         const page = await doc.getPage(i);
         const content = await page.getTextContent();
-        text += ' ' + content.items.map((it: any) => it.str ?? '').join(' ');
+        text += ' ' + (content.items as any[]).map((it: any) => it.str ?? '').join(' ');
       }
       return text.trim();
     }
