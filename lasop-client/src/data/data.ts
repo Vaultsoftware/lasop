@@ -915,6 +915,188 @@ export const course: CourseData[] = [
         ]
 
     },
+
+
+    {
+    id: 7,
+    dpt1: "Full-stack Web Software",
+    title: "fullstack-ai",
+    dpt2: "Development & AI",
+    bannerText: `This program trains students to build scalable, production-ready web software
+    while integrating Artificial Intelligence into real-world applications. You will learn
+    frontend and backend development, APIs, cloud deployment, and AI-powered features
+    such as intelligent automation, recommendation systems, and data-driven decision tools.`,
+    bannerBtn: [
+        { text: "Ojodu-Berger" },
+        { text: "Weekdays" },
+        { text: "Weekends" },
+        { text: "6 months" },
+        { text: "Online" },
+    ],
+    courseInfo: [
+        {
+            curr: "Advanced Full-stack Development",
+            text: "Master modern frontend and backend technologies, API design, databases, authentication systems, and cloud deployment to build scalable web software."
+        },
+        {
+            curr: "AI Integration for Web Apps",
+            text: "Learn how to integrate machine learning models, intelligent APIs, automation systems, and AI-driven features into web applications."
+        },
+        {
+            curr: "Deployment & Production Systems",
+            text: "Understand DevOps fundamentals, CI/CD pipelines, cloud hosting, monitoring, and scaling production-ready applications."
+        },
+    ],
+    packageBtn: [
+        {
+            title: "Entry Requirement",
+            info: [
+                "Basic computer literacy",
+                "Personal laptop required",
+                "Strong commitment to learning"
+            ]
+        },
+        {
+            title: "Tuition Fee",
+            info: ["N 600,000 for Nigerians", "50% More for foreign students"]
+        },
+
+         {
+                title: "Lectures & Assesments",
+                info: [
+                    "Students should have a personal laptop computer. ",
+                    "Tuition Fee"
+                ]
+            },
+        {
+            title: "Careers",
+            info: [
+                "Full-stack Software Engineer",
+                "AI-enabled Web Developer",
+                "Technical Product Engineer"
+            ]
+        }
+    ]
+},
+{
+    id: 8,
+    dpt1: "Data Science",
+    title: "datascience-ai",
+    dpt2: "And Artificial Intelligence",
+    bannerText: `This course combines data science and artificial intelligence to prepare
+    students for intelligent data-driven roles. You will work with real-world datasets,
+    build predictive models, and apply AI techniques to solve business and societal problems.`,
+    bannerBtn: [
+        { text: "Ojodu-Berger" },
+        { text: "Weekdays" },
+        { text: "Weekends" },
+        { text: "5 months" },
+    ],
+    courseInfo: [
+        {
+            curr: "Data Science Foundations",
+            text: "Learn data analysis, statistics, Python programming, data cleaning, and visualization using industry-standard tools."
+        },
+        {
+            curr: "Machine Learning & AI",
+            text: "Build and evaluate machine learning models, explore supervised and unsupervised learning, and apply AI techniques to real problems."
+        },
+        {
+            curr: "AI Projects & Portfolio",
+            text: "Develop end-to-end data science and AI projects that demonstrate real-world problem-solving skills."
+        },
+    ],
+    packageBtn: [
+        {
+            title: "Entry Requirement",
+            info: [
+                "Basic computer knowledge",
+                "Interest in data and problem solving",
+                "Personal laptop required"
+            ]
+        },
+        {
+            title: "Tuition Fee",
+           info: ["N 600,000 for Nigerians", "50% More for foreign students"]
+        },
+         {
+                title: "Lectures & Assesments",
+                info: [
+                    "Students should have a personal laptop computer. ",
+                    "Tuition Fee"
+                ]
+            },
+        {
+            title: "Careers",
+            info: [
+                "Data Scientist",
+                "Machine Learning Engineer",
+                "AI Analyst"
+            ]
+        }
+    ]
+},
+{
+    id: 9,
+    dpt1: "Artificial Intelligence",
+    title: "ai-engineering",
+    dpt2: "Engineering",
+    bannerText: `This program focuses on designing, building, and deploying intelligent
+    systems. Students will learn machine learning, deep learning, neural networks,
+    and how to deploy AI solutions at scale for real-world applications.`,
+    bannerBtn: [
+        { text: "Ojodu-Berger" },
+        { text: "Weekdays" },
+        { text: "Weekends" },
+        { text: "6 months" },
+    ],
+    courseInfo: [
+        {
+            curr: "Machine Learning Engineering",
+            text: "Learn how to design, train, evaluate, and optimize machine learning models for production use."
+        },
+        {
+            curr: "Deep Learning & Neural Networks",
+            text: "Explore neural networks, deep learning architectures, and AI frameworks used in modern AI systems."
+        },
+        {
+            curr: "AI Deployment & Ethics",
+            text: "Understand AI deployment pipelines, scalability, monitoring, and responsible AI practices."
+        },
+    ],
+    packageBtn: [
+        {
+            title: "Entry Requirement",
+            info: [
+                "Basic programming knowledge",
+                "Strong analytical mindset",
+                "Personal laptop required"
+            ]
+        },
+        {
+            title: "Tuition Fee",
+          info: ["N 600,000 for Nigerians", "50% More for foreign students"]
+        },
+
+
+         {
+                title: "Lectures & Assesments",
+                info: [
+                    "Students should have a personal laptop computer. ",
+                    "Tuition Fee"
+                ]
+            },
+        {
+            title: "Careers",
+            info: [
+                "AI Engineer",
+                "Machine Learning Engineer",
+                "Applied AI Specialist"
+            ]
+        }
+    ]
+},
+
 ]
 
 interface Team {
