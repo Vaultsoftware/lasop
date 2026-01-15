@@ -42,17 +42,17 @@ type Course = {
 };
 
 const courses: Course[] = [
-  {
-    title: 'PRODUCT DESIGN',
-    description: 'Learn to craft stunning, user-friendly product designs for web and mobile apps.',
-    href: '/course/productdesign',
-    icon: Palette,
-    accentFrom: 'from-pink-500',
-    accentTo: 'to-rose-500',
-    duration: '10 weeks',
-    level: 'Beginner',
-    mode: ['Online', 'On-campus'],
-  },
+  // {
+  //   title: 'PRODUCT DESIGN',
+  //   description: 'Learn to craft stunning, user-friendly product designs for web and mobile apps.',
+  //   href: '/course/productdesign',
+  //   icon: Palette,
+  //   accentFrom: 'from-pink-500',
+  //   accentTo: 'to-rose-500',
+  //   duration: '10 weeks',
+  //   level: 'Beginner',
+  //   mode: ['Online', 'On-campus'],
+  // },
   {
     title: 'FRONTEND DEVELOPMENT',
     description: 'Build responsive and modern websites using React, Tailwind CSS, and best practices.',
@@ -87,13 +87,13 @@ const courses: Course[] = [
     mode: ['Online', 'Hybrid'],
   },
   {
-    title: 'MOBILE APP DEVELOPMENT',
-    description: 'Design and develop apps for iOS and Android with React Native and Flutter.',
-    href: '/course/mobileapp',
+    title: 'BACKEND DEVELOPMENT',
+    description: 'Learn Python fundamentals, data structures, object-oriented programming, and best practices for backend development.',
+    href: '/course/backend',
     icon: Smartphone,
     accentFrom: 'from-amber-500',
     accentTo: 'to-orange-600',
-    duration: '14 weeks',
+    duration: '12weeks',
     level: 'Mixed',
     mode: ['Online', 'On-campus'],
   },

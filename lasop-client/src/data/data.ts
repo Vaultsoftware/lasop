@@ -426,7 +426,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 250,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 350,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -459,7 +459,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays" },
             { text: "weekends" },
-            { text: "3 months" },
+            { text: "3 months (Course)" },
         ],
 
         courseInfo: [
@@ -551,7 +551,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays Mode AVailable" },
             { text: "Weekends Mode AVailable" },
-            { text: "6 months" },
+            { text: "6 months (Course)" },
             { text: "Online Mode AVailable" },
         ],
 
@@ -639,7 +639,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays" },
             { text: "weekends" },
-            { text: "4 months" },
+            { text: "4 months (Course)" },
         ],
 
         courseInfo: [
@@ -715,7 +715,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays" },
             { text: "weekends" },
-            { text: "6 months" },
+            { text: "6 months (Course)" },
         ],
 
         courseInfo: [
@@ -738,7 +738,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 250,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 400,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -767,7 +767,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays" },
             { text: "weekends" },
-            { text: "4 months" },
+            { text: "5 months (Course)" },
         ],
 
         courseInfo: [
@@ -851,7 +851,7 @@ export const course: CourseData[] = [
             { text: "Ojodu-Berger" },
             { text: "Weekdays" },
             { text: "weekends" },
-            { text: "4 months" },
+            { text: "4 months (Course)" },
         ],
 
         courseInfo: [
@@ -930,7 +930,7 @@ export const course: CourseData[] = [
         { text: "Ojodu-Berger" },
         { text: "Weekdays" },
         { text: "Weekends" },
-        { text: "6 months" },
+        { text: "8 months (Diploma)" },
         { text: "Online" },
     ],
     courseInfo: [
@@ -990,7 +990,7 @@ export const course: CourseData[] = [
         { text: "Ojodu-Berger" },
         { text: "Weekdays" },
         { text: "Weekends" },
-        { text: "5 months" },
+        { text: "8 months (Diploma)" },
     ],
     courseInfo: [
         {
@@ -1048,7 +1048,7 @@ export const course: CourseData[] = [
         { text: "Ojodu-Berger" },
         { text: "Weekdays" },
         { text: "Weekends" },
-        { text: "6 months" },
+        { text: "8 months(Diploma)" },
     ],
     courseInfo: [
         {
@@ -1096,6 +1096,72 @@ export const course: CourseData[] = [
         }
     ]
 },
+
+
+
+{
+    id: 10,
+    dpt1: "Backend",
+    title: "backend",
+    dpt2: "(Python & Django)",
+    bannerText: `This backend development program focuses on building secure, scalable,
+    and high-performance server-side applications using Python and Django.
+    Students will learn how to design APIs, manage databases, implement authentication,
+    and deploy backend systems used by real-world web and mobile applications.`,
+    bannerBtn: [
+        { text: "Ojodu-Berger" },
+        { text: "Weekdays" },
+        { text: "Weekends" },
+        { text: "3 months" },
+        { text: "Online" },
+    ],
+    courseInfo: [
+        {
+            curr: "Python Programming for Backend",
+            text: "Learn Python fundamentals, data structures, object-oriented programming, and best practices for backend development."
+        },
+        {
+            curr: "Django Framework",
+            text: "Master Django for building robust backend systems, including models, views, serializers, authentication, and admin customization."
+        },
+        {
+            curr: "APIs, Databases & Deployment",
+            text: "Build RESTful APIs, work with SQL databases, handle authentication, and deploy backend applications to production environments."
+        },
+    ],
+    packageBtn: [
+        {
+            title: "Entry Requirement",
+            info: [
+                "Basic computer literacy",
+                "Logical thinking ability",
+                "Personal laptop required"
+            ]
+        },
+        {
+            title: "Tuition Fee",
+          info: ["N 300,000 for Nigerians", "50% More for foreign students"]
+        },
+
+
+         {
+                title: "Lectures & Assesments",
+                info: [
+                    "Students should have a personal laptop computer. ",
+                    "Tuition Fee"
+                ]
+            },
+        {
+            title: "Careers",
+            info: [
+                "Backend Developer",
+                "Python Developer",
+                "Django Engineer"
+            ]
+        }
+    ]
+},
+
 
 ]
 
