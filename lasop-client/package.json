@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
-    "@types/axios": "^0.9.36",
     "aos": "^2.3.4",
     "axios": "^1.7.5",
     "chart.js": "^4.4.7",
@@ -37,7 +36,7 @@
   },
   "devDependencies": {
     "@types/aos": "^3.0.7",
-    "@types/node": "^18.19.47",
+    "@types/node": "^24.0.0",
     "@types/react": "18.2.45",
     "@types/react-dom": "18.2.18",
     "@types/react-scroll": "^1.8.10",
