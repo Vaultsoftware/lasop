@@ -29,6 +29,7 @@ import { fetchStaff } from '@/store/staffStore/staffSlice';
 import { updateProjectStatus } from '@/store/projectStore/projectStore';
 import { updateAssessmentStatus } from '@/store/assessmentStore/assessmentStore';
 import { setActiveCohortAd, setAdminAssignedCohort } from '@/store/filterStore/adminFilStore';
+import { MdOutlineMessage } from 'react-icons/md';
 
 interface DashLayout {
     children: ReactNode;
@@ -140,6 +141,12 @@ function DashboardLayout({ children }: DashLayout) {
                             <CiWarning />
                         </div>
                         <span>Queries</span>
+                    </Link>
+                    <Link onClick={() => dispatch(handleMenu())} href='/dashboard/admin/messages' className={`${getLinkClass('/dashboard/admin/messages')} flex item-center gap-3 pl-3 leading-9 text-primary text-[14px] hover:bg-primary hover:text-shadow font-semibold rounded-md transition-all duration-500`}>
+                        <div className="side_icon flex items-center">
+                            <MdOutlineMessage />
+                        </div>
+                        <span>Messages</span>
                     </Link>
                     <Link onClick={() => dispatch(handleMenu())} href='/dashboard/admin/postjob' className={`${getLinkClass('/dashboard/admin/postjob')} flex item-center gap-3 pl-3 leading-9 text-primary text-[14px] hover:bg-primary hover:text-shadow font-semibold rounded-md transition-all duration-500`}>
                         <div className="side_icon flex items-center">

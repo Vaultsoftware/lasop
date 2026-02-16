@@ -1,5 +1,5 @@
 // lasop-client/src/store/staffStore/staffSlice.ts
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { StaffData, StaffMain, StaffResponsePayload, OtherInfoResponsePayload, LogStaff } from '@/interfaces/interface';
 
@@ -150,6 +150,16 @@ const staffSlice = createSlice({
       state.status = 'idle';
       clearToken();
     },
+    addStaff: (state, action: PayloadAction<StaffMain>) => {
+      if (!state.staffs.some(s => s._id === action.payload._id)) {
+        state.staffs.push(action.payload);
+      }
+    },
+    addOtherInfo: (state, action: PayloadAction<OtherInfoData>) => {
+      if (!state.otherInfos.some(o => o.id === action.payload.id)) {
+        state.otherInfos.push(action.payload);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -253,4 +263,4 @@ const staffSlice = createSlice({
 });
 
 export default staffSlice.reducer;
-export const { logOut } = staffSlice.actions;
+export const { logOut, addStaff, addOtherInfo } = staffSlice.actions;

@@ -24,6 +24,7 @@ import staffData from './staffData/staffData';
 import nonCourseStore from './nonCourseStore/nonCourseSlice';
 import profileSlice from './profile/profileStore'
 import forgetSlice from './forgetPwdStore/forgetStore'
+import adminSlice from "./admin/adminSlice";
 
 const persistConfig = {
     key: 'root',
@@ -53,7 +54,8 @@ const rootReducer = combineReducers({
     verifyOtp: verifyEmailStore,
     nonCourse: nonCourseStore,
     profile: profileSlice,
-    forget: forgetSlice
+    forget: forgetSlice,
+    admin: adminSlice
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

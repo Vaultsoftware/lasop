@@ -9,127 +9,183 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
-const connection = require("./config/connection");
+const { connection } = require("./config/connection");
 
 /* ============================ Route imports ============================ */
-const signStudent = require("./routes/student/signStudent");
-const signUser = require("./routes/admin/signUser");
-const postCohort = require("./routes/cohort/postCohort");
-const logUser = require("./routes/admin/logUser");
-const logStudent = require("./routes/student/logStudent");
-const getCohort = require("./routes/cohort/getCohort");
-const postJob = require("./routes/job/postJob");
-const getJob = require("./routes/job/getJob");
-const sendMsg = require("./routes/chat/sendMsg");
-const getMsg = require("./routes/chat/getMsg");
-const updateStudent = require("./routes/student/updateStudent");
-const delStudent = require("./routes/student/delStudent");
-const updateUser = require("./routes/admin/updateUser");
-const delUser = require("./routes/admin/delUser");
-const updateCohort = require("./routes/cohort/updateCohort");
-const delCohort = require("./routes/cohort/delCohort");
-const updateJob = require("./routes/job/updateJob");
-const delJob = require("./routes/job/delJob");
-const postSyllabus = require("./routes/syllabus/postSyllabus");
-const getSyllabus = require("./routes/syllabus/getSyllabus");
-const getStudentDet = require("./routes/student/getStudentDet");
-const getStudent = require("./routes/student/getStudents");
-const updateSyllabus = require("./routes/syllabus/updateSyllabus");
-const delSyllabus = require("./routes/syllabus/delSyllabus");
-const addCourseStudent = require("./routes/student/addCourseStudent");
-const postCourse = require("./routes/course/postCourse");
-const getCourse = require("./routes/course/getCourse");
-const updateCourse = require("./routes/course/updateCourse");
-const delCourse = require("./routes/course/delCourse");
-const postExam = require("./routes/exam/postExam");
-const getExam = require("./routes/exam/getExam");
-const updateExam = require("./routes/exam/updateExam");
-const delExam = require("./routes/exam/delExam");
-const postCohortExam = require("./routes/cohortExam/postCohortExam");
-const getCohortExam = require("./routes/cohortExam/getCohortExamDet");
-const getCohortDetails = require("./routes/cohort/getCohortId");
-const getCourseDetails = require("./routes/course/getCourseId");
-const postCenter = require("./routes/center/postCenter");
-const getCenter = require("./routes/center/getCenter");
-const postStaff = require("./routes/staff/postStaff");
-const getStaff = require("./routes/staff/getStaff");
-const getStaffId = require("./routes/staff/getStaffId");
-const updateStaffDet = require("./routes/staff/updateStaffDet");
-const postOtherInfo = require("./routes/staff/postOtherInfo");
-const getOtherInfo = require("./routes/staff/getOtherInfo");
-const getOtherInfoDet = require("./routes/staff/getOtherInfoDet");
-const updateOtherInfo = require("./routes/staff/updateOtherInfo");
-const postResult = require("./routes/result/postResult");
-const getResult = require("./routes/result/getResult");
-const getResultDetail = require("./routes/result/getResultDetails");
-const postAssessment = require("./routes/assessment/postAssessment");
-const getAssessment = require("./routes/assessment/getAssessment");
-const delAssessment = require("./routes/assessment/delAssessment");
-const getAssessmentDetail = require("./routes/assessment/getAssessmentDetail");
-const postProject = require("./routes/project/postProject");
-const getProject = require("./routes/project/getProject");
-const getProjectDetail = require("./routes/project/getProjectDetail");
-const delProject = require("./routes/project/delProject");
-const postClassroom = require("./routes/classroom/postClassroom");
-const getClassroom = require("./routes/classroom/getClassroom");
-const getClassroomDetail = require("./routes/classroom/getClassroomDet");
-const delClassroom = require("./routes/classroom/delClassroom");
-const updateClassroom = require("./routes/classroom/updateClassroom");
+// Student
+const signStudent = require("./routes/student/account/signStudent");
+const logStudent = require("./routes/student/account/logStudent");
+const updateStudent = require("./routes/student/account/updateStudent");
+const delStudent = require("./routes/student/account/delStudent");
+const getStudentDet = require("./routes/student/account/getStudentDet");
+const getStudent = require("./routes/student/account/getStudents");
+const addCourseStudent = require("./routes/student/onboard/addCourseStudent");
+const fetchStudentByStatus = require("./routes/student/onboard/fetchStudentByStatus")
 
+// Job
+const postJob = require("./routes/admin/job/postJob");
+const getJob = require("./routes/admin/job/getJob");
+const updateJob = require("./routes/admin/job/updateJob");
+const delJob = require("./routes/admin/job/delJob");
+
+// Cohort Message
+const postCohortMessage = require('./routes/cross/cohortChat/postCohortMessage.js');
+const getCohortMessages = require('./routes/cross/cohortChat/getCohortMessages.js');
+const deleteCohortMessage = require('./routes/cross/cohortChat/deleteCohortMessage.js');
+
+// Group Message
+const postGroupMessage = require('./routes/cross/groupChat/postGroupMessage.js');
+const getGroupMessages = require('./routes/cross/groupChat/getGroupMessages.js');
+const deleteGroupMessage = require('./routes/cross/groupChat/deleteGroupMessage.js');
+
+// Admin
+const logUser = require("./routes/admin/account/logUser");
+const signUser = require("./routes/admin/account/signUser");
+const updateUser = require("./routes/admin/account/updateUser");
+const delUser = require("./routes/admin/account/delUser");
+
+// Cohort
+const postCohort = require("./routes/admin/cohort/postCohort");
+const getCohort = require("./routes/admin/cohort/getCohort");
+const updateCohort = require("./routes/admin/cohort/updateCohort");
+const delCohort = require("./routes/admin/cohort/delCohort");
+const getCohortDetails = require("./routes/admin/cohort/getCohortId");
+const fetchCohortsByCourse = require('./routes/admin/cohort/fetchCohortsByCourse.js');
+
+// Syllabus
+const postSyllabus = require("./routes/admin/syllabus/postSyllabus");
+const getSyllabus = require("./routes/admin/syllabus/getSyllabus");
+const updateSyllabus = require("./routes/admin/syllabus/updateSyllabus");
+const delSyllabus = require("./routes/admin/syllabus/delSyllabus");
+
+// Course
+const postCourse = require("./routes/admin/course/postCourse");
+const getCourse = require("./routes/admin/course/getCourse");
+const getCourseDetails = require("./routes/admin/course/getCourseId");
+const updateCourse = require("./routes/admin/course/updateCourse");
+const delCourse = require("./routes/admin/course/delCourse");
+
+// Exam
+const postExam = require("./routes/admin/exam/postExam");
+const getExam = require("./routes/admin/exam/getExam");
+const updateExam = require("./routes/admin/exam/updateExam");
+const delExam = require("./routes/admin/exam/delExam");
+const postCohortExam = require("./routes/admin/cohortExam/postCohortExam");
+const getCohortExam = require("./routes/admin/cohortExam/getCohortExam");
+const getCohortExamDet = require("./routes/admin/cohortExam/getCohortExamDet");
+
+// Center
+const postCenter = require("./routes/cross/center/postCenter");
+const getCenter = require("./routes/cross/center/getCenter");
+
+// Staff route
+const postStaff = require("./routes/staff/account/postStaff");
+const getStaff = require("./routes/staff/account/getStaff");
+const getStaffId = require("./routes/staff/account/getStaffId");
+const updateStaffDet = require("./routes/staff/account/updateStaffDet");
+const postOtherInfo = require("./routes/staff/account/postOtherInfo");
+const getOtherInfo = require("./routes/staff/account/getOtherInfo");
+const getOtherInfoDet = require("./routes/staff/account/getOtherInfoDet");
+const updateOtherInfo = require("./routes/staff/account/updateOtherInfo");
+const fetchStaffByRole = require('./routes/staff/account/fetchStaffByRole.js');
+
+// Assessment result
+const postResult = require("./routes/admin/result/postResult");
+const getResult = require("./routes/admin/result/getResult");
+const getResultDetail = require("./routes/admin/result/getResultDetails");
+
+// Assessment
+const postAssessment = require("./routes/staff/assessment/postAssessment");
+const getAssessment = require("./routes/staff/assessment/getAssessment");
+const delAssessment = require("./routes/staff/assessment/delAssessment");
+const getAssessmentDetail = require("./routes/staff/assessment/getAssessmentDetail");
+
+// Project
+const postProject = require("./routes/staff/project/postProject");
+const getProject = require("./routes/staff/project/getProject");
+const getProjectDetail = require("./routes/staff/project/getProjectDetail");
+const delProject = require("./routes/staff/project/delProject");
+
+// Classroom
+const postClassroom = require("./routes/staff/classroom/postClassroom");
+const getClassroom = require("./routes/staff/classroom/getClassroom");
+const getClassroomDetail = require("./routes/staff/classroom/getClassroomDet");
+const delClassroom = require("./routes/staff/classroom/delClassroom");
+const updateClassroom = require("./routes/staff/classroom/updateClassroom");
+
+// Auth token
 const authToken = require("./middleware/authToken");
 
-const getCertificate = require("./routes/certificate/getCertificate");
-const getCertId = require("./routes/certificate/getCertId");
-const updateCert = require("./routes/certificate/updateCert");
+// Certificate
+const getCertificate = require("./routes/admin/certificate/getCertificate");
+const getCertId = require("./routes/admin/certificate/getCertId");
+const updateCert = require("./routes/admin/certificate/updateCert");
 
-const postMsg = require("./routes/messages/postMsg");
-const getMessages = require("./routes/messages/getMsg");
-const getMessageDetail = require("./routes/messages/getMsgDet");
-const deleteMessage = require("./routes/messages/delMsg");
+// Message
+const postMsg = require("./routes/cross/messages/postMsg");
+const getMessageBtwSenders = require('./routes/cross/messages/getMessageBtwSenders');
+const deleteMessageBtwSenders = require('./routes/cross/messages/deleteMessageBtwSenders');
+const fetchAllConversations = require('./routes/cross/messages/fetchAllConversations');
 
-const getCohortExamDet = require("./routes/cohortExam/getCohortExamDet");
-const verifyUserCode = require('./routes/verifyOtp/verifyUserCode');
-const sendVerificationCode = require('./routes/verifyOtp/sendVerificationCode');
-const logStaff = require("./routes/staff/logStaff");
-const assignCohort = require("./routes/cohort/assignCohort");
-const postAttendance = require("./routes/classroom/postAttendance");
-const convertProgramArrayToObject = require("./routes/student/convertProgram");
-const postNonCourse = require("./routes/nonCourse/postNonCourse");
-const getNonCourse = require("./routes/nonCourse/getNonCourse");
-const postGradePro = require("./routes/project/postGradePro");
-const postSubmissionPro = require("./routes/project/postSubmissionPro");
-const postGradeAss = require("./routes/assessment/postGradeAss");
-const postSubmissionAss = require("./routes/assessment/postSubmissionAss");
-const postProfile = require('./routes/profile/postProfile');
-const getProfile = require('./routes/profile/getProfile');
-const getProfileDet = require('./routes/profile/getProfileDet');
-const delProfile = require('./routes/profile/delProfile');
-const updateProjectStatus = require("./routes/status/projectStatus");
-const updateCohortStatus = require("./routes/status/cohortStatus");
-const updateAssessmentStatus = require("./routes/status/assessmentStatus");
-const updateStudentWithoutOtherName = require("./routes/student/updateStudentOther");
-const devPeekOtp = require('./routes/verifyOtp/devPeekOtp');
+// Verification
+const verifyUserCode = require('./routes/cross/verifyOtp/verifyUserCode');
+const sendVerificationCode = require('./routes/cross/verifyOtp/sendVerificationCode');
+
+const logStaff = require("./routes/staff/account/logStaff");
+const assignCohort = require("./routes/admin/cohort/assignCohort");
+
+// Attendance
+const postAttendance = require("./routes/staff/classroom/postAttendance");
+const convertProgramArrayToObject = require("./routes/student/onboard/convertProgram");
+
+// Non course route
+const postNonCourse = require("./routes/admin/nonCourse/postNonCourse");
+const getNonCourse = require("./routes/admin/nonCourse/getNonCourse");
+
+// Grade posting
+const postGradePro = require("./routes/staff/project/postGradePro");
+const postSubmissionPro = require("./routes/staff/project/postSubmissionPro");
+const postGradeAss = require("./routes/staff/assessment/postGradeAss");
+const postSubmissionAss = require("./routes/staff/assessment/postSubmissionAss");
+
+// Student profile
+const postProfile = require('./routes/student/profile/postProfile');
+const getProfile = require('./routes/student/profile/getProfile');
+const getProfileDet = require('./routes/student/profile/getProfileDet');
+const delProfile = require('./routes/student/profile/delProfile');
+
+// Statuses
+const updateProjectStatus = require("./routes/cross/status/projectStatus");
+const updateCohortStatus = require("./routes/cross/status/cohortStatus");
+const updateAssessmentStatus = require("./routes/cross/status/assessmentStatus");
+const updateStudentWithoutOtherName = require("./routes/student/account/updateStudentOther");
+const devPeekOtp = require('./routes/cross/verifyOtp/devPeekOtp');
 
 // Blogs
-const blogPostBatch = require('./routes/blog/postBlogBatch');
-const blogGet = require('./routes/blog/getBlog');
-const blogGetId = require('./routes/blog/getBlogId');
-const blogUpdate = require('./routes/blog/updateBlog');
-const blogDelete = require('./routes/blog/delBlog');
+const blogPostBatch = require('./routes/admin/blog/postBlogBatch');
+const postBlog = require('./routes/admin/blog/postBlog.js');
+const blogGet = require('./routes/admin/blog/getBlog');
+const blogGetId = require('./routes/admin/blog/getBlogId');
+const blogUpdate = require('./routes/admin/blog/updateBlog');
+const blogDelete = require('./routes/admin/blog/delBlog');
 
 // ✅ GridFS certificate routes
-const { postCert, upload } = require("./routes/certificate/postCert.gridfs");
-const streamFile = require("./routes/files/streamFile");
-const delCert = require("./routes/certificate/delCert.gridfs");
+const { postCert, upload } = require("./routes/admin/certificate/postCert.gridfs");
+const streamFile = require("./routes/cross/files/streamFile");
+const delCert = require("./routes/admin/certificate/delCert.gridfs");
 const authEcho = require('./routes/__dev/authEcho');
 
+// Create Admin Account
+const createAccount = require('./routes/admin/user/createAccount');
+const logAdmin = require('./routes/admin/user/logAdmin');
+
 // ---- Guests (admin)
-const guestList = require('./routes/guest/listGuests');
-const guestCreate = require('./routes/guest/createGuest');
-const guestGet = require('./routes/guest/getGuest');
-const guestGetEmails = require('./routes/guest/getGuestEmails');
-const guestSendEmail = require('./routes/guest/sendGuestEmail');
-const syncGuestReplies = require('./routes/guest/syncGuestReplies');
+const guestList = require('./routes/cross/guest/listGuests');
+const guestCreate = require('./routes/cross/guest/createGuest');
+const guestGet = require('./routes/cross/guest/getGuest');
+const guestGetEmails = require('./routes/cross/guest/getGuestEmails');
+const guestSendEmail = require('./routes/cross/guest/sendGuestEmail');
+const syncGuestReplies = require('./routes/cross/guest/syncGuestReplies');
 
 // ✅ Facebook Conversion API
 const facebookRoutes = require("./routes/facebook.js");
@@ -244,13 +300,15 @@ app.put('/addCourse/:id', authToken, addCourseStudent);
 app.delete('/deleteStudent/:id', delStudent);
 app.get('/studentDetails/:id', getStudentDet);
 app.get('/getStudent', getStudent);
+app.get('/studentStatus/:status/:cohortId/:courseId', fetchStudentByStatus)
 
 /* ============================== Blog ============================== */
 app.post('/blog/batch', blogPostBatch);
+app.post('/blog/:userId', postBlog);
 app.get('/blog', blogGet);
 app.get('/blog/:id', blogGetId);
 app.put('/blog/:id', blogUpdate);
-app.delete('/blog/:id', blogDelete);
+app.delete('/blog/:blogId/:userId', blogDelete);
 
 /* =========================== Assessment ========================== */
 app.post('/postAssessment', postAssessment);
@@ -278,6 +336,7 @@ app.delete('/deleteCohort/:id', delCohort);
 app.post('/postCohortExam', authToken, postCohortExam);
 app.get('/getCohortExam', authToken, getCohortExam);
 app.get('/getCohortExamDet/:id', authToken, getCohortExamDet);
+app.get('/getCohortByCourse/:courseId', fetchCohortsByCourse);
 
 /* ============================== Course ========================= */
 app.post('/postCourse', postCourse);
@@ -321,9 +380,19 @@ app.delete('/deleteJob/:id', authToken, delJob);
 
 /* ============================== Message ======================== */
 app.post('/postMsg', postMsg);
-app.get('/getMsg', authToken, getMessages);
-app.get('/getMessage/:id', authToken, getMessageDetail);
-app.delete('/deleteMsg/:id', authToken, deleteMessage);
+app.get('/getMsgBtwSenders/:senderId/:receiverId/:senderModel/:receiverModel', getMessageBtwSenders);
+app.delete('/delMsgBtwSenders/:messageId/:otherUserId', deleteMessageBtwSenders);
+app.get('/fetchAllConversations', fetchAllConversations);
+
+/* ============================== Cohort Message ======================== */
+app.post('/sendCohortMsg', postCohortMessage);
+app.get('/getCohortMessage/:cohortId', getCohortMessages);
+app.delete('/deleteCohortMessage', deleteCohortMessage);
+
+/* ============================== Group Message ======================== */
+app.post('/sendGroupMessage', postGroupMessage);
+app.get('/getGroupMessage/:groupId', getGroupMessages);
+app.delete('/deleteGroupMessage/messageId/:groupId', deleteGroupMessage);
 
 /* ========================== Non-course staff =================== */
 app.post('/postNonCourse', postNonCourse);
@@ -360,6 +429,7 @@ app.post('/logStaff', logStaff);
 app.get('/getStaff', getStaff);
 app.get('/getStaffDet/:id', getStaffId);
 app.put('/updateStaff/:id', updateStaffDet);
+app.get('/staffByRole/:role', fetchStaffByRole)
 
 app.post('/postOtherInfo', authToken, postOtherInfo);
 app.get('/getOtherInfo', authToken, getOtherInfo);
@@ -377,11 +447,15 @@ app.post('/verifyOtp', verifyUserCode);
 app.get('/__dev/otp', devPeekOtp);
 
 /* ================================ Chat ========================= */
-app.post('/postChat', authToken, sendMsg);
-app.get('/getChat', authToken, getMsg);
+// app.post('/postChat', authToken, postMsg);
+// app.get('/getChat', authToken, getMsg);
 
 /* ===== update student without other name ===== */
 app.put('/addOtherName', updateStudentWithoutOtherName);
+/* ================================ Admin ========================= */
+app.post('/createAccount', createAccount);
+app.post('/logAdmin', logAdmin);
+
 
 /* ============================== Guests ============================== */
 const guestGuard = requireAuth ? authToken : (_req, _res, next) => next();

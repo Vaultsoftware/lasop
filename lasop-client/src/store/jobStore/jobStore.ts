@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { JobData, JobPayload, UpdateJob } from '@/interfaces/interface';
 
@@ -57,7 +57,13 @@ const initialState: InitialState = {
 const jobSlice = createSlice({
     name: 'Job',
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        addJob: (state, action: PayloadAction<JobData>) => {
+            if (!state.job.some(j => j._id === action.payload._id)) {
+                state.job.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
         .addCase(fetchJob.pending, (state) => {
@@ -120,3 +126,4 @@ const jobSlice = createSlice({
 })
 
 export default jobSlice.reducer;
+export const { addJob } = jobSlice.actions;

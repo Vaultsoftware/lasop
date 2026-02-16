@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from 'axios';
 import { ProfileData, ProfileDataMain, ProfilePayload } from "@/interfaces/interface";
 
@@ -65,7 +65,13 @@ const initialState: InitialState = {
 const profileSlice = createSlice({
     name: 'profile',
     initialState,
-    reducers: {},
+    reducers: {
+        addProfile: (state, action: PayloadAction<ProfileDataMain>) => {
+            if (!state.profiles.some(p => p._id === action.payload._id)) {
+                state.profiles.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(postProfile.pending, (state) => {
@@ -120,3 +126,4 @@ const profileSlice = createSlice({
 })
 
 export default profileSlice.reducer;
+export const { addProfile } = profileSlice.actions;

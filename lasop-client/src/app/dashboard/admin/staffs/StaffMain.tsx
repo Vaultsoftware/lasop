@@ -3,10 +3,12 @@
 import { calendar } from '@/data/data';
 import React, { useEffect, useState } from 'react';
 import { GoDot } from "react-icons/go";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import Link from 'next/link';
 import { IoEyeOutline } from "react-icons/io5";
+import { addStaff } from '@/store/staffStore/staffSlice';
+import { socket } from '@/connection/socket';
 
 interface OtherInfo {
     fName: string;
@@ -41,6 +43,7 @@ interface StaffMain {
 }
 
 function StaffMain() {
+    const dispatch = useDispatch<AppDispatch>()
     const staffData = useSelector((state: RootState) => state.staff.staffs);
 
     const roles = [
@@ -105,6 +108,19 @@ function StaffMain() {
             setStaffStatusDisplay(getStaff);
         }
     }, [staffToDisplay, status])
+
+    // Socket.io to display real life time data
+    useEffect(() => {
+        const handleNewStaffReq = (staf: StaffMain) => {
+            dispatch(addStaff(staf));
+        }
+
+        socket.on('newStaff', handleNewStaffReq);
+
+        return () => {
+            socket.off('newStaff', handleNewStaffReq);
+        }
+    })
 
     return (
         <main className='w-full p-5'>

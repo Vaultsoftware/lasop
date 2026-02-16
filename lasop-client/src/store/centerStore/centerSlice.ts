@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
 
@@ -63,7 +63,13 @@ const initialState: InitialState = {
 const centerSlice = createSlice({
     name: 'center',
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        addCenter: (state, action: PayloadAction<CenterData>) => {
+            if (!state.centers.some(c => c._id === action.payload._id)) {
+                state.centers.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
         .addCase(fetchCenter.pending, (state) => {
@@ -98,3 +104,4 @@ const centerSlice = createSlice({
 });
 
 export default centerSlice.reducer;
+export const { addCenter } = centerSlice.actions;

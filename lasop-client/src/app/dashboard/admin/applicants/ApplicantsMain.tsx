@@ -6,11 +6,12 @@ import { IoEyeOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import ApplicantDetails from '@/components/dashboardComp/adminComp/applicants/ApplicantDetails';
-import { fetchStudentDetails } from '@/store/studentStore/studentStore';
+import { addStudent, fetchStudentDetails } from '@/store/studentStore/studentStore';
 import { useRouter } from 'next/navigation';
 import { handleAppDet } from '@/store/dashMenu/dashStore';
 import { StudentDataMain } from '@/interfaces/interface';
 import ReactPaginate from 'react-paginate';
+import { socket } from '@/connection/socket';
 
 // ---- helpers to avoid null/invalid date crashes ----
 const isValidDate = (d: Date) => !Number.isNaN(d.getTime());
@@ -32,11 +33,26 @@ const weeksBetween = (a?: string | null, b?: string | null): string => {
 };
 
 function ApplicantsMain() {
+  const dispatch = useDispatch<AppDispatch>();
+
   // Displaying student on their courses
   const [courseId, setCourseId] = useState<string>('66cd6d560d14292ee2136134');
   const handleCourseId = (arg: string) => setCourseId(arg);
 
   const router = useRouter();
+
+  // Socket.io to display realtime life data
+  useEffect(() => {
+    const handleNewStudentReq = (stud: StudentDataMain) => {
+      dispatch(addStudent(stud));
+    }
+
+    socket.on('newStudent', handleNewStudentReq);
+
+    return () => {
+      socket.off('newStudent', handleNewStudentReq);
+    }
+  })
 
   // Fetching student and setting them on the course
   const courses = useSelector((state: RootState) => state.courses.courses) ?? [];
@@ -64,7 +80,6 @@ function ApplicantsMain() {
   };
 
   // Fetching and storing applicant details
-  const dispatch = useDispatch<AppDispatch>();
   const [applicantDetail, setApplicantDetail] = useState<StudentDataMain | null>(null);
   const applicantData = useSelector((state: RootState) => state.student.studentDetails);
 

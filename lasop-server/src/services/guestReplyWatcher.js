@@ -5,7 +5,7 @@ const { simpleParser } = require('mailparser');
 const Guest = require('../models/guest');
 const GuestEmail = require('../models/guestEmail');
 
-const bool = (v, d=false) => {
+const bool = (v, d = false) => {
   const s = String(v ?? '').trim().toLowerCase();
   if (s === '1' || s === 'true') return true;
   if (s === '0' || s === 'false') return false;
@@ -42,7 +42,7 @@ async function syncInboxWindow(client) {
   // Open mailbox (INBOX → Inbox fallback)
   let lock;
   let opened = false;
-  for (const name of [pick(process.env.IMAP_MAILBOX,'INBOX'), 'INBOX', 'Inbox']) {
+  for (const name of [pick(process.env.IMAP_MAILBOX, 'INBOX'), 'INBOX', 'Inbox']) {
     try {
       ({ lock } = await withMailboxLock(client, name));
       opened = true;
@@ -126,10 +126,10 @@ async function syncInboxWindow(client) {
             guestId,
             from: (parsed.from?.text || '').trim(),
             to: (parsed.to?.text ||
-                 process.env.REPLY_TO_EMAIL ||
-                 process.env.FROM_EMAIL ||
-                 process.env.SMTP_USER ||
-                 '').trim(),
+              process.env.REPLY_TO_EMAIL ||
+              process.env.FROM_EMAIL ||
+              process.env.SMTP_USER ||
+              '').trim(),
             subject,
             body,
             type: 'reply',
@@ -149,7 +149,7 @@ async function syncInboxWindow(client) {
 
     return { saved };
   } finally {
-    try { lock && lock.release(); } catch {}
+    try { lock && lock.release(); } catch { }
   }
 }
 
@@ -165,7 +165,7 @@ async function tick() {
   const secure = bool(process.env.IMAP_SECURE, true);
   const user = pick(process.env.IMAP_USER);
   const pass = pick(process.env.IMAP_PASS);
-  const sni  = pick(process.env.IMAP_TLS_SERVERNAME, host);
+  const sni = pick(process.env.IMAP_TLS_SERVERNAME, host);
   if (!host || !user || !pass) { W('IMAP not configured; skipping'); _running = false; return; }
 
   const client = new ImapFlow({
@@ -183,7 +183,7 @@ async function tick() {
   } catch (e) {
     E('auto-sync error:', e?.message || e);
   } finally {
-    try { await client.logout(); } catch {}
+    try { await client.logout(); } catch { }
     _running = false;
   }
 }

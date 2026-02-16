@@ -1,15 +1,38 @@
 'use client';
 
+import { socket } from '@/connection/socket';
 import { calendar } from '@/data/data';
-import React, { useState } from 'react';
+import { ExamData } from '@/interfaces/interface';
+import { addExam } from '@/store/examStore/examStore';
+import { AppDispatch } from '@/store/store';
+import React, { useEffect, useState } from 'react';
 import { GoDot } from "react-icons/go";
+import { useDispatch } from 'react-redux';
 
 function ExamMain() {
+    const dispatch = useDispatch<AppDispatch>();
     const [calendarData, setCalendarData] = useState<number>(0);
 
     const handleCalendarData = (arg: number) => {
         setCalendarData(arg);
     }
+
+    // Socket.io to display realtime life data
+    useEffect(() => {
+        const handleNewExamReq = (coh: ExamData) => {
+            dispatch(addExam(coh));
+        }
+
+        socket.on('newExam', handleNewExamReq);
+        socket.on('examUpdated', handleNewExamReq);
+        socket.on('examDeleted', handleNewExamReq);
+
+        return () => {
+            socket.off('newExam', handleNewExamReq);
+            socket.off('examUpdated', handleNewExamReq);
+            socket.off('examDeleted', handleNewExamReq);
+        }
+    }, [])
 
     return (
         <main className='w-full p-5'>

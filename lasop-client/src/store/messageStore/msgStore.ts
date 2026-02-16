@@ -1,6 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
+import { AdminMain } from '../admin/adminSlice';
 
 interface OtherInfo {
     fName: string;
@@ -53,48 +54,83 @@ interface StaffMain {
     createdAt?: string;
 }
 
-interface Message {
-    _id: string;
+export interface Message {
     sender: string;
-    senderModel: 'Student' | 'Staff';
-    reciever: string;
-    recieverModel: 'Student' | 'Staff';
+    senderModel: 'Student' | 'Staff' | 'User';
+    receiver: string;
+    receiverModel: 'Student' | 'Staff' | 'User';
+    messageType: 'text' | 'image' | 'file';
     message: string;
-    read: boolean;
-    createdAt: string;
 }
 
 interface MessageMain {
     _id: string;
-    sender: StaffMain | StudentData;
-    senderModel: 'Student' | 'Staff';
-    reciever: string;
-    recieverModel: 'Student' | 'Staff';
+    sender: StaffMain | StudentData | AdminMain;
+    senderModel: 'Student' | 'Staff' | 'User';
+    receiver: StaffMain | StudentData | AdminMain;
+    receiverModel: 'Student' | 'Staff' | 'User';
+    messageType: 'text' | 'image' | 'file';
     message: string;
-    read: boolean;
+    fileUrl: string;
+    seen: boolean;
+    seenAt: string
     createdAt: string;
 }
 
 interface MessageResponsePayload {
     message?: string;
-    data?: MessageMain;
+    data?: MessageMain[] | MessageMain;
+}
+
+// Represents the minimal user info you receive in conversation list
+interface ConversationUser {
+    _id: string;
+    name: string;
+    email: string | null;
+}
+// Represents the last message summary inside each conversation
+interface LastMessage {
+    _id: string;
+    sender: string;
+    receiver: string;
+    messageType: 'text' | 'image' | 'file';
+    message: string;
+    createdAt: string;
+    seen: boolean;
+    seenAt?: string | null;
+}
+// A single conversation entry (like a WhatsApp chat tile)
+export interface Conversation {
+    conversationWith: ConversationUser;
+    lastMessage: LastMessage;
+    unreadCount: number;
+}
+// API response from your backend
+interface ConversationsResponsePayload {
+    message: string;
+    data: Conversation[];
 }
 
 interface InitialState {
     messages: MessageMain[];
+    conversations: Conversation[];
     messageDetail: MessageMain | null;
-    status: 'idle' | 'loading' | 'succeeded' | 'failed'; 
+    toBeMessageInfo: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        senderModel: 'Student' | 'Staff' | 'User';
+        recieverModel: 'Student' | 'Staff' | 'User';
+    } | null;
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
 }
 
 
 // Async actions
-export const postMessage = createAsyncThunk<MessageResponsePayload, Omit<Message, '_id' | 'createdAt'>, { state: RootState }>('message/postMessage', async (messageData, { getState }) => {
-    const state = getState().student || getState().staff; // Assuming state structure
-    const { token } = state;
-
+export const postMessage = createAsyncThunk<MessageResponsePayload, Message>('message/postMessage', async (messageData) => {
     try {
-        const response = await axios.post<MessageResponsePayload>(`${process.env.NEXT_PUBLIC_API_URL}/postMsg`, messageData);
+        const response = await axios.post<MessageResponsePayload>(`http://localhost:5000/postMsg`, messageData);
 
         return response.data;
     } catch (error: any) {
@@ -102,16 +138,9 @@ export const postMessage = createAsyncThunk<MessageResponsePayload, Omit<Message
     }
 });
 
-export const fetchMessages = createAsyncThunk<MessageMain[], void, { state: RootState }>('message/fetchMessages', async (_, { getState }) => {
-    const state = getState().student || getState().staff; // Assuming state structure
-    const { token } = state;
-
+export const fetchMessages = createAsyncThunk<MessageResponsePayload, { senderId: string, recieverId: string, senderModel: 'Student' | 'Staff' | 'User', recieverModel: 'Student' | 'Staff' | 'User' }, { state: RootState }>('message/fetchMessages', async ({ senderId, recieverId, senderModel, recieverModel }) => {
     try {
-        const response = await axios.get<MessageMain[]>(`${process.env.NEXT_PUBLIC_API_URL}/getMsg`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await axios.get<MessageResponsePayload>(`http://localhost:5000/getMsgBtwSenders/${senderId}/${recieverId}/${senderModel}/${recieverModel}`);
 
         return response.data;
     } catch (error: any) {
@@ -119,16 +148,9 @@ export const fetchMessages = createAsyncThunk<MessageMain[], void, { state: Root
     }
 });
 
-export const fetchMessageDetail = createAsyncThunk<MessageMain, string, { state: RootState }>('message/fetchMessageDetail', async (messageId, { getState }) => {
-    const state = getState().student || getState().staff; // Assuming state structure
-    const { token } = state;
-
+export const fetchMessageDetail = createAsyncThunk<MessageMain, string, { state: RootState }>('message/fetchMessageDetail', async (messageId) => {
     try {
-        const response = await axios.get<MessageMain>(`${process.env.NEXT_PUBLIC_API_URL}/getMessage/${messageId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await axios.get<MessageMain>(`http://localhost:5000/getMessage/${messageId}`);
 
         return response.data;
     } catch (error: any) {
@@ -136,18 +158,21 @@ export const fetchMessageDetail = createAsyncThunk<MessageMain, string, { state:
     }
 });
 
-export const delMessage = createAsyncThunk<string, string, { state: RootState }>('message/delMessage', async (messageId, { getState }) => {
-    const state = getState().student || getState().staff; // Assuming state structure
-    const { token } = state;
-
+export const delMessage = createAsyncThunk<string, string, { state: RootState }>('message/delMessage', async (messageId) => {
     try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/deleteMsg/${messageId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        await axios.delete(`http://localhost:5000/deleteMsg/${messageId}`);
 
         return messageId; // Return the ID of the deleted message
+    } catch (error: any) {
+        throw error.response?.data.message;
+    }
+});
+
+export const fetchConversations = createAsyncThunk<ConversationsResponsePayload, { senderId: string, senderModel: 'Student' | 'Staff' | 'User' }, { state: RootState }>('message/fetchConversations', async ({ senderId, senderModel }) => {
+    try {
+        const response = await axios.get<ConversationsResponsePayload>(`http://localhost:5000/fetchAllConversations?senderId=${senderId}&senderModel=${senderModel}`);
+
+        return response.data || [];
     } catch (error: any) {
         throw error.response?.data.message;
     }
@@ -156,7 +181,9 @@ export const delMessage = createAsyncThunk<string, string, { state: RootState }>
 // Initial state
 const initialState: InitialState = {
     messages: [],
+    conversations: [],
     messageDetail: null,
+    toBeMessageInfo: null,
     status: 'idle',
     error: null,
 };
@@ -165,14 +192,25 @@ const initialState: InitialState = {
 const messageSlice = createSlice({
     name: 'message',
     initialState,
-    reducers: {},
+    reducers: {
+        addMessage: (state, action: PayloadAction<MessageMain>) => {
+            if (!state.messages.some(m => m._id === action.payload._id)) {
+                state.messages.push(action.payload);
+            }
+        },
+        setToBeMessageInfo: (state, action: PayloadAction<{ _id: string; firstName: string; lastName: string; senderModel: 'Student' | 'Staff' | 'User'; recieverModel: 'Student' | 'Staff' | 'User' } | null>) => {
+            state.toBeMessageInfo = action.payload;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchMessages.pending, (state) => {
                 state.status = 'loading';
             })
             .addCase(fetchMessages.fulfilled, (state, action) => {
-                state.messages = action.payload;
+                const { data } = action.payload;
+                if (Array.isArray(data)) state.messages = data as MessageMain[];
+                else if (data) state.messages = [data as MessageMain];
                 state.status = 'succeeded';
                 state.error = null;
             })
@@ -197,8 +235,39 @@ const messageSlice = createSlice({
             })
             .addCase(postMessage.fulfilled, (state, action) => {
                 const { data } = action.payload;
-                if (data) {
-                    state.messages.push(data);
+                if (data && !Array.isArray(data)) {
+                    // Helper function to normalize user objects
+                    const normalizeUser = (user: any): StaffMain | StudentData | AdminMain => {
+                        if (typeof user === "string") {
+                            return { _id: user } as any;
+                        }
+
+                        if (user && typeof user === "object") {
+                            if (user.id && !user._id) {
+                                return { ...user, _id: user.id };
+                            }
+                            return user;
+                        }
+
+                        return user;
+                    };
+                    const normalizedMessage: MessageMain = {
+                        _id: data._id,
+                        sender: normalizeUser(data.sender),
+                        senderModel: data.senderModel,
+                        receiver: normalizeUser(data.receiver),
+                        receiverModel: data.receiverModel,
+                        messageType: data.messageType,
+                        message: data.message || '',
+                        fileUrl: data.fileUrl || '',
+                        seen: data.seen || false,
+                        seenAt: data.seenAt || '',
+                        createdAt: data.createdAt || new Date().toISOString()
+                    };
+                    // Check for duplicates before adding
+                    if (!state.messages.some((m) => m._id === normalizedMessage._id)) {
+                        state.messages.push(normalizedMessage);
+                    }
                 }
                 state.status = 'succeeded';
                 state.error = null;
@@ -218,8 +287,26 @@ const messageSlice = createSlice({
             .addCase(delMessage.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.error.message || 'Failed to delete message';
+            })
+            .addCase(fetchConversations.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchConversations.fulfilled, (state, action) => {
+                const { data } = action.payload;
+                if (Array.isArray(data)) {
+                    state.conversations = data;
+                } else {
+                    state.conversations = [];
+                }
+                state.status = 'succeeded';
+                state.error = null;
+            })
+            .addCase(fetchConversations.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message || 'Failed to fetch conversations';
             });
     },
 });
 
 export default messageSlice.reducer;
+export const { addMessage, setToBeMessageInfo } = messageSlice.actions;

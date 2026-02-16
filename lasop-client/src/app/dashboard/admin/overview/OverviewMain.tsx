@@ -12,11 +12,14 @@ import staff from '../../../../asset/dashIcon/staff.png';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import user from '../../../../asset/dashIcon/user.png';
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { StudentDataMain, CohortMain } from '@/interfaces/interface';
 import BlogManagerModal from '@/components/blog/BlogManagerModal';
 import GuestManagerModal from '../../../../components/guest/GuestManagerModal'; // <-- NEW
+import { addStudent } from '@/store/studentStore/studentStore';
+import { socket } from '@/connection/socket';
+import { addCohort } from '@/store/cohortSlice/cohortStore';
 
 interface Colleagues {
   id: number;
@@ -26,6 +29,7 @@ interface Colleagues {
 }
 
 function OverviewMain() {
+  const dispatch = useDispatch<AppDispatch>();
   const adminActiveCohort = useSelector((state: RootState) => state.adminFilter.adminOverviewSelectedCohort);
   const cohort = useSelector((state: RootState) => state.cohort.cohort);
   const studentAvail = useSelector((state: RootState) => state.student.student);
@@ -51,6 +55,30 @@ function OverviewMain() {
     setStudentData(allStudentInSelectedCohort.filter((stud) => stud.status === 'student'));
     setGraduates(allStudentInSelectedCohort.filter((stud) => stud.status === 'graduate'));
   }, [studentAvail, convertCohort]);
+
+  // Socket.io to display realtime life data
+  useEffect(() => {
+    const handleNewStudentReq = (stud: StudentDataMain) => {
+      dispatch(addStudent(stud));
+    }
+    const handleNewCohortReq = (coh: CohortMain) => {
+      dispatch(addCohort(coh));
+    }
+
+    socket.on('newCohort', handleNewCohortReq);
+    socket.on('cohortUpdated', handleNewCohortReq);
+    socket.on('cohortDeleted', handleNewCohortReq);
+
+    socket.on('newStudent', handleNewStudentReq);
+
+    return () => {
+      socket.off('newStudent', handleNewStudentReq);
+
+      socket.off('newCohort', handleNewCohortReq);
+      socket.off('cohortUpdated', handleNewCohortReq);
+      socket.off('cohortDeleted', handleNewCohortReq);
+    }
+  })
 
   const colleague: Colleagues[] = [
     { id: 1, title: 'No of students', numCol: studentData.length, icon: studentIcon },

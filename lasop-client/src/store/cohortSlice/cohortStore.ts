@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/lib/api";
 import { RootState } from "../store";
 import { pickAnyToken } from "@/utils/token";
@@ -6,6 +6,7 @@ import { CohortMain, CohortData, AssignCohort, UpdateCohort, CohortResponsePaylo
 
 interface InitialState {
   cohort: CohortMain[];
+  cohortCourse: CohortMain[];
   cohortDetail: CohortMain | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
@@ -13,6 +14,7 @@ interface InitialState {
 
 const initialState: InitialState = {
   cohort: [],
+  cohortCourse: [],
   cohortDetail: null,
   status: "idle",
   error: null,
@@ -23,6 +25,14 @@ export const fetchCohort = createAsyncThunk<CohortMain[]>(
   "cohort/fetchCohort",
   async () => {
     const response = await api.get<CohortMain[]>('/getCohort');
+    return response.data;
+  }
+);
+
+export const fetchCohortByCourse = createAsyncThunk<CohortMain[], string>(
+  "cohort/fetchCohortByCourse",
+  async (cohortId: string) => {
+    const response = await api.get<CohortMain[]>(`/getCohortByCourse/${cohortId}`);
     return response.data;
   }
 );
@@ -87,9 +97,16 @@ export const updateCohortStatus = createAsyncThunk<void, void, { state: RootStat
 const cohortSlice = createSlice({
   name: "cohort",
   initialState,
-  reducers: {},
+  reducers: {
+    addCohort: (state, action: PayloadAction<CohortMain>) => {
+      if (!state.cohort.some(c => c._id === action.payload._id)) {
+        state.cohort.push(action.payload);
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
+      // --- Fetch all cohorts ---
       .addCase(fetchCohort.pending, (state) => {
         state.status = "loading";
       })
@@ -102,6 +119,20 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch cohort";
       })
+      // --- Fetch cohorts filtered by course ---
+      .addCase(fetchCohortByCourse.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCohortByCourse.fulfilled, (state, action) => {
+        state.cohortCourse = action.payload;
+        state.status = "succeeded";
+        state.error = null;
+      })
+      .addCase(fetchCohortByCourse.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch cohort";
+      })
+      // --- Fetch single cohort detail ---
       .addCase(fetchCohortDetail.pending, (state) => {
         state.status = "loading";
       })
@@ -114,6 +145,7 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch cohort detail";
       })
+      // --- Create a new cohort ---
       .addCase(postCohort.pending, (state) => {
         state.status = "loading";
       })
@@ -129,6 +161,7 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to post cohort";
       })
+      // --- Update cohort details ---
       .addCase(updateCohortDet.pending, (state) => {
         state.status = "loading";
       })
@@ -147,6 +180,7 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to update cohort";
       })
+      // --- Assign staff to cohort ---
       .addCase(assignCohortStaff.pending, (state) => {
         state.status = "loading";
       })
@@ -165,6 +199,7 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to update cohort";
       })
+      // --- Delete a cohort ---
       .addCase(deleteCohort.pending, (state) => {
         state.status = "loading";
       })
@@ -177,6 +212,8 @@ const cohortSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to delete cohort";
       })
+      
+      // --- Bulk cohort status updater (protected) ---
       .addCase(updateCohortStatus.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -192,3 +229,4 @@ const cohortSlice = createSlice({
 });
 
 export default cohortSlice.reducer;
+export const { addCohort } = cohortSlice.actions;

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 import { RootState } from '../store';
 import { pickAnyToken } from '@/utils/token';
@@ -119,7 +119,13 @@ const initialState: InitialState = {
 const assessmentSlice = createSlice({
   name: 'assessment',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    addAssessment: (state, action: PayloadAction<AssessmentMain>) => {
+      if (!state.assessment.some(ass => ass._id === action.payload._id)) {
+        state.assessment.push(action.payload)
+      }
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAssessment.pending, (state) => {
@@ -230,3 +236,4 @@ const assessmentSlice = createSlice({
   },
 });
 export default assessmentSlice.reducer;
+export const { addAssessment } = assessmentSlice.actions;

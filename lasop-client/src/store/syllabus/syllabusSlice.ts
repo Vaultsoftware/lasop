@@ -1,7 +1,8 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-interface Syllabus {
+export interface Syllabus {
+    _id?: string;
     sylTitle: string;
     sylFile: any;
 }
@@ -51,7 +52,13 @@ const initialState: InitialState = {
 const syllabusSlice = createSlice({
     name: 'Syllabus',
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        addSyllabus: (state, action: PayloadAction<Syllabus>) => {
+            if (!state.syllabus.some(s => s._id === action.payload._id)) {
+                state.syllabus.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
         .addCase(fetchSyllabus.pending, (state) => {
@@ -85,3 +92,4 @@ const syllabusSlice = createSlice({
 });
 
 export default syllabusSlice.reducer;
+export const { addSyllabus } = syllabusSlice.actions;

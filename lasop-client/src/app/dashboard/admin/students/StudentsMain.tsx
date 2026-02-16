@@ -5,18 +5,33 @@ import { IoEyeOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import ApplicantDetails from '@/components/dashboardComp/adminComp/applicants/ApplicantDetails';
-import { fetchStudentDetails, updateStudent } from '@/store/studentStore/studentStore';
+import { addStudent, fetchStudentDetails, updateStudent } from '@/store/studentStore/studentStore';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { StudentDataMain } from '@/interfaces/interface';
 import Link from 'next/link';
 import ReactPaginate from 'react-paginate';
+import { socket } from '@/connection/socket';
 
 interface StudentResponsePayload {
     message: string;
 }
 
 function StudentsMain() {
+    const dispatch = useDispatch<AppDispatch>();
+
+    // Socket.io to display realtime life data
+    useEffect(() => {
+        const handleNewStudentReq = (stud: StudentDataMain) => {
+            dispatch(addStudent(stud));
+        }
+
+        socket.on('newStudent', handleNewStudentReq);
+
+        return () => {
+            socket.off('newStudent', handleNewStudentReq);
+        }
+    })
     // Displaying student on their courses
     const [courseId, setCourseId] = useState<string>('66cd6d560d14292ee2136134');
     const handleCourseId = (arg: string) => {

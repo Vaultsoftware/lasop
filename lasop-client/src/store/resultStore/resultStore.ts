@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
 import { CohortMain, Course, CenterData, StudentData, ResultData, ResultMain, ResultPayload } from '@/interfaces/interface';
@@ -99,7 +99,13 @@ const initialState: InitialState = {
 const resultSlice = createSlice({
     name: 'Result',
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        addResult: (state, action: PayloadAction<ResultMain>) => {
+            if (!state.result.some(r => r.studentId === action.payload.studentId)) {
+                state.result.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
         .addCase(fetchResult.pending, (state) => {
@@ -145,3 +151,4 @@ const resultSlice = createSlice({
 })
 
 export default resultSlice.reducer;
+export const { addResult } = resultSlice.actions;

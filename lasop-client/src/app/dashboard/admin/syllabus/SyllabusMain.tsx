@@ -1,19 +1,39 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import folder from '../../../../asset/dashIcon/folder.png';
 import Image from 'next/image';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import { addSyllabus, Syllabus } from '@/store/syllabus/syllabusSlice';
+import { socket } from '@/connection/socket';
 
 function SyllabusMain() {
+    const dispatch = useDispatch<AppDispatch>();
+
     const syllabus = useSelector((state: RootState) => state.syllabus.syllabus);
 
     const handleViewSyllabus = (sylLink: string) => {
-        if(sylLink) {
+        if (sylLink) {
             window.open(sylLink, '_blank')
         }
     }
+
+    useEffect(() => {
+        const handleNewSyllabusReq = (syl: Syllabus) => {
+            dispatch(addSyllabus(syl));
+        }
+
+        socket.on('newSyllabus', handleNewSyllabusReq);
+        socket.on('syllabusUpdated', handleNewSyllabusReq);
+        socket.on('syllabusDeleted', handleNewSyllabusReq);
+
+        return () => {
+            socket.off('newSyllabus', handleNewSyllabusReq);
+            socket.off('syllabusUpdated', handleNewSyllabusReq);
+            socket.off('syllabusDeleted', handleNewSyllabusReq);
+        }
+    })
     return (
         <main className='w-full p-5'>
             <div className="syllabus grid md:grid-cols-4 gap-3">

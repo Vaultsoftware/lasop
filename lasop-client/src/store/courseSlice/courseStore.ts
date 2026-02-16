@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { Course, CourseResponsePayload, UpdateCourse } from "@/interfaces/interface";
 
@@ -68,7 +68,13 @@ export const delCourse = createAsyncThunk<string, string>(
 const courseSlice = createSlice({
     name: 'course',
     initialState,
-    reducers: {},
+    reducers: {
+        addCourse: (state, action: PayloadAction<Course>) => {
+            if (!state.courses.some(c => c._id === action.payload._id)) {
+                state.courses.push(action.payload);
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchCourse.pending, (state) => {
@@ -151,3 +157,4 @@ const courseSlice = createSlice({
 });
 
 export default courseSlice.reducer;
+export const { addCourse } = courseSlice.actions;

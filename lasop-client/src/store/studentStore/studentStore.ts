@@ -1,5 +1,5 @@
 // File: lasop-client/src/store/studentStore/studentStore.ts
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../store";
 import {
@@ -74,6 +74,21 @@ export const fetchStudent = createAsyncThunk<StudentDataMain[]>(
     const response = await axios.get<StudentDataMain[]>(
       `${process.env.NEXT_PUBLIC_API_URL}/getStudent`
     );
+    return response.data;
+  }
+);
+
+export const fetchStudentByStatus = createAsyncThunk<
+  StudentDataMain[],
+  { status: string; cohortId?: string; courseId?: string }
+>(
+  "student/fetchStudentByStatus",
+  async ({ status, cohortId = '', courseId = '' }) => {
+    const base = `${process.env.NEXT_PUBLIC_API_URL}/studentStatus`;
+    const url = `${base}/${encodeURIComponent(status || '')}/${encodeURIComponent(
+      cohortId || ''
+    )}/${encodeURIComponent(courseId || '')}`;
+    const response = await axios.get<StudentDataMain[]>(url);
     return response.data;
   }
 );
@@ -184,6 +199,11 @@ const studentSlice = createSlice({
       state.error = null;
       state.status = "idle";
       clearToken();
+    },
+    addStudent: (state, action: PayloadAction<StudentDataMain>) => {
+      if (!state.student.some(s => s._id === action.payload._id)) {
+        state.student.push(action.payload);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -307,4 +327,4 @@ const studentSlice = createSlice({
 });
 
 export default studentSlice.reducer;
-export const { logOut } = studentSlice.actions;
+export const { logOut, addStudent } = studentSlice.actions;

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 import { RootState } from '../store';
 import { pickAnyToken } from '@/utils/token';
@@ -131,7 +131,13 @@ const initialState: InitialState = {
 const ProjectSlice = createSlice({
   name: 'Project',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    addProject: (state, action: PayloadAction<ProjectMain>) => {
+      if (!state.project.some(p => p._id === action.payload._id)) {
+        state.project.push(action.payload);
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProject.pending, (state) => {
@@ -242,3 +248,4 @@ const ProjectSlice = createSlice({
   },
 });
 export default ProjectSlice.reducer;
+export const { addProject } = ProjectSlice.actions;

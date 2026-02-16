@@ -7,6 +7,8 @@ import { RootState, AppDispatch } from '@/store/store';
 import { handleCert } from '@/store/dashMenu/dashStore';
 import { deleteCertificate, fetchCertificates } from '@/store/certificate/certificateStore';
 import { toast } from 'react-toastify';
+import { setToBeMessageInfo } from '@/store/messageStore/msgStore';
+import { useRouter } from 'next/navigation';
 
 interface CertificateMain {
   _id: string;
@@ -35,6 +37,7 @@ interface CertificateMain {
 function StudentIdHead() {
   const [option, setOption] = useState<boolean>(false);
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   const studentDet = useSelector((state: RootState) => state.student.studentDetails);
   const certificates = useSelector((state: RootState) => state.certificate.certificates);
@@ -74,13 +77,25 @@ function StudentIdHead() {
 
   const loading = status === 'loading';
 
+  const handleMessage = () => {
+    dispatch(setToBeMessageInfo({
+      _id: studentDet?._id as string,
+      firstName: studentDet?.firstName as string,
+      lastName: studentDet?.lastName as string,
+      senderModel: 'User',
+      recieverModel: 'Student'
+    }))
+
+    router.push('/dashboard/admin/messages');
+  }
+
   return (
     <header className="w-full h-[70px] flex items-center justify-between px-[30px] border-t-2 border-b-2 border-accent">
       <div className="logo">
         <h3 className="font-bold text-xl">Student / Profile</h3>
       </div>
       <div className="filter flex items-center gap-3">
-        <div className="msg flex items-center gap-2 border border-accent text-accent px-3 py-1 rounded-md h-fit text-[14px]">
+        <div onClick={handleMessage} className="msg flex items-center gap-2 border border-accent text-accent px-3 py-1 rounded-md h-fit text-[14px] cursor-pointer">
           <TiMessages />
           <span>Message</span>
         </div>

@@ -154,7 +154,7 @@ function Started3() {
         typeof s.detectedAmount === 'number' && Number.isFinite(s.detectedAmount) ? s.detectedAmount : undefined
       );
       if (s.receiptText) setNeedsReupload(true);
-    } catch {}
+    } catch { }
   }, []);
 
   // Persist state
@@ -176,7 +176,7 @@ function Started3() {
           detectedAmount,
         })
       );
-    } catch {}
+    } catch { }
   }, [
     isPartPay,
     amount,
@@ -271,7 +271,7 @@ function Started3() {
       const raw = localStorage.getItem(LS_KEY);
       const s = raw ? JSON.parse(raw) : {};
       localStorage.setItem(LS_KEY, JSON.stringify({ ...s, shareStartedAt: now, shareConfirmed: false }));
-    } catch {}
+    } catch { }
     try {
       // @ts-ignore
       if (navigator.canShare && navigator.canShare({ files: [proof] })) {
@@ -279,7 +279,7 @@ function Started3() {
         toast.success('Share dialog opened. Please send on WhatsApp.');
         return;
       }
-    } catch {}
+    } catch { }
     window.location.href = `https://wa.me/${WHATSAPP_E164}?text=${encoded}`;
   };
 
@@ -557,9 +557,8 @@ function Started3() {
                     <button
                       type="button"
                       onClick={() => setIsPartPay(false)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${
-                        !isPartPay ? 'bg-accent text-white border-accent' : ''
-                      }`}
+                      className={`h-8 px-3 rounded-md border text-[12px] ${!isPartPay ? 'bg-accent text-white border-accent' : ''
+                        }`}
                       disabled={overlayVisible}
                       aria-disabled={overlayVisible}
                     >
@@ -568,9 +567,8 @@ function Started3() {
                     <button
                       type="button"
                       onClick={() => setIsPartPay(true)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${
-                        isPartPay ? 'bg-accent text-white border-accent' : ''
-                      }`}
+                      className={`h-8 px-3 rounded-md border text-[12px] ${isPartPay ? 'bg-accent text-white border-accent' : ''
+                        }`}
                       disabled={overlayVisible}
                       aria-disabled={overlayVisible}
                     >
@@ -592,9 +590,8 @@ function Started3() {
                           value={amount}
                           onChange={handleAmountInput}
                           disabled={overlayVisible}
-                          className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${
-                            receiptHasAmount ? 'border-green-500' : 'border-shadow'
-                          } ${overlayVisible ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                          className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${receiptHasAmount ? 'border-green-500' : 'border-shadow'
+                            } ${overlayVisible ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         />
                         {receiptHasAmount && (
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[12px]">
@@ -609,9 +606,8 @@ function Started3() {
                           type="button"
                           onClick={rerunVerification}
                           disabled={overlayVisible}
-                          className={`h-8 px-3 rounded-md border text-[12px] ${
-                            overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
+                          className={`h-8 px-3 rounded-md border text-[12px] ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                           title="Re-run verification"
                           aria-disabled={overlayVisible}
                         >
@@ -739,7 +735,7 @@ function Started3() {
                               <div className="mt-1">
                                 <div className="text-gray-500">Matched snippet:</div>
                                 <pre className="mt-0.5 bg-gray-50 border rounded px-2 py-1 text-[10px] whitespace-pre-wrap break-words">
-{matchSnippet}
+                                  {matchSnippet}
                                 </pre>
                               </div>
                             )}
@@ -767,7 +763,7 @@ function Started3() {
                             <div className="mt-1">
                               <div className="text-gray-500">Name snippet:</div>
                               <pre className="mt-0.5 bg-gray-50 border rounded px-2 py-1 text-[10px] whitespace-pre-wrap break-words">
-{accountNameSnippet}
+                                {accountNameSnippet}
                               </pre>
                             </div>
                           )}
@@ -779,9 +775,8 @@ function Started3() {
                   {/* WhatsApp flow */}
                   <button
                     type="button"
-                    className={`mt-2 h-9 w-full rounded-md border text-[12px] ${
-                      overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`mt-2 h-9 w-full rounded-md border text-[12px] ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     onClick={shareToWhatsApp}
                     aria-label="Send to WhatsApp"
                     title="Send to WhatsApp"
@@ -837,7 +832,7 @@ function Started3() {
                       </button>
                       {showRaw && (
                         <pre className="mt-1 max-h-48 overflow-auto bg-gray-50 border rounded p-2 text-[10px] whitespace-pre-wrap break-words">
-{receiptText.slice(0, 4000)}
+                          {receiptText.slice(0, 4000)}
                         </pre>
                       )}
                     </div>
@@ -849,9 +844,8 @@ function Started3() {
                 <button
                   type="submit"
                   disabled={completeDisabled}
-                  className={`w-full h-[35px] text-[12px] rounded-md ${
-                    completeDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-accent text-cyan-50'
-                  }`}
+                  className={`w-full h-[35px] text-[12px] rounded-md ${completeDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-accent text-cyan-50'
+                    }`}
                 >
                   Complete Application
                 </button>
@@ -1155,20 +1149,20 @@ function buildAmountInWordsRegex(amount: number): RegExp | null {
 
 function numberToWords(num: number): string {
   if (num === 0) return 'zero';
-  const below20 = ['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
-  const tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
-  const thousands = ['','thousand','million','billion'];
+  const below20 = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const thousands = ['', 'thousand', 'million', 'billion'];
 
   const chunk = (n: number): string => {
     let res = '';
     if (n >= 100) {
-      res += below20[Math.floor(n/100)] + ' hundred';
+      res += below20[Math.floor(n / 100)] + ' hundred';
       n %= 100;
       if (n) res += ' and ';
     }
     if (n >= 20) {
-      res += tens[Math.floor(n/10)];
-      if (n % 10) res += ' ' + below20[n%10];
+      res += tens[Math.floor(n / 10)];
+      if (n % 10) res += ' ' + below20[n % 10];
     } else if (n > 0) {
       res += below20[n];
     }
@@ -1282,6 +1276,6 @@ async function extractTextFromFile(file: File): Promise<string> {
       const { data } = await Tesseract.recognize(file, 'eng');
       return (data?.text ?? '').trim();
     }
-  } catch {}
+  } catch { }
   return '';
 }

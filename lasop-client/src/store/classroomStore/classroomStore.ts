@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../store';
 import { Classroom, ClassroomMain, ClassroomResponsePayload, UpdateClassroom, UpdateAttendance } from '@/interfaces/interface';
@@ -160,7 +160,13 @@ const initialState: InitialState = {
 const classroomSlice = createSlice({
     name: 'Classroom',
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        addClassroom: (state, action: PayloadAction<ClassroomMain>) => {
+            if (!state.classroom.some(cls => cls._id === action.payload._id)) {
+                state.classroom.push(action.payload)
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchClassroom.pending, (state) => {
@@ -253,3 +259,4 @@ const classroomSlice = createSlice({
     }
 })
 export default classroomSlice.reducer;
+export const { addClassroom } = classroomSlice.actions;

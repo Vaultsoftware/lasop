@@ -1,5 +1,5 @@
 // lasop-client/src/store/certificate/certificateStore.ts
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/lib/api';
 import { RootState } from '../store';
 import { pickAnyToken } from '@/utils/token';
@@ -92,7 +92,13 @@ export const deleteCertificate = createAsyncThunk<string, string, { state: RootS
 const certificateSlice = createSlice({
   name: 'certificate',
   initialState,
-  reducers: {},
+  reducers: {
+    addCertificate: (state, action: PayloadAction<CertificateMain>) => {
+      if (!state.certificates.some(c => c._id === action.payload._id)) {
+        state.certificates.push(action.payload);
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // fetch list
@@ -173,3 +179,4 @@ const certificateSlice = createSlice({
 });
 
 export default certificateSlice.reducer;
+export const { addCertificate } = certificateSlice.actions;

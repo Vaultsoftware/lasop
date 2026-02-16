@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchCohort, updateCohortDet } from '@/store/cohortSlice/cohortStore';
+import { addCohort, fetchCohort, updateCohortDet } from '@/store/cohortSlice/cohortStore';
 import { AppDispatch, RootState } from '@/store/store';
 import React, { useEffect, useState } from 'react';
 import { GoDot } from "react-icons/go";
@@ -10,6 +10,7 @@ import { CohortResponsePayload, CohortMain } from '@/interfaces/interface';
 import Link from 'next/link';
 import { IoEyeOutline } from 'react-icons/io5';
 import ReactPaginate from 'react-paginate';
+import { socket } from '@/connection/socket';
 
 function CalDashMain() {
     const [cohortId, setCohortId] = useState<string>('66cd6d560d14292ee2136134');
@@ -29,6 +30,23 @@ function CalDashMain() {
         const courseCohort = cohorts.filter((coh) => coh.courseId.some((cou) => cou._id === cohortId))
         setCohortData(courseCohort);
     }, [cohorts, cohortId])
+
+    // Socket.io to display realtime life data
+    useEffect(() => {
+        const handleNewCohortReq = (coh: CohortMain) => {
+            dispatch(addCohort(coh));
+        }
+
+        socket.on('newCohort', handleNewCohortReq);
+        socket.on('cohortUpdated', handleNewCohortReq);
+        socket.on('cohortDeleted', handleNewCohortReq);
+
+        return () => {
+            socket.off('newCohort', handleNewCohortReq);
+            socket.off('cohortUpdated', handleNewCohortReq);
+            socket.off('cohortDeleted', handleNewCohortReq);
+        }
+    })
 
     // Formatting date
     const formatDate = (dateString: string) => {

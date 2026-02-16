@@ -1,6 +1,28 @@
-import React from 'react'
+import { socket } from '@/connection/socket';
+import { JobData } from '@/interfaces/interface';
+import { addJob } from '@/store/jobStore/jobStore';
+import { AppDispatch } from '@/store/store'
+import React, { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 
 function PostMain() {
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        const handleNewJobReq = (job: JobData) => {
+            dispatch(addJob(job));
+        }
+
+        socket.on('newJob', handleNewJobReq);
+        socket.on('jobUpdated', handleNewJobReq);
+        socket.on('jobDeleted', handleNewJobReq);
+
+        return () => {
+            socket.off('newJob', handleNewJobReq)
+            socket.off('jobUpdated', handleNewJobReq)
+            socket.off('jobDeleted', handleNewJobReq)
+        }
+    })
     return (
         <main className='w-full p-5'>
             <div className='w-full md:w-[80%]'>
@@ -12,19 +34,19 @@ function PostMain() {
                         <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Title</label>
-                                <input  className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Title'  />
+                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Title' />
                             </div>
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Salary range</label>
-                                <input  className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input'  />
+                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input' />
                             </div>
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Job type</label>
-                                <input  className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Job type'  />
+                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Job type' />
                             </div>
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Requirements</label>
-                                <input  className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input'  />
+                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input' />
                             </div>
                         </div>
                     </div>
@@ -35,17 +57,17 @@ function PostMain() {
                         <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Company</label>
-                                <input  className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Company name'  />
+                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Company name' />
                             </div>
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>Location</label>
-                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3'  name="" id="">
+                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' name="" id="">
                                     <option value=""></option>
                                 </select>
                             </div>
                             <div className="post_ctrl grid gap-1">
                                 <label htmlFor="" className='font-semibold text-[14px]'>City</label>
-                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3'  name="" id="">
+                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' name="" id="">
                                     <option value=""></option>
                                 </select>
                             </div>
