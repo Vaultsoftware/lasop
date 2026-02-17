@@ -211,7 +211,7 @@ export default function StudentSuccessStories() {
     multiplier: string;
     projects: string[];
     projectItems: { image: string; url: string }[];
-    accentColor: string;
+    accentColor: 'blue' | 'emerald' | 'violet';
     showExperience?: boolean;
   }
 
@@ -270,35 +270,36 @@ export default function StudentSuccessStories() {
     },
   ];
 
-  const getAccentClasses = (color: string) => {
-    const classes = {
-      blue: {
-        gradient: 'from-blue-600 to-cyan-600',
-        text: 'text-blue-600',
-        bg: 'bg-blue-600',
-        bgLight: 'bg-blue-50',
-        border: 'border-blue-600',
-        ring: 'ring-blue-100'
-      },
-      emerald: {
-        gradient: 'from-emerald-600 to-teal-600',
-        text: 'text-emerald-600',
-        bg: 'bg-emerald-600',
-        bgLight: 'bg-emerald-50',
-        border: 'border-emerald-600',
-        ring: 'ring-emerald-100'
-      },
-      violet: {
-        gradient: 'from-violet-600 to-purple-600',
-        text: 'text-violet-600',
-        bg: 'bg-violet-600',
-        bgLight: 'bg-violet-50',
-        border: 'border-violet-600',
-        ring: 'ring-violet-100'
-      }
-    };
-    return classes[color] || classes.blue;
+ const getAccentClasses = (color: 'blue' | 'emerald' | 'violet') => {
+  const classes = {
+    blue: {
+      gradient: 'from-blue-600 to-cyan-600',
+      text: 'text-blue-600',
+      bg: 'bg-blue-600',
+      bgLight: 'bg-blue-50',
+      border: 'border-blue-600',
+      ring: 'ring-blue-100'
+    },
+    emerald: {
+      gradient: 'from-emerald-600 to-teal-600',
+      text: 'text-emerald-600',
+      bg: 'bg-emerald-600',
+      bgLight: 'bg-emerald-50',
+      border: 'border-emerald-600',
+      ring: 'ring-emerald-100'
+    },
+    violet: {
+      gradient: 'from-violet-600 to-purple-600',
+      text: 'text-violet-600',
+      bg: 'bg-violet-600',
+      bgLight: 'bg-violet-50',
+      border: 'border-violet-600',
+      ring: 'ring-violet-100'
+    }
   };
+  return classes[color as keyof typeof classes] ?? classes.blue;
+};
+
 
   return (
     <div ref={containerRef} className="min-h-screen bg-white">
