@@ -3,6 +3,10 @@ import axios from 'axios';
 import { RootState } from '../store';
 import { AdminMain } from '../admin/adminSlice';
 
+/* ================================
+   Interfaces
+================================ */
+
 interface OtherInfo {
     fName: string;
     lName: string;
@@ -39,6 +43,7 @@ interface StudentData {
 
 interface StaffMain {
     id?: string;
+    _id?: string;
     fName: string;
     lName: string;
     email: string;
@@ -73,7 +78,7 @@ interface MessageMain {
     message: string;
     fileUrl: string;
     seen: boolean;
-    seenAt: string
+    seenAt: string;
     createdAt: string;
 }
 
@@ -82,13 +87,12 @@ interface MessageResponsePayload {
     data?: MessageMain[] | MessageMain;
 }
 
-// Represents the minimal user info you receive in conversation list
 interface ConversationUser {
     _id: string;
     name: string;
     email: string | null;
 }
-// Represents the last message summary inside each conversation
+
 interface LastMessage {
     _id: string;
     sender: string;
@@ -99,13 +103,13 @@ interface LastMessage {
     seen: boolean;
     seenAt?: string | null;
 }
-// A single conversation entry (like a WhatsApp chat tile)
+
 export interface Conversation {
     conversationWith: ConversationUser;
     lastMessage: LastMessage;
     unreadCount: number;
 }
-// API response from your backend
+
 interface ConversationsResponsePayload {
     message: string;
     data: Conversation[];
@@ -126,59 +130,99 @@ interface InitialState {
     error: string | null;
 }
 
+/* ================================
+   Async Thunks
+================================ */
 
-// Async actions
-export const postMessage = createAsyncThunk<MessageResponsePayload, Message>('message/postMessage', async (messageData) => {
+export const postMessage = createAsyncThunk<
+    MessageResponsePayload,
+    Message,
+    { rejectValue: string }
+>('message/postMessage', async (messageData, { rejectWithValue }) => {
     try {
-        const response = await axios.post<MessageResponsePayload>(`http://localhost:5000/postMsg`, messageData);
-
+        const response = await axios.post<MessageResponsePayload>(
+            `http://localhost:5000/postMsg`,
+            messageData
+        );
         return response.data;
     } catch (error: any) {
-        throw error.response?.data.message;
+        return rejectWithValue(error.response?.data?.message || 'Failed to post message');
     }
 });
 
-export const fetchMessages = createAsyncThunk<MessageResponsePayload, { senderId: string, recieverId: string, senderModel: 'Student' | 'Staff' | 'User', recieverModel: 'Student' | 'Staff' | 'User' }, { state: RootState }>('message/fetchMessages', async ({ senderId, recieverId, senderModel, recieverModel }) => {
+export const fetchMessages = createAsyncThunk<
+    MessageResponsePayload,
+    {
+        senderId: string;
+        recieverId: string;
+        senderModel: 'Student' | 'Staff' | 'User';
+        recieverModel: 'Student' | 'Staff' | 'User';
+    },
+    { rejectValue: string }
+>('message/fetchMessages', async (payload, { rejectWithValue }) => {
     try {
-        const response = await axios.get<MessageResponsePayload>(`http://localhost:5000/getMsgBtwSenders/${senderId}/${recieverId}/${senderModel}/${recieverModel}`);
+        const { senderId, recieverId, senderModel, recieverModel } = payload;
+
+        const response = await axios.get<MessageResponsePayload>(
+            `http://localhost:5000/getMsgBtwSenders/${senderId}/${recieverId}/${senderModel}/${recieverModel}`
+        );
 
         return response.data;
     } catch (error: any) {
-        throw error.response?.data.message;
+        return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages');
     }
 });
 
-export const fetchMessageDetail = createAsyncThunk<MessageMain, string, { state: RootState }>('message/fetchMessageDetail', async (messageId) => {
+export const fetchMessageDetail = createAsyncThunk<
+    MessageMain,
+    string,
+    { rejectValue: string }
+>('message/fetchMessageDetail', async (messageId, { rejectWithValue }) => {
     try {
-        const response = await axios.get<MessageMain>(`http://localhost:5000/getMessage/${messageId}`);
-
+        const response = await axios.get<MessageMain>(
+            `http://localhost:5000/getMessage/${messageId}`
+        );
         return response.data;
     } catch (error: any) {
-        throw error.response?.data.message;
+        return rejectWithValue(error.response?.data?.message || 'Failed to fetch message detail');
     }
 });
 
-export const delMessage = createAsyncThunk<string, string, { state: RootState }>('message/delMessage', async (messageId) => {
+export const delMessage = createAsyncThunk<
+    string,
+    string,
+    { rejectValue: string }
+>('message/delMessage', async (messageId, { rejectWithValue }) => {
     try {
         await axios.delete(`http://localhost:5000/deleteMsg/${messageId}`);
-
-        return messageId; // Return the ID of the deleted message
+        return messageId;
     } catch (error: any) {
-        throw error.response?.data.message;
+        return rejectWithValue(error.response?.data?.message || 'Failed to delete message');
     }
 });
 
-export const fetchConversations = createAsyncThunk<ConversationsResponsePayload, { senderId: string, senderModel: 'Student' | 'Staff' | 'User' }, { state: RootState }>('message/fetchConversations', async ({ senderId, senderModel }) => {
+export const fetchConversations = createAsyncThunk<
+    ConversationsResponsePayload,
+    { senderId: string; senderModel: 'Student' | 'Staff' | 'User' },
+    { rejectValue: string }
+>('message/fetchConversations', async (payload, { rejectWithValue }) => {
     try {
-        const response = await axios.get<ConversationsResponsePayload>(`http://localhost:5000/fetchAllConversations?senderId=${senderId}&senderModel=${senderModel}`);
+        const { senderId, senderModel } = payload;
 
-        return response.data || [];
+        const response = await axios.get<ConversationsResponsePayload>(
+            `http://localhost:5000/fetchAllConversations?senderId=${senderId}&senderModel=${senderModel}`
+        );
+
+        return response.data;
     } catch (error: any) {
-        throw error.response?.data.message;
+        return rejectWithValue(error.response?.data?.message || 'Failed to fetch conversations');
     }
 });
 
-// Initial state
+/* ================================
+   Initial State
+================================ */
+
 const initialState: InitialState = {
     messages: [],
     conversations: [],
@@ -188,7 +232,10 @@ const initialState: InitialState = {
     error: null,
 };
 
-// Slice
+/* ================================
+   Slice
+================================ */
+
 const messageSlice = createSlice({
     name: 'message',
     initialState,
@@ -198,9 +245,9 @@ const messageSlice = createSlice({
                 state.messages.push(action.payload);
             }
         },
-        setToBeMessageInfo: (state, action: PayloadAction<{ _id: string; firstName: string; lastName: string; senderModel: 'Student' | 'Staff' | 'User'; recieverModel: 'Student' | 'Staff' | 'User' } | null>) => {
+        setToBeMessageInfo: (state, action: PayloadAction<InitialState['toBeMessageInfo']>) => {
             state.toBeMessageInfo = action.payload;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -209,101 +256,58 @@ const messageSlice = createSlice({
             })
             .addCase(fetchMessages.fulfilled, (state, action) => {
                 const { data } = action.payload;
-                if (Array.isArray(data)) state.messages = data as MessageMain[];
-                else if (data) state.messages = [data as MessageMain];
+
+                if (Array.isArray(data)) {
+                    state.messages = data;
+                } else if (data) {
+                    state.messages = [data];
+                } else {
+                    state.messages = [];
+                }
+
                 state.status = 'succeeded';
                 state.error = null;
             })
             .addCase(fetchMessages.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message || 'Failed to fetch messages';
-            })
-            .addCase(fetchMessageDetail.pending, (state) => {
-                state.status = 'loading';
+                state.error = action.payload || 'Failed to fetch messages';
             })
             .addCase(fetchMessageDetail.fulfilled, (state, action) => {
                 state.messageDetail = action.payload;
                 state.status = 'succeeded';
-                state.error = null;
             })
             .addCase(fetchMessageDetail.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message || 'Failed to fetch message detail';
-            })
-            .addCase(postMessage.pending, (state) => {
-                state.status = 'loading';
+                state.error = action.payload || 'Failed to fetch message detail';
             })
             .addCase(postMessage.fulfilled, (state, action) => {
                 const { data } = action.payload;
+
                 if (data && !Array.isArray(data)) {
-                    // Helper function to normalize user objects
-                    const normalizeUser = (user: any): StaffMain | StudentData | AdminMain => {
-                        if (typeof user === "string") {
-                            return { _id: user } as any;
-                        }
-
-                        if (user && typeof user === "object") {
-                            if (user.id && !user._id) {
-                                return { ...user, _id: user.id };
-                            }
-                            return user;
-                        }
-
-                        return user;
-                    };
-                    const normalizedMessage: MessageMain = {
-                        _id: data._id,
-                        sender: normalizeUser(data.sender),
-                        senderModel: data.senderModel,
-                        receiver: normalizeUser(data.receiver),
-                        receiverModel: data.receiverModel,
-                        messageType: data.messageType,
-                        message: data.message || '',
-                        fileUrl: data.fileUrl || '',
-                        seen: data.seen || false,
-                        seenAt: data.seenAt || '',
-                        createdAt: data.createdAt || new Date().toISOString()
-                    };
-                    // Check for duplicates before adding
-                    if (!state.messages.some((m) => m._id === normalizedMessage._id)) {
-                        state.messages.push(normalizedMessage);
+                    if (!state.messages.some(m => m._id === data._id)) {
+                        state.messages.push(data);
                     }
                 }
+
                 state.status = 'succeeded';
-                state.error = null;
             })
             .addCase(postMessage.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message || 'Failed to post message';
-            })
-            .addCase(delMessage.pending, (state) => {
-                state.status = 'loading';
+                state.error = action.payload || 'Failed to post message';
             })
             .addCase(delMessage.fulfilled, (state, action) => {
-                state.messages = state.messages.filter(msg => msg._id !== action.payload);
+                state.messages = state.messages.filter(
+                    msg => msg._id !== action.payload
+                );
                 state.status = 'succeeded';
-                state.error = null;
-            })
-            .addCase(delMessage.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.error.message || 'Failed to delete message';
-            })
-            .addCase(fetchConversations.pending, (state) => {
-                state.status = 'loading';
             })
             .addCase(fetchConversations.fulfilled, (state, action) => {
-                const { data } = action.payload;
-                if (Array.isArray(data)) {
-                    state.conversations = data;
-                } else {
-                    state.conversations = [];
-                }
+                state.conversations = action.payload.data || [];
                 state.status = 'succeeded';
-                state.error = null;
             })
             .addCase(fetchConversations.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message || 'Failed to fetch conversations';
+                state.error = action.payload || 'Failed to fetch conversations';
             });
     },
 });

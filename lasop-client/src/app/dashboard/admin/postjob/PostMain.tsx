@@ -1,93 +1,100 @@
-import { socket } from '@/connection/socket';
-import { JobData } from '@/interfaces/interface';
-import { addJob } from '@/store/jobStore/jobStore';
-import { AppDispatch } from '@/store/store'
-import React, { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+"use client";
 
-function PostMain() {
-    const dispatch = useDispatch<AppDispatch>();
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { socket } from "@/connection/socket";
+import { JobData } from "@/interfaces/interface";
+import { addJob } from "@/store/jobStore/jobStore";
+import { AppDispatch } from "@/store/store";
 
-    useEffect(() => {
-        const handleNewJobReq = (job: JobData) => {
-            dispatch(addJob(job));
-        }
+export default function PostMain() {
+  const dispatch = useDispatch<AppDispatch>();
 
-        socket.on('newJob', handleNewJobReq);
-        socket.on('jobUpdated', handleNewJobReq);
-        socket.on('jobDeleted', handleNewJobReq);
+  useEffect(() => {
+    const handleNewJobReq = (job: JobData) => {
+      dispatch(addJob(job));
+    };
 
-        return () => {
-            socket.off('newJob', handleNewJobReq)
-            socket.off('jobUpdated', handleNewJobReq)
-            socket.off('jobDeleted', handleNewJobReq)
-        }
-    })
-    return (
-        <main className='w-full p-5'>
-            <div className='w-full md:w-[80%]'>
-                <form action="" className='grid gap-8'>
-                    <div className="job_info">
-                        <div className="job_head">
-                            <h3 className='font-bold text-[16px]'>JOB INFORMATION</h3>
-                        </div>
-                        <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Title</label>
-                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Title' />
-                            </div>
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Salary range</label>
-                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input' />
-                            </div>
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Job type</label>
-                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Job type' />
-                            </div>
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Requirements</label>
-                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Input' />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="job_info">
-                        <div className="job_head">
-                            <h3 className='font-bold text-[16px]'>COMPANY INFO</h3>
-                        </div>
-                        <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Company</label>
-                                <input className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' type="text" placeholder='Company name' />
-                            </div>
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Location</label>
-                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' name="" id="">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>City</label>
-                                <select className='w-full h-[40px] border border-shadow outline-none rounded-md px-3' name="" id="">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="job_info">
-                        <div className="job_head">
-                            <h3 className='font-bold text-[16px]'>JOB DESCRIPTION</h3>
-                        </div>
-                        <div className="post_inp mt-4">
-                            <div className="post_ctrl grid gap-1">
-                                <label htmlFor="" className='font-semibold text-[14px]'>Job description</label>
-                                <textarea className='w-full h-[200px] border border-shadow outline-none rounded-md px-3' name="" id=""></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+    socket.on("newJob", handleNewJobReq);
+    socket.on("jobUpdated", handleNewJobReq);
+    socket.on("jobDeleted", handleNewJobReq);
+
+    return () => {
+      socket.off("newJob", handleNewJobReq);
+      socket.off("jobUpdated", handleNewJobReq);
+      socket.off("jobDeleted", handleNewJobReq);
+    };
+  }, [dispatch]); // ✅ prevent infinite re-subscription
+
+  return (
+    <main className="w-full p-5">
+      <div className="w-full md:w-[80%]">
+        <form className="grid gap-8">
+          <div className="job_info">
+            <div className="job_head">
+              <h3 className="font-bold text-[16px]">JOB INFORMATION</h3>
             </div>
-        </main>
-    )
+
+            <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
+              <Input label="Title" placeholder="Title" />
+              <Input label="Salary range" placeholder="Input" />
+              <Input label="Job type" placeholder="Job type" />
+              <Input label="Requirements" placeholder="Input" />
+            </div>
+          </div>
+
+          <div className="job_info">
+            <div className="job_head">
+              <h3 className="font-bold text-[16px]">COMPANY INFO</h3>
+            </div>
+
+            <div className="post_inp mt-4 grid md:grid-cols-2 gap-3">
+              <Input label="Company" placeholder="Company name" />
+              <Select label="Location" />
+              <Select label="City" />
+            </div>
+          </div>
+
+          <div className="job_info">
+            <div className="job_head">
+              <h3 className="font-bold text-[16px]">JOB DESCRIPTION</h3>
+            </div>
+
+            <div className="post_inp mt-4">
+              <div className="post_ctrl grid gap-1">
+                <label className="font-semibold text-[14px]">
+                  Job description
+                </label>
+                <textarea className="w-full h-[200px] border border-shadow outline-none rounded-md px-3" />
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
 }
 
-export default PostMain
+function Input({ label, placeholder }: { label: string; placeholder: string }) {
+  return (
+    <div className="post_ctrl grid gap-1">
+      <label className="font-semibold text-[14px]">{label}</label>
+      <input
+        className="w-full h-[40px] border border-shadow outline-none rounded-md px-3"
+        type="text"
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+function Select({ label }: { label: string }) {
+  return (
+    <div className="post_ctrl grid gap-1">
+      <label className="font-semibold text-[14px]">{label}</label>
+      <select className="w-full h-[40px] border border-shadow outline-none rounded-md px-3">
+        <option value=""></option>
+      </select>
+    </div>
+  );
+}
