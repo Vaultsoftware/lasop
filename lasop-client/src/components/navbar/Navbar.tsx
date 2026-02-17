@@ -67,6 +67,10 @@ function Navbar() {
             </li>
 
             <li className='md:nav_item leading-9 font-semibold'>
+              <Link href='/webinar'>Webinar</Link>
+            </li>
+
+            <li className='md:nav_item leading-9 font-semibold'>
               <Link href='/calendar'>Calendar</Link>
             </li>
             <li className='md:nav_item leading-9 font-semibold'>

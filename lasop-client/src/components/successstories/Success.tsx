@@ -1,33 +1,19 @@
-// File: app/components/StudentSuccessStories.tsx
 'use client';
-
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  ArrowRight,
-  Heart,
-  Star,
-  Trophy,
-  Lightbulb,
-  TrendingUp,
-  Clock,
-  DollarSign,
-  Briefcase,
-  MapPin,
-  User,
-} from 'lucide-react';
 import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, TrendingUp, Clock, Briefcase, MapPin, User, Check, ExternalLink, Star } from 'lucide-react';
+import FaceOfStudents from './../faceOfstudents/faceOfStudents';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-/* =================== Slider (compact/student cards) =================== */
+/* =================== Slider =================== */
 interface SliderStudent {
   name: string;
   course: string;
-  image: string; // public/
+  image: string;
   achievement?: string;
   duration?: string;
   progress?: number;
@@ -44,11 +30,10 @@ const sliderStudents: SliderStudent[] = [
   { name: 'Ridwan Ojikutu', course: 'Fullstack software development', image: '/7.jpg', achievement: 'Published 2 Apps', duration: '6 months', progress: 83, rating: 4.7 },
   { name: 'Marvelous Emamurho', course: 'Fullstack software development', image: '/8.jpg', achievement: 'React and Django expert', duration: '6 months', progress: 89, rating: 4.8 },
   { name: 'Idoga Ene', course: 'Cyber-Security', image: '/9.jpg', achievement: 'SOC Analyst Intern → Junior', duration: '6 months', progress: 87, rating: 4.7 },
-  { name: 'Victoria Nwogo ', course: 'Backend', image: '/10.jpg', achievement: 'Node.js,Express.js,Sql', duration: '3 months', progress: 91, rating: 4.9 },
+  { name: 'Victoria Nwogo', course: 'Backend', image: '/10.jpg', achievement: 'Node.js, Express.js, SQL', duration: '3 months', progress: 91, rating: 4.9 },
 ];
 
 const SwiperStudentSlider: React.FC = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -59,11 +44,8 @@ const SwiperStudentSlider: React.FC = () => {
     return () => mq?.removeEventListener?.('change', apply);
   }, []);
 
-  const handleSlideChange = (swiper: SwiperType) => setCurrentSlide(swiper.realIndex);
-
   return (
     <section className="bg-white py-14 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* global slider cosmetics */}
       <style jsx global>{`
         .student-slider { width: 100%; height: 100%; padding-bottom: 50px !important; }
         .student-slider .swiper-slide { display: flex; justify-content: center; align-items: stretch; }
@@ -76,7 +58,6 @@ const SwiperStudentSlider: React.FC = () => {
         }
       `}</style>
 
-      {/* subtle background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -left-24 w-56 h-56 bg-blue-50 rounded-full opacity-60" />
         <div className="absolute -bottom-24 -right-24 w-56 h-56 bg-blue-50 rounded-full opacity-40" />
@@ -96,486 +77,409 @@ const SwiperStudentSlider: React.FC = () => {
           </p>
         </div>
 
-        <div className="relative">
-          <Swiper
-            modules={[Pagination, Autoplay]}
-            className="student-slider rounded-2xl"
-            slidesPerView={1}
-            spaceBetween={16}
-            loop
-            centeredSlides={false}
-            autoplay={reducedMotion ? false : { delay: 3500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-            speed={reducedMotion ? 0 : 700}
-            grabCursor
-            breakpoints={{
-              480:  { slidesPerView: 1, spaceBetween: 18 },
-              640:  { slidesPerView: 1, spaceBetween: 20 },
-              768:  { slidesPerView: 2, spaceBetween: 22 },
-              1024: { slidesPerView: 3, spaceBetween: 24 },
-              1280: { slidesPerView: 4, spaceBetween: 28 },
-            }}
-            pagination={{ clickable: true }}
-            onSlideChange={handleSlideChange}
-          >
-            {sliderStudents.map((student, index) => (
-              <SwiperSlide key={index} aria-label={`${student.name} – ${student.course}`}>
-                <div className="w-full px-2 sm:px-3">
-                  <div className="bg-white rounded-xl p-5 sm:p-6 h-full border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-medium border border-blue-100">
-                        {student.course}
-                      </div>
-                      <div className="bg-white border border-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 group-hover:border-blue-200 transition-colors">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        {student.rating}
-                      </div>
+        <Swiper
+          modules={[Pagination, Autoplay]}
+          className="student-slider rounded-2xl"
+          slidesPerView={1}
+          spaceBetween={16}
+          loop
+          autoplay={reducedMotion ? false : { delay: 3500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+          speed={reducedMotion ? 0 : 700}
+          grabCursor
+          breakpoints={{
+            480:  { slidesPerView: 1, spaceBetween: 18 },
+            640:  { slidesPerView: 1, spaceBetween: 20 },
+            768:  { slidesPerView: 2, spaceBetween: 22 },
+            1024: { slidesPerView: 3, spaceBetween: 24 },
+            1280: { slidesPerView: 4, spaceBetween: 28 },
+          }}
+          pagination={{ clickable: true }}
+        >
+          {sliderStudents.map((student, index) => (
+            <SwiperSlide key={index} aria-label={`${student.name} – ${student.course}`}>
+              <div className="w-full px-2 sm:px-3">
+                <div className="bg-white rounded-xl p-5 sm:p-6 h-full border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-medium border border-blue-100">
+                      {student.course}
+                    </div>
+                    <div className="bg-white border border-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 group-hover:border-blue-200 transition-colors">
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      {student.rating}
+                    </div>
+                  </div>
+
+                  <div className="relative mb-5 overflow-hidden rounded-lg shadow-md transition-shadow group-hover:shadow-xl">
+                    <div className="w-full" style={{ aspectRatio: '3 / 4' }}>
+                      <img
+                        src={student.image}
+                        alt={student.name}
+                        className={`w-full h-full object-cover ${reducedMotion ? '' : 'will-change-transform transition-transform duration-500 md:duration-700 ease-out group-hover:scale-105 md:group-hover:scale-110'}`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ objectPosition: 'top' }}
+                      />
+                    </div>
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 ${reducedMotion ? '' : 'group-hover:opacity-100 transition-opacity duration-300'}`} />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {student.name}
+                      </h3>
+                      {student.achievement && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                          <span className="text-sm font-medium text-gray-700">{student.achievement}</span>
+                        </div>
+                      )}
+                      {student.duration && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Clock className="w-4 h-4 text-blue-400" />
+                          <span>{student.duration} journey</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* image with fixed aspect to avoid CLS */}
-                  <div className="relative mb-5 overflow-hidden rounded-lg shadow-md transition-shadow group-hover:shadow-xl">
-  <div className="w-full" style={{ aspectRatio: '3 / 4' }}>
-    <img
-      src={student.image}
-      alt={student.name}
-      className={`w-full h-full object-cover ${reducedMotion ? '' : 'will-change-transform transition-transform duration-500 md:duration-700 ease-out group-hover:scale-105 md:group-hover:scale-110'}`}
-      loading="lazy"
-      decoding="async"
-      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 23vw"
-      style={{ objectPosition: 'top' }}
-    />
-  </div>
-  <div className={`absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 ${reducedMotion ? '' : 'group-hover:opacity-100 transition-opacity duration-300'}`} />
-</div>
-
-
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                          {student.name}
-                        </h3>
-
-                        {student.achievement && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                            <span className="text-sm font-medium text-gray-700">{student.achievement}</span>
-                          </div>
-                        )}
-
-                        {student.duration && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Clock className="w-4 h-4 text-blue-400" />
-                            <span>{student.duration} journey</span>
-                          </div>
-                        )}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">Progress</span>
+                        <span className="text-xs font-medium text-blue-600">{student.progress}%</span>
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-500">Progress</span>
-                          <span className="text-xs font-medium text-blue-600">{student.progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2">
-                          <div
-                            className={`bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full shadow-sm ${reducedMotion ? '' : 'transition-all duration-1000'}`}
-                            style={{ width: `${student.progress}%` }}
-                            aria-label={`Progress: ${student.progress}%`}
-                          />
-                        </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div
+                          className={`bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full shadow-sm ${reducedMotion ? '' : 'transition-all duration-1000'}`}
+                          style={{ width: `${student.progress}%` }}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   );
 };
 
-/* =================== Stories (long format) =================== */
+/* =================== Main Page =================== */
 export default function StudentSuccessStories() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-    const apply = () => setReducedMotion(Boolean(mq?.matches));
-    apply();
-    mq?.addEventListener?.('change', apply);
-    return () => mq?.removeEventListener?.('change', apply);
-  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Enter animations
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('opacity-100', 'translate-y-0');
-            entry.target.classList.remove('opacity-0', 'translate-y-16');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
+    const observerOptions: IntersectionObserverInit = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('opacity-100', 'translate-y-0');
+          entry.target.classList.remove('opacity-0', 'translate-y-12');
+        }
+      });
+    }, observerOptions);
 
     const elements = containerRef.current.querySelectorAll('.fade-in-element');
     elements.forEach((el, index) => {
-      (el as HTMLElement).style.transitionDelay = `${reducedMotion ? 0 : index * 150}ms`;
+      const htmlElement = el as HTMLElement;
+      htmlElement.style.transitionDelay = `${index * 80}ms`;
       observer.observe(el);
-    });
-
-    // Lightbox (with scroll lock)
-    const handleImageClick = (src: string, alt: string) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 cursor-pointer';
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden'; // why: prevent background scroll
-
-      const lightboxImg = document.createElement('img');
-      lightboxImg.src = src;
-      lightboxImg.alt = alt;
-      lightboxImg.className = 'max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl transform scale-95 transition-transform duration-300 ease-out';
-      setTimeout(() => lightboxImg.classList.replace('scale-95', 'scale-100'), 20);
-      overlay.appendChild(lightboxImg);
-      document.body.appendChild(overlay);
-
-      const closeHandler = () => {
-        lightboxImg.classList.replace('scale-100', 'scale-95');
-        setTimeout(() => {
-          if (document.body.contains(overlay)) document.body.removeChild(overlay);
-          document.body.style.overflow = prevOverflow || '';
-        }, 200);
-      };
-      overlay.addEventListener('click', closeHandler);
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          closeHandler();
-          document.removeEventListener('keydown', handleEscape);
-        }
-      };
-      document.addEventListener('keydown', handleEscape);
-    };
-
-    const lightboxImages = containerRef.current.querySelectorAll('.lightbox-image');
-    const clickHandlers: Array<() => void> = [];
-    lightboxImages.forEach((img) => {
-      const el = img as HTMLImageElement;
-      const h = () => handleImageClick(el.src, el.alt);
-      clickHandlers.push(h);
-      el.addEventListener('click', h);
     });
 
     return () => {
       observer.disconnect();
-      lightboxImages.forEach((img, i) => (img as HTMLImageElement).removeEventListener('click', clickHandlers[i]));
     };
-  }, [reducedMotion]);
+  }, []);
 
-  interface StoryStudent {
+  interface Student {
     name: string;
-    age: number;
+    duration?: string;
     location: string;
-    role: string;
+    previousRole: string;
+    currentRole: string;
     quote: string;
     timeline: string;
     currentIncome: string;
     previousIncome: string;
     multiplier: string;
     projects: string[];
-    projectImages: string[];
-    icon: React.ComponentType<{ className?: string }>;
-    color: 'rose' | 'amber' | 'purple';
+    projectItems: { image: string; url: string }[];
+    accentColor: string;
+    showExperience?: boolean;
   }
 
-  const students: StoryStudent[] = [
+  const students: Student[] = [
     {
-      name: 'Olajumoke Adebayo',
-      age: 34,
-      location: 'Lagos, Nigeria',
-      role: 'Mathematics Teacher → Full-Stack Developer',
-      quote: 'At 34, with two kids and bills to pay, everyone said I was too old to start over. They were wrong.',
-      timeline: '6 months transformation',
-      currentIncome: '₦450,000/month',
-      previousIncome: '₦65,000/month',
-      multiplier: '7x',
+      name: "R. Olajumoke Kaothar",
+      duration: "10 months+ in Tech ",
+      location: "Ogun State, Nigeria",
+      previousRole: "Primary School Teacher",
+      currentRole: "Tech Entrepreneur & Founder",
+      quote: "Building AgroStack was just the beginning — soon after, I landed an interview in Riyadh, Saudi Arabia. From there, I scaled enterprise websites, created Kanban task management systems, and discovered that coding could unlock a world of endless possibilities.",
+      timeline: "6 months",
+      currentIncome: "Building AgroStack",
+      previousIncome: "Teacher's Salary",
+      multiplier: "∞ Potential",
       projects: [
-        'NaijaEats - A food blog generating ₦80,000/month in ad revenue',
-        'E-commerce platform for Abuja fashion designer - ₦150,000 project',
-        'School management system for 3 private schools',
-        'Wedding planning website with booking system',
+        "AgroStack - Revolutionary platform solving critical pain points for Nigerian farmers across the entire agricultural value chain",
+        "Selected for technical interview in Riyadh, Saudi Arabia for enterprise website scalability role",
+        "Kanban Task Management System - Advanced project management tool for teams and businesses",
+        "Multiple full-stack web applications serving thousands of users"
       ],
-      projectImages: [
-        'https://www.blogtyrant.com/wp-content/uploads/2022/05/rsz_ambitious-kitchen-food-blog-example.png',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjoawfh48w03qCIAG3fdpr6xMkNJPvtyMTHw&s',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjwsPfiHLbMC620Z-lzdyognEJdahV5Pncrw&s',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUZoZnGI_kBZ8aSg9slyL7IWj1UKwn5sXo5Q&s',
+      projectItems: [
+        { image: "/lasopProject.jfif ", url: "https://agritech-woad.vercel.app/" },
+        { image: "/Kanban.jfif", url: "https://kanban-task-management-dusky.vercel.app/" },
+        { image: "/Agrro.jfif", url: "https://agritech-woad.vercel.app/" },
+        { image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=600&fit=crop", url: "https://your-third-project.vercel.app" },
       ],
-      icon: Heart,
-      color: 'rose',
+      accentColor: "blue",
+      showExperience: true
     },
     {
-      name: 'Samuel Okonkwo',
-      age: 28,
-      location: 'Port Harcourt, Nigeria',
-      role: 'Factory Worker → Freelance Developer',
-      quote: 'My hands were stained with machine oil, but my dreams were bigger than that factory floor.',
-      timeline: '6 months transformation',
-      currentIncome: '₦380,000/month',
-      previousIncome: '₦45,000/month',
-      multiplier: '8.4x',
+      name: "Samuel Okonkwo",
+      duration: "1 year+ in Tech",
+      location: "Port Harcourt, Nigeria",
+      previousRole: "Factory Worker",
+      currentRole: "Freelance Developer",
+      quote: "My hands were stained with machine oil, but my dreams were bigger than that factory floor.",
+      timeline: "6 months",
+      currentIncome: "₦380,000",
+      previousIncome: "₦45,000",
+      multiplier: "8.4x increase",
       projects: [
-        'GroceryRun - Full-featured delivery app earning ₦120,000/month',
-        'School management system for 3 Port Harcourt schools',
-        'Restaurant ordering platform with payment integration',
-        'Church management system with member portal',
+        "GroceryRun - Full-featured delivery app earning ₦120,000/month",
+        "School management system for 3 Port Harcourt schools",
+        "Restaurant ordering platform with payment integration",
+        "Church management system with member portal"
       ],
-      projectImages: [
-        'https://wrapmarketusercontent.com/assets/items/thumb/0ebdf5eaecbcab493384f45b09fda87b0b20900173ce05c6a05f9dc4a3004c16.webp?v=1710580878',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaUEQzV_MP10HM4BWRNkBGflNdR0mjSB7ZOw&s',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjbOihuKj9nP85KfbAqYznWjef7FpNC4kTyQ&s',
-        'https://s3.envato.com/files/519893740/01_wp_church_preview.jpg',
+      projectItems: [
+        { image: "https://wrapmarketusercontent.com/assets/items/thumb/0ebdf5eaecbcab493384f45b09fda87b0b20900173ce05c6a05f9dc4a3004c16.webp?v=1710580878", url: "https://groceryrun-project.vercel.app" },
+        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaUEQzV_MP10HM4BWRNkBGflNdR0mjSB7ZOw&s", url: "https://school-management-project.vercel.app" },
+        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjbOihuKj9nP85KfbAqYznWjef7FpNC4kTyQ&s", url: "https://restaurant-ordering-project.vercel.app" },
+        { image: "https://s3.envato.com/files/519893740/01_wp_church_preview.jpg", url: "https://church-management-project.vercel.app" }
       ],
-      icon: Trophy,
-      color: 'amber',
-    },
-    {
-      name: 'Blessing Okoro',
-      age: 26,
-      location: 'Abuja, Nigeria',
-      role: 'Job Seeker → Tech Entrepreneur',
-      quote: "After 300+ rejection emails, I realized the job I was looking for didn't exist - so I created it myself.",
-      timeline: '6 months transformation',
-      currentIncome: '₦520,000/month',
-      previousIncome: '₦0 (unemployed)',
-      multiplier: '∞',
-      projects: [
-        'BlessCode Studios - Her agency generating ₦400,000+ monthly',
-        'JobTracker - App helping graduates track applications (2000+ users)',
-        'E-learning platform for skill acquisition programs',
-        'Portfolio websites for 20+ professionals',
-      ],
-      projectImages: [
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaBNKnjvlV3IdgWSBEVfqViHMLtMfSkHeWRw&s',
-        'https://www.figma.com/community/resource/07dfb082-ac0e-4d86-b901-ee1f6eacb1af/thumbnail',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuQUDI_9Zi0L0Sk09ts00p9fYOx7vywEXspA&s',
-        'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop',
-      ],
-      icon: Lightbulb,
-      color: 'purple',
+      accentColor: "emerald",
+      showExperience: true
     },
   ];
 
-  const colorClasses: Record<string, string> = {
-    rose: 'from-blue-500 to-red-500',
-    amber: 'from-blue-500 to-blue-600',
-    purple: 'from-red-500 to-blue-500',
+  const getAccentClasses = (color: string) => {
+    const classes = {
+      blue: {
+        gradient: 'from-blue-600 to-cyan-600',
+        text: 'text-blue-600',
+        bg: 'bg-blue-600',
+        bgLight: 'bg-blue-50',
+        border: 'border-blue-600',
+        ring: 'ring-blue-100'
+      },
+      emerald: {
+        gradient: 'from-emerald-600 to-teal-600',
+        text: 'text-emerald-600',
+        bg: 'bg-emerald-600',
+        bgLight: 'bg-emerald-50',
+        border: 'border-emerald-600',
+        ring: 'ring-emerald-100'
+      },
+      violet: {
+        gradient: 'from-violet-600 to-purple-600',
+        text: 'text-violet-600',
+        bg: 'bg-violet-600',
+        bgLight: 'bg-violet-50',
+        border: 'border-violet-600',
+        ring: 'ring-violet-100'
+      }
+    };
+    return classes[color] || classes.blue;
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100">
-      {/* Hero */}
-      <section className="relative px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className={`absolute top-20 left-6 sm:left-20 w-56 sm:w-72 h-56 sm:h-72 bg-gradient-to-r from-blue-200/40 to-blue-300/40 rounded-full blur-3xl ${reducedMotion ? '' : 'animate-pulse'}`} />
-          <div className={`absolute bottom-20 right-6 sm:right-20 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-red-200/30 to-red-300/30 rounded-full blur-3xl ${reducedMotion ? '' : 'animate-pulse'} delay-1000`} />
-          <div className={`absolute top-1/2 left-1/2 w-64 sm:w-80 h-64 sm:h-80 bg-gradient-to-r from-blue-300/40 to-white/40 rounded-full blur-3xl ${reducedMotion ? '' : 'animate-pulse'} delay-500`} />
-        </div>
-
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="fade-in-element opacity-0 translate-y-16 transition-all duration-700 ease-out">
-            <div className="inline-flex items-center gap-3 bg-white/95 backdrop-blur-sm px-4 sm:px-6 py-3 rounded-full text-sm font-bold mb-6 sm:mb-8 shadow-xl border border-blue-200/50">
-              <Star className="w-4 h-4 text-red-500" />
-              <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent text-2xl sm:text-3xl">Real Transformations</span>
-              <Heart className="w-4 h-4 text-red-500" />
-            </div>
-          </div>
-
-          <div className="fade-in-element opacity-0 translate-y-16 transition-all duration-700 ease-out">
-            <h1 className="font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 bg-clip-text text-transparent mb-4 sm:mb-6">
+    <div ref={containerRef} className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative px-6 py-8 md:py-12 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
               Success Stories
             </h1>
           </div>
 
-          <div className="fade-in-element opacity-0 translate-y-16 transition-all duration-700 ease-out max-w-3xl mx-auto text-blue-700 text-lg sm:text-xl font-medium mb-8 sm:mb-12">
-            Real people. Real transformations. Real income growth.
+          <div className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Discover how our students transformed their lives in just 6 months
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Stories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 sm:pb-16 md:pb-20 space-y-16 sm:space-y-18 md:space-y-20">
+      {/* Student Stories */}
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-12">
         {students.map((student, i) => {
-          const { name, age, location, role, quote, timeline, currentIncome, previousIncome, multiplier, projects, projectImages, icon: Icon, color } = student;
+          const accent = getAccentClasses(student.accentColor);
 
           return (
-            <div key={i} className="fade-in-element opacity-0 translate-y-16 transition-all duration-700 ease-out">
-              {/* Profile */}
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-6 sm:p-8 mb-6 sm:mb-8 shadow-2xl border border-white/50 overflow-hidden">
-                <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${colorClasses[color]}`} />
-                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-4 sm:gap-6 mb-5 sm:mb-6">
-                      <div className={`p-3 sm:p-4 rounded-2xl bg-gradient-to-br ${colorClasses[color]} shadow-lg`}>
-                        <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            <article key={i} className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
+              <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+
+                {/* Left Column - Profile & Story */}
+                <div className="lg:col-span-5 space-y-6">
+                  {/* Profile Card */}
+                  <div className={`bg-gradient-to-br ${accent.gradient} p-8 rounded-2xl text-white shadow-xl`}>
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                        <User className="w-8 h-8 text-white" />
                       </div>
-                      <div className="flex-1">
-                        <h2 className="font-black text-3xl sm:text-4xl text-blue-800 mb-2">{name}</h2>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                          <div className="flex items-center gap-2 text-blue-600">
-                            <User className="w-4 h-4" />
-                            <span className="font-semibold">{age} years old</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-blue-600">
-                            <MapPin className="w-4 h-4" />
-                            <span className="font-semibold">{location}</span>
-                          </div>
-                        </div>
-                        <div className={`inline-block px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r ${colorClasses[color]} text-white font-bold text-base sm:text-lg shadow-lg`}>
-                          {role}
+                      <div>
+                        <h2 className="text-3xl font-bold mb-1">{student.name}</h2>
+                        <div className="flex items-center gap-2 text-white/90">
+                          <MapPin className="w-4 h-4" />
+                          <span>{student.location}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="relative">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-red-400 rounded-full" />
-                      <blockquote className="italic text-blue-700 text-lg sm:text-xl font-medium pl-6 sm:pl-8 leading-relaxed">
-                        “{quote}”
-                      </blockquote>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mb-6 sm:mb-8">
-                <div className="group bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-xl border border-blue-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-blue-800 text-lg">Timeline</h3>
-                  </div>
-                  <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-1.5 sm:mb-2">{timeline}</p>
-                  <p className="text-blue-600 font-medium">Complete transformation</p>
-                </div>
-
-                <div className="group bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-xl border border-blue-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-red-500 shadow-lg">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-blue-800 text-lg">Growth</h3>
-                  </div>
-                  <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-600 to-red-600 bg-clip-text text-transparent mb-1.5 sm:mb-2">{multiplier}</p>
-                  <p className="text-blue-600 font-medium text-sm">{previousIncome} → {currentIncome}</p>
-                </div>
-
-                <div className="group bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-xl border border-blue-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-blue-500 shadow-lg">
-                      <DollarSign className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-blue-800 text-lg">Income</h3>
-                  </div>
-                  <p className="text-xl sm:text-2xl font-black bg-gradient-to-r from-red-600 to-blue-600 bg-clip-text text-transparent mb-1.5 sm:mb-2">{currentIncome}</p>
-                  <p className="text-blue-600 font-medium">Monthly earnings</p>
-                </div>
-
-                <div className="group bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-xl border border-blue-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-red-500 shadow-lg">
-                      <Briefcase className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-blue-800 text-lg">Career</h3>
-                  </div>
-                  <p className="text-xl sm:text-2xl font-black bg-gradient-to-r from-blue-600 to-red-600 bg-clip-text text-transparent mb-1.5 sm:mb-2">Transformed</p>
-                  <p className="text-blue-600 font-medium">New trajectory</p>
-                </div>
-              </div>
-
-              {/* Projects */}
-              <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-blue-200/50">
-                  <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-red-500 shadow-lg">
-                      <Briefcase className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-black text-xl sm:text-2xl text-blue-800">Key Projects</h3>
-                  </div>
-                  <div className="space-y-3 sm:space-y-4">
-                    {projects.map((project, idx) => (
-                      <div key={idx} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-blue-50/80 hover:bg-blue-100/80 transition-all duration-300">
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-blue-500 to-red-500 mt-1.5 sm:mt-2 flex-shrink-0" />
-                        <p className="text-blue-700 font-medium leading-relaxed">{project}</p>
+                    <div className="space-y-3">
+                      {student.showExperience && student.duration && (
+                        <div className="flex items-center justify-between py-3 border-t border-white/20">
+                          <span className="text-white/80">Experience</span>
+                          <span className="font-semibold">{student.duration}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between py-3 border-t border-white/20">
+                        <span className="text-white/80">Timeline</span>
+                        <span className="font-semibold">{student.timeline}</span>
                       </div>
-                    ))}
+                    </div>
+                  </div>
+
+                  {/* Transformation Card */}
+                  <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Career Transformation</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">From</p>
+                        <p className="text-lg font-semibold text-slate-700">{student.previousRole}</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <ArrowRight className={`w-6 h-6 ${accent.text}`} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">To</p>
+                        <p className={`text-lg font-semibold ${accent.text}`}>{student.currentRole}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Income Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        <p className="text-xs font-medium text-slate-500 uppercase">Before</p>
+                      </div>
+                      <p className="text-xl font-bold text-slate-700">{student.previousIncome}</p>
+                      <p className="text-xs text-slate-500 mt-1">per month</p>
+                    </div>
+                    <div className={`${accent.bgLight} rounded-xl p-5 border-2 ${accent.border}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className={`w-4 h-4 ${accent.text}`} />
+                        <p className={`text-xs font-medium ${accent.text} uppercase`}>Now</p>
+                      </div>
+                      <p className={`text-xl font-bold ${accent.text}`}>{student.currentIncome}</p>
+                      <p className={`text-xs ${accent.text} mt-1 font-medium`}>{student.multiplier}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl border border-blue-200/50">
-                  <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-red-500 shadow-lg">
-                      <Star className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-black text-xl sm:text-2xl text-blue-800">Portfolio</h3>
+                {/* Right Column - Quote, Projects & Portfolio */}
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Quote */}
+                  <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl">
+                    <div className="text-6xl font-serif text-white/20 mb-4">"</div>
+                    <blockquote className="text-xl md:text-2xl font-medium leading-relaxed italic">
+                      {student.quote}
+                    </blockquote>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                    {projectImages.map((src, idx) => (
-                      <div key={idx} className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300">
-                        <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
+                  {/* Projects */}
+                  <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Briefcase className={`w-6 h-6 ${accent.text}`} />
+                      <h3 className="text-2xl font-bold text-slate-900">Key Projects</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {student.projects.map((project, idx) => (
+                        <div key={idx} className="flex items-start gap-3 group">
+                          <div className={`w-6 h-6 rounded-full ${accent.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                          <p className="text-slate-700 leading-relaxed flex-1">{project}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Portfolio Grid */}
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">Portfolio Showcase</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {student.projectItems.map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative overflow-hidden rounded-xl aspect-video shadow-md hover:shadow-xl transition-all duration-300 block"
+                        >
                           <img
-                            src={src}
-                            alt={`Project ${idx + 1} by ${name}`}
-                            className={`lightbox-image w-full h-full object-cover cursor-pointer ${reducedMotion ? '' : 'group-hover:scale-110 transition-transform duration-500'}`}
+                            src={item.image}
+                            alt={`Project ${idx + 1} by ${student.name}`}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             loading="lazy"
-                            decoding="async"
-                            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
                           />
-                        </div>
-                        <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent opacity-0 ${reducedMotion ? '' : 'group-hover:opacity-100 transition-opacity duration-300'}`} />
-                        <div className="absolute bottom-2 left-2 right-2">
-                          <div className="bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <p className="text-xs font-bold text-blue-800 truncate">Project {idx + 1}</p>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <div className="flex items-center gap-2 text-white font-semibold">
+                              <span>View Project</span>
+                              <ExternalLink className="w-4 h-4" />
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
+
               </div>
-            </div>
+            </article>
           );
         })}
       </section>
 
-      {/* Slider */}
+      
+      {/* Meet Our Amazing Students Slider */}
       <SwiperStudentSlider />
 
-      {/* CTA */}
-      <section className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 py-16 sm:py-20 md:py-24 text-center text-white px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-blue-900/10" />
-        <div className="absolute inset-0">
-          <div className={`absolute top-10 left-6 sm:left-10 w-48 sm:w-64 h-48 sm:h-64 bg-white/10 rounded-full blur-3xl ${reducedMotion ? '' : 'animate-pulse'}`} />
-          <div className={`absolute bottom-10 right-6 sm:right-10 w-64 sm:w-80 h-64 sm:h-80 bg-red-300/20 rounded-full blur-3xl ${reducedMotion ? '' : 'animate-pulse'} delay-1000`} />
-        </div>
-
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <h2 className="font-black text-4xl sm:text-5xl md:text-6xl mb-6 sm:mb-8">Your Success Story Awaits</h2>
-          <p className="max-w-3xl mx-auto mb-8 sm:mb-12 text-lg sm:text-xl font-medium opacity-90 leading-relaxed">
-            Join thousands who transformed their careers and multiplied their income. Your journey to financial freedom starts with a single decision.
+      {/* CTA Section */}
+      <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-20 md:py-32 px-6 mt-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-100 mb-4 tracking-tight leading-tight">
+            your success stories start here
+          </h1>
+          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+            Join thousands who've transformed their careers. Start your journey today.
           </p>
-          <Link
-            className="group inline-flex items-center gap-3 sm:gap-4 bg-white text-blue-700 font-black py-4 sm:py-5 md:py-6 px-7 sm:px-9 md:px-10 rounded-2xl text-lg sm:text-xl hover:bg-blue-50 transition-all duration-300 shadow-2xl hover:scale-105 hover:shadow-3xl"
-            href="/getStarted"
-          >
-            Start Your Transformation
-            <ArrowRight className={`w-5 h-5 sm:w-6 sm:h-6 ${reducedMotion ? '' : 'group-hover:translate-x-1 transition-transform duration-300'}`} />
+          <Link href="/contact">
+            <button className="group inline-flex items-center gap-3 bg-white text-slate-900 font-bold py-5 px-10 rounded-xl hover:bg-slate-100 transition-all duration-300 shadow-2xl hover:shadow-white/20 hover:scale-105">
+              Get Started Now
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+            </button>
           </Link>
         </div>
       </section>

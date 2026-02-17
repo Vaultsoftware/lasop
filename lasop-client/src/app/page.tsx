@@ -11,7 +11,7 @@ import { fetchCohort } from "@/store/cohortSlice/cohortStore";
 import { fetchCourse } from "@/store/courseSlice/courseStore";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import TawkWidget from "@/components/Tawk/TawkWidget"; // show only on home
+import TawkWidget from "@/components/Tawk/WhatsApp"; 
 
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,7 +31,7 @@ export default function Home() {
       <LandHead />
       <LandMain />
       <Footer />
-      <TawkWidget /> {/* Now only renders on the home page */}
+      <TawkWidget /> 
     </>
   );
 }
