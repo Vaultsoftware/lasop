@@ -4,9 +4,15 @@ import Navbar from './../../components/navbar/Navbar';
 import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
 
 export default function LasopWebinar() {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -16,16 +22,16 @@ export default function LasopWebinar() {
   // Countdown timer
   useEffect(() => {
     const targetDate = new Date('2026-02-20T19:00:00').getTime();
-    
+
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
-      
+
       setTimeLeft({
         days: Math.floor(distance / (1000 * 60 * 60 * 24)),
         hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
         minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        seconds: Math.floor((distance % (1000 * 60)) / 1000),
       });
     }, 1000);
 
@@ -37,21 +43,19 @@ export default function LasopWebinar() {
     emailjs.init('jmMjHWm08bK1xNwwI');
   }, []);
 
-  const handleRegistration = async (e) => {
+  const handleRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (email && name && phone) {
       setSending(true);
-      
+
       try {
-        // Email parameters - matching your EmailJS template variables
         const templateParams = {
           name: name,
           email: email,
           phone: phone,
         };
 
-        // Send email using emailjs.send (after initialization in useEffect)
         const response = await emailjs.send(
           'service_90bids9',
           'template_70vkndx',
@@ -60,8 +64,7 @@ export default function LasopWebinar() {
 
         console.log('Email sent successfully:', response);
         setRegistered(true);
-        
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error sending email:', error);
         console.error('Error details:', error.text || error.message);
         alert(`Registration error: ${error.text || error.message || 'Please check your internet connection and try again.'}`);
@@ -71,7 +74,6 @@ export default function LasopWebinar() {
     }
   };
 
-  // CTA Button Component
   const CTAButton = () => (
     <a href="#register" className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl group">
       Register Free Now
@@ -83,12 +85,10 @@ export default function LasopWebinar() {
     <div className="min-h-screen bg-white">
       <Navbar />
       
-      {/* Hero Section - Clean White Design */}
+      {/* Hero Section */}
       <div className="relative bg-white overflow-hidden border-b border-gray-200">
         <div className="relative md:px-12 px-[30px] pb-16 lg:pb-20 pt-10 lg:pt-12">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
-            
-            {/* Left Side - Text */}
             <div className="order-2 lg:order-1">
               <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
                 <span className="relative flex h-2 w-2">
@@ -106,7 +106,6 @@ export default function LasopWebinar() {
                 Join 500+ professionals for an exclusive 90-minute training that will accelerate your career growth
               </p>
 
-              {/* Event Details */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <div className="space-y-2.5 text-sm">
                   <div className="flex items-center gap-3 text-gray-700">
@@ -127,7 +126,6 @@ export default function LasopWebinar() {
               <CTAButton />
             </div>
 
-            {/* Right Side - Image */}
             <div className="order-1 lg:order-2">
               <div className="relative">
                 <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200">
@@ -139,7 +137,6 @@ export default function LasopWebinar() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
