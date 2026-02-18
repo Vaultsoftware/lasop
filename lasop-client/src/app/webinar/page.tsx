@@ -16,10 +16,11 @@ export default function LasopWebinar() {
   const [sending, setSending] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [whatsappJoined, setWhatsappJoined] = useState(false);
+  const [hasClickedWhatsApp, setHasClickedWhatsApp] = useState(false); // NEW - tracks if they clicked join
 
   // Countdown timer
   useEffect(() => {
-    const targetDate = new Date('2026-02-20T19:00:00').getTime();
+    const targetDate = new Date('2026-02-22T12:00:00').getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -45,12 +46,15 @@ export default function LasopWebinar() {
   const handleRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (email && name && phone) {
+      setHasClickedWhatsApp(false); 
       setShowWhatsAppModal(true);
     }
   };
 
-  // STEP 2: User clicks "I've Joined WhatsApp" → now send email and show success
+  // STEP 2: User clicks "I've Joined WhatsApp" → send email and show success
   const handleWhatsAppJoined = async () => {
+    if (!hasClickedWhatsApp) return; // extra safety - shouldn't reach here anyway
+
     setWhatsappJoined(true);
     setSending(true);
 
@@ -80,9 +84,10 @@ export default function LasopWebinar() {
     }
   };
 
-  // Open WhatsApp link in new tab
+  // Opens WhatsApp AND unlocks the "I've Joined" button
   const handleOpenWhatsApp = () => {
     window.open(WHATSAPP_GROUP_LINK, '_blank');
+    setHasClickedWhatsApp(true);
   };
 
   // CTA Button Component
@@ -103,7 +108,10 @@ export default function LasopWebinar() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 lg:p-8 relative">
 
             <button
-              onClick={() => setShowWhatsAppModal(false)}
+              onClick={() => {
+                setShowWhatsAppModal(false);
+                setHasClickedWhatsApp(false); // reset on close
+              }}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X className="w-5 h-5" />
@@ -125,7 +133,7 @@ export default function LasopWebinar() {
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
                   <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                  Click <strong>"Join WhatsApp Group"</strong> below
+                  Click <strong>"Join WhatsApp Group To Complete Registration"</strong> 
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
@@ -138,18 +146,20 @@ export default function LasopWebinar() {
               </ul>
             </div>
 
+            {/* Green Join Button */}
             <button
               onClick={handleOpenWhatsApp}
               className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 mb-3 transition-all shadow-md"
             >
               <MessageCircle className="w-5 h-5" />
-              Join WhatsApp Group
+              {hasClickedWhatsApp ? 'Open WhatsApp Group Again ↗' : 'Join WhatsApp Group'}
             </button>
 
+            {/* Blue Confirm Button - LOCKED until they click green button */}
             <button
               onClick={handleWhatsAppJoined}
-              disabled={sending}
-              className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-md"
+              disabled={sending || !hasClickedWhatsApp}
+              className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-md"
             >
               {sending ? (
                 <>
@@ -164,9 +174,14 @@ export default function LasopWebinar() {
               )}
             </button>
 
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Please join the WhatsApp group before confirming
+            {/* Helper message - changes based on state */}
+            <p className="text-xs text-center mt-3 font-medium">
+              {hasClickedWhatsApp
+                ? <span className="text-green-600">✅ Great! Now click "I've Joined" above to finish</span>
+                : <span className="text-red-500">⚠️ Please click "Join WhatsApp Group" first before continuing</span>
+              }
             </p>
+
           </div>
         </div>
       )}
