@@ -27,10 +27,32 @@ const postStaff = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashPwd = await bcrypt.hash(password, salt);
 
-    const staffExist = await Staff.findOne({ email });
-    if (staffExist) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
+  const staffExist = await Staff.findOne({ email });
+
+if (staffExist) {
+  // Update existing record instead of blocking
+  staffExist.firstName = firstName;
+  staffExist.lastName = lastName;
+  staffExist.contact = contact;
+  staffExist.houseNo = _houseNo;
+  staffExist.streetName = _streetName;
+  staffExist.city = _city;
+  staffExist.dateOfEmploy = dateOfEmploy;
+  staffExist.salary = salary;
+  staffExist.password = hashPwd;
+  staffExist.otherInfo = otherInfo;
+  staffExist.role = role;
+  staffExist.enrol = enrol;
+  staffExist.status = status;
+
+  await staffExist.save();
+
+  return res.status(200).json({
+    message: 'Staff account updated successfully',
+    data: staffExist
+  });
+}
+
 
     // Legacy compatibility: derive parts from `address` if needed
     let _houseNo = (houseNo ?? '').trim();
