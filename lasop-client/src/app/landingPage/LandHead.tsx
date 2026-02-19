@@ -9,7 +9,7 @@ export default function LasopLandingPage() {
 
   // Modal state
   const [isDemoOpen, setIsDemoOpen] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null); // lazy: null by default
+  const [activeDemo, setActiveDemo] = useState<string | null>(null); 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Respect OS motion preferences (why: accessibility)
@@ -36,13 +36,13 @@ export default function LasopLandingPage() {
 
   const openDemoModal = () => {
     setIsDemoOpen(true);
-    // lazy-load: do NOT preselect; wait for user to click
+    
     setActiveDemo(null);
   };
   const closeDemoModal = () => {
     setIsDemoOpen(false);
     setActiveDemo(null);
-    if (videoRef.current) videoRef.current.pause(); // why: avoid background audio
+    if (videoRef.current) videoRef.current.pause(); 
   };
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDemoModal(); };
@@ -54,7 +54,7 @@ export default function LasopLandingPage() {
     {
       id: 'fullstack',
       emoji: '⚛️',
-      title: 'Front-end Development',
+      title: 'Front-end Web Development',
       subtitle: 'Modern Web Development',
       borderColor: 'border-blue-500',
       details: {
@@ -68,14 +68,14 @@ export default function LasopLandingPage() {
           'Authentication & Security',
           'Deployment & DevOps',
         ],
-        duration: '6 Months',
+        duration: '4 Months',
         level: 'Intermediate to Advanced',
       },
     },
     {
       id: 'python',
       emoji: '🐍',
-      title: 'Python & Backend',
+      title: 'Python & Backend Web Development',
       subtitle: 'Server-side programming',
       borderColor: 'border-red-500',
       details: {
@@ -110,7 +110,7 @@ export default function LasopLandingPage() {
           'Statistical Analysis',
           'AI Model Deployment',
         ],
-        duration: '5 Months',
+        duration: '6 Months',
         level: 'Intermediate to Advanced',
       },
     },

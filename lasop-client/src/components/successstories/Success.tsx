@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, TrendingUp, Clock, Briefcase, MapPin, User, Check, ExternalLink, Star } from 'lucide-react';
+import { ArrowRight, TrendingUp, Clock, Briefcase, MapPin, User, Check, ExternalLink, Star, BadgeCheck } from 'lucide-react';
 import FaceOfStudents from './../faceOfstudents/faceOfStudents';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -165,6 +165,70 @@ const SwiperStudentSlider: React.FC = () => {
   );
 };
 
+/* =================== Student Profile Card (small & clean) =================== */
+interface StudentProfile {
+  name: string;
+  title: string;
+  initials: string;
+  skills: string[];
+  accentColor: 'blue' | 'emerald' | 'violet';
+  email?: string;
+  phone?: string;
+}
+
+const StudentProfileCard: React.FC<{ profile: StudentProfile }> = ({ profile }) => {
+  const colorMap = {
+    blue:    { gradient: 'from-blue-600 to-cyan-500',     text: 'text-blue-600',    pill: 'bg-blue-50 text-blue-700 border-blue-100' },
+    emerald: { gradient: 'from-emerald-600 to-teal-500',  text: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    violet:  { gradient: 'from-violet-600 to-purple-500', text: 'text-violet-600',  pill: 'bg-violet-50 text-violet-700 border-violet-100' },
+  };
+  const c = colorMap[profile.accentColor];
+
+  return (
+    <div className="mt-6 flex flex-wrap sm:flex-nowrap items-center gap-4 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
+      {/* Avatar */}
+      <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0`}>
+        <span className="text-sm font-bold text-white">{profile.initials}</span>
+      </div>
+
+      {/* Name + title + skills */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
+          <BadgeCheck className={`w-4 h-4 flex-shrink-0 ${c.text}`} />
+        </div>
+        <p className={`text-xs ${c.text} font-medium mb-2`}>{profile.title}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {profile.skills.map((skill, idx) => (
+            <span key={idx} className={`text-xs px-2 py-0.5 rounded-full border ${c.pill}`}>{skill}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Open to opportunities badge + contact */}
+      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+          </span>
+          Open to opportunities
+        </div>
+        {profile.email && (
+          <a href={`mailto:${profile.email}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
+            📧 {profile.email}
+          </a>
+        )}
+        {profile.phone && (
+          <a href={`tel:${profile.phone}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
+            📞 {profile.phone}
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* =================== Main Page =================== */
 export default function StudentSuccessStories() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -213,6 +277,7 @@ export default function StudentSuccessStories() {
     projectItems: { image: string; url: string }[];
     accentColor: 'blue' | 'emerald' | 'violet';
     showExperience?: boolean;
+    profile: StudentProfile;
   }
 
   const students: Student[] = [
@@ -240,7 +305,16 @@ export default function StudentSuccessStories() {
         { image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=600&fit=crop", url: "https://your-third-project.vercel.app" },
       ],
       accentColor: "blue",
-      showExperience: true
+      showExperience: true,
+      profile: {
+        name: "R. Olajumoke Kaothar",
+        initials: "OK",
+        title: "Fullstack Developer & Tech Entrepreneur",
+        skills: ["React", "Next.js", "Node.js", "Django", "PostgreSQL", "REST APIs"],
+        accentColor: "blue",
+        email: "rafiuolajumoke7@gmail.com",
+        phone: "08083790474",
+      }
     },
     {
       name: "Samuel Okonkwo",
@@ -266,40 +340,46 @@ export default function StudentSuccessStories() {
         { image: "https://s3.envato.com/files/519893740/01_wp_church_preview.jpg", url: "https://church-management-project.vercel.app" }
       ],
       accentColor: "emerald",
-      showExperience: true
+      showExperience: true,
+      profile: {
+        name: "Samuel Okonkwo",
+        initials: "SO",
+        title: "Fullstack Developer & Freelance Engineer",
+        skills: ["React", "Node.js", "Express.js", "MongoDB", "MySQL", "Payment APIs"],
+        accentColor: "emerald",
+      }
     },
   ];
 
- const getAccentClasses = (color: 'blue' | 'emerald' | 'violet') => {
-  const classes = {
-    blue: {
-      gradient: 'from-blue-600 to-cyan-600',
-      text: 'text-blue-600',
-      bg: 'bg-blue-600',
-      bgLight: 'bg-blue-50',
-      border: 'border-blue-600',
-      ring: 'ring-blue-100'
-    },
-    emerald: {
-      gradient: 'from-emerald-600 to-teal-600',
-      text: 'text-emerald-600',
-      bg: 'bg-emerald-600',
-      bgLight: 'bg-emerald-50',
-      border: 'border-emerald-600',
-      ring: 'ring-emerald-100'
-    },
-    violet: {
-      gradient: 'from-violet-600 to-purple-600',
-      text: 'text-violet-600',
-      bg: 'bg-violet-600',
-      bgLight: 'bg-violet-50',
-      border: 'border-violet-600',
-      ring: 'ring-violet-100'
-    }
+  const getAccentClasses = (color: 'blue' | 'emerald' | 'violet') => {
+    const classes = {
+      blue: {
+        gradient: 'from-blue-600 to-cyan-600',
+        text: 'text-blue-600',
+        bg: 'bg-blue-600',
+        bgLight: 'bg-blue-50',
+        border: 'border-blue-600',
+        ring: 'ring-blue-100'
+      },
+      emerald: {
+        gradient: 'from-emerald-600 to-teal-600',
+        text: 'text-emerald-600',
+        bg: 'bg-emerald-600',
+        bgLight: 'bg-emerald-50',
+        border: 'border-emerald-600',
+        ring: 'ring-emerald-100'
+      },
+      violet: {
+        gradient: 'from-violet-600 to-purple-600',
+        text: 'text-violet-600',
+        bg: 'bg-violet-600',
+        bgLight: 'bg-violet-50',
+        border: 'border-violet-600',
+        ring: 'ring-violet-100'
+      }
+    };
+    return classes[color as keyof typeof classes] ?? classes.blue;
   };
-  return classes[color as keyof typeof classes] ?? classes.blue;
-};
-
 
   return (
     <div ref={containerRef} className="min-h-screen bg-white">
@@ -308,7 +388,7 @@ export default function StudentSuccessStories() {
         <div className="max-w-7xl mx-auto text-center">
           <div className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
-              Success Stories
+              Former Student's Testimonies
             </h1>
           </div>
 
@@ -458,12 +538,15 @@ export default function StudentSuccessStories() {
                 </div>
 
               </div>
+
+              {/* ===== STUDENT PROFILE CARD (below each story) ===== */}
+              <StudentProfileCard profile={student.profile} />
+
             </article>
           );
         })}
       </section>
 
-      
       {/* Meet Our Amazing Students Slider */}
       <SwiperStudentSlider />
 
