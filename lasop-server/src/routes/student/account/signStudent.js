@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const path = require('path');
 const Student = require('../../../models/student/student');
+const Staff = require('../../../models/staff/staff');
 const Cohort = require('../../../models/admin/cohort');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
@@ -51,9 +52,10 @@ try {
   console.error('Mail transporter init failed:', e?.message || e);
 }
 
-/* -------- Email helpers (unchanged) -------- */
+/* -------- Email helpers -------- */
 const P = (html) => `<p style="margin:0 0 12px 0;font-size:14px;line-height:22px;color:#3a4152;">${html}</p>`;
 const IMG = (cid, alt) => `<div style="margin:8px 0 14px 0;"><img src="cid:${cid}" alt="${alt}" width="100%" style="max-width:640px;border-radius:12px;border:1px solid #eef1f6;display:block;"></div>`;
+
 function signatureHtml() {
   return `
   <div style="margin-top:18px;padding:14px 16px;border:1px solid #eef1f6;border-radius:12px;background:#fcfdff;">
@@ -64,6 +66,7 @@ function signatureHtml() {
     <div style="color:#0b1532;font-size:12px;margin-top:6px;">+234 702 571 3326</div>
   </div>`;
 }
+
 function wrapHtml({ title, tagRight, bodyHtml }) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title></head>
 <body style="margin:0;background:#f6f8fb;">
@@ -93,6 +96,7 @@ function wrapHtml({ title, tagRight, bodyHtml }) {
   <div style="padding:16px 0 0 0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#8a93a5;font-size:11px;">© ${new Date().getFullYear()} LASOP — All rights reserved.</div>
 </td></tr></table></body></html>`;
 }
+
 function getWelcomeHtml(firstName, courseTitle) {
   const blocks = [];
   blocks.push(P(`Hi ${firstName}! We are glad that you have enrolled to be a student at our school.`));
@@ -104,15 +108,24 @@ function getWelcomeHtml(firstName, courseTitle) {
   blocks.push(IMG('img2@lasop', 'LASOP image'));
   blocks.push(P(`LASOP MENTORS! We don't just train. We follow up with your development and growth in the tech space by entertaining and providing answers to your questions and counselling you from time to time. As an alumni, you are always welcome to the school, and you can utilise any of our "free to use" facilities when you want to. You can know more about us by visiting <a href="https://www.lasop.net/about" style="color:#0b5fff;text-decoration:none;">lasop.net/about</a> or by visiting our campus.`));
 
-  if (courseTitle === 'Fullstack Development') {
-    blocks.push(P(`You will be taught on frontend and backend courses in a very organized manner and you will do really good at programming. More information on your courses can be found at: <a href="https://lasop.net/course/Fullstack" style="color:#0b5fff;text-decoration:none;">lasop.net/course/Fullstack</a>.`));
-  } else if (courseTitle === 'Frontend') {
-    blocks.push(P(`You will be taught frontend in a very organized manner and you will do really good at programming. More information on your courses can be found at: <a href="https://lasop.net/course/Frontend" style="color:#0b5fff;text-decoration:none;">lasop.net/course/Frontend</a>.`));
-  } else if (courseTitle === 'Data Science And AI') {
-    blocks.push(P(`You will be taught data science in a very organized manner, and you will do really well at analysis and artificial intelligence. More information on your courses can be found at: <a href="https://lasop.net/course/Data%20Science%20And%20AI" style="color:#0b5fff;text-decoration:none;">lasop.net/course/Data Science And AI</a>.`));
-  } else if (courseTitle === 'Data Analytics') {
-    blocks.push(P(`You will be taught data analysis in a very organized manner, and you will do really well at it in a matter of months. More information on your courses can be found at: <a href="https://lasop.net/course/Data%20Analytics" style="color:#0b5fff;text-decoration:none;">lasop.net/course/Data Analytics</a>.`));
-  }
+ if (courseTitle === 'Fullstack Development') {
+  blocks.push(P(`You will be taught on frontend and backend courses in a very organized manner and you will do really good at programming. More information on your courses can be found at: <a href="https://lasop.net/course/fullstack" style="color:#0b5fff;text-decoration:none;">lasop.net/course/fullstack</a>.`));
+} else if (courseTitle === 'Frontend Development') {
+  blocks.push(P(`You will be taught frontend in a very organized manner and you will do really good at programming. More information on your courses can be found at: <a href="https://lasop.net/course/frontend" style="color:#0b5fff;text-decoration:none;">lasop.net/course/frontend</a>.`));
+} else if (courseTitle === 'Data Science & AI') {
+  blocks.push(P(`You will be taught data science in a very organized manner, and you will do really well at analysis and artificial intelligence. More information on your courses can be found at: <a href="https://lasop.net/course/datascience" style="color:#0b5fff;text-decoration:none;">lasop.net/course/datascience</a>.`));
+} else if (courseTitle === 'Data Analysis') {
+  blocks.push(P(`You will be taught data analysis in a very organized manner, and you will do really well at it in a matter of months. More information on your courses can be found at: <a href="https://lasop.net/course/dataanalysis" style="color:#0b5fff;text-decoration:none;">lasop.net/course/dataanalysis</a>.`));
+} else if (courseTitle === 'Cyber Security') {
+  blocks.push(P(`You will be taught cybersecurity principles including ethical hacking, encryption, and network protection. More information on your courses can be found at: <a href="https://lasop.net/course/cybersecurity" style="color:#0b5fff;text-decoration:none;">lasop.net/course/cybersecurity</a>.`));
+} else if (courseTitle === 'Product Design') {
+  blocks.push(P(`You will learn UI/UX and product design to create beautiful, user-friendly applications. More information on your courses can be found at: <a href="https://lasop.net/course/productdesign" style="color:#0b5fff;text-decoration:none;">lasop.net/course/productdesign</a>.`));
+} else if (courseTitle === 'Mobile App Development') {
+  blocks.push(P(`You will be taught to design and develop mobile apps for iOS and Android using modern frameworks. More information on your courses can be found at: <a href="https://lasop.net/course/mobileapp" style="color:#0b5fff;text-decoration:none;">lasop.net/course/mobileapp</a>.`));
+} else if (courseTitle === 'Content Creation') {
+  blocks.push(P(`You will learn content creation strategies including digital media, copywriting, and engagement techniques. More information on your courses can be found at: <a href="https://lasop.net/course/contentcreation" style="color:#0b5fff;text-decoration:none;">lasop.net/course/contentcreation</a>.`));
+}
+
 
   blocks.push(P(`If you need to get in touch with anyone in the office, please use this link to view our contact address: <a href="https://www.lasop.net/contact" style="color:#0b5fff;text-decoration:none;">lasop.net/contact</a>.`));
   blocks.push(P(`Please dive into the student suite and explore the opportunities prepared for you! To log in with the email and password you used during registration, visit <a href="https://www.lasop.net/login" style="color:#0b5fff;text-decoration:none;">lasop.net/login</a>.`));
@@ -121,9 +134,8 @@ function getWelcomeHtml(firstName, courseTitle) {
   return wrapHtml({ title: `Welcome to ${courseTitle} — LASOP`, tagRight: 'Welcome', bodyHtml: blocks.join('') });
 }
 
-/* -------- Controller (updated to houseNo/streetName/city) -------- */
+/* -------- Controller (fully synced) -------- */
 const signStudent = async (req, res) => {
-  // NOTE: `address` removed. Accept split address fields instead.
   const {
     firstName,
     lastName,
@@ -137,8 +149,7 @@ const signStudent = async (req, res) => {
     allowed,
     gender,
     status,
-    // Legacy fallback: if some old client still sends `address`
-    address, // optional; used only to derive parts when new fields missing
+    address, // legacy
   } = req.body;
 
   const profile = req.file;
@@ -149,130 +160,107 @@ const signStudent = async (req, res) => {
 
     let fileUrl = null;
 
+    // --- Email uniqueness: student cannot reuse email ---
     const emailExist = await Student.findOne({ email });
     if (emailExist) {
-      return res.status(400).json({ message: 'Email already exists' });
-    } else {
-      if (profile) {
-        const bucket = storage.bucket();
-        const file = bucket.file(`certificates/${encodeURIComponent(profile.originalname)}`);
-
-        const stream = file.createWriteStream({ metadata: { contentType: profile.mimetype } });
-
-        stream.on('error', (err) => {
-          return res.status(500).json({ error: 'Failed to upload file', details: err.message });
-        });
-
-        stream.on('finish', async () => {
-          fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
-        });
-
-        stream.end(profile.buffer);
-      }
-
-      // Tutor mapping (unchanged)
-      const cohort = await Cohort.findById(program.cohortId).populate({
-        path: 'courseTutors',
-        match: { course: program.courseId, center: program.center, mode: program.mode },
-        select: 'tutors',
-      });
-
-      if (cohort && cohort.courseTutors.length > 0) {
-        program.tutorId = cohort.courseTutors[0].tutors;
-      } else {
-        program.tutorId = 'pending';
-      }
-
-      // --- Address compatibility: derive parts from legacy `address` if needed ---
-      let _houseNo = (houseNo ?? '').trim();
-      let _streetName = (streetName ?? '').trim();
-      let _city = (city ?? '').trim();
-
-      if ((!_houseNo || !_streetName || !_city) && typeof address === 'string' && address.trim()) {
-        const parts = address.split(',').map(s => s.trim()).filter(Boolean);
-        _houseNo = _houseNo || parts[0] || '';
-        _streetName = _streetName || parts[1] || '';
-        _city = _city || parts[2] || '';
-      }
-
-      const newStudent = new Student({
-        firstName,
-        lastName,
-        email,
-        password: hashPwd,
-        contact,
-        houseNo: _houseNo,
-        streetName: _streetName,
-        city: _city,
-        program,
-        profile: fileUrl || '',
-        gender,
-        allowed,
-        status,
-      });
-
-      const saveStudent = await newStudent.save();
-
-      const populatedStudent = await saveStudent.populate({
-        path: 'program.courseId',
-        model: 'Course',
-        select: 'title',
-      });
-
-      const courseTitle = populatedStudent.program.courseId.title;
-
-      const fromEmail = 'no-reply@lasop.net';
-      const fromName = (process.env.FROM_NAME || 'LASOP').trim();
-      const from = `${fromName} <${fromEmail}>`;
-
-      const html = getWelcomeHtml(firstName, courseTitle);
-
-      const text = `Hi ${firstName}!
-
-Congratulations!
-
-Learn more: https://www.lasop.net/about
-Contact: https://www.lasop.net/contact
-Login: https://www.lasop.net/login
-
-— Faith Igboin
-Admissions Office
-Lagos School of Programming Limited
-Ojodu-Berger, Lagos
-+2347025713326`;
-
-      const mailOptions = {
-        from,
-        to: email,
-        subject: `Welcome to ${courseTitle} at LASOP`,
-        text,
-        html,
-        headers: { 'Auto-Submitted': 'auto-generated', 'X-Auto-Response-Suppress': 'All', Precedence: 'bulk' },
-        envelope: { from: fromEmail, to: email },
-        attachments: [
-          { filename: 'lasop.png', path: assetPath('lasop.png'), cid: 'logo@lasop' },
-          { filename: 'email1.png', path: assetPath('email1.png'), cid: 'img1@lasop' },
-          { filename: 'email2.png', path: assetPath('email2.png'), cid: 'img2@lasop' },
-        ],
-      };
-
-      if (transporter) {
-        transporter.sendMail(mailOptions).catch((error) => {
-          console.error('Error occurred while sending email:', error);
-        });
-      }
-
-      const io = getSocket();
-      if (io) {
-        io.to('lasop_global_room').emit('newStudent', saveStudent);
-        io.to(saveStudent._id.toString()).emit('newStudent', saveStudent);
-      };
-
-      return res.status(201).json({
-        message: 'Account created successfully and confirmation email sent!',
-        data: saveStudent,
-      });
+      return res.status(400).json({ message: 'Email already exists for a student' });
     }
+
+    // --- Profile upload to Firebase ---
+    if (profile) {
+      const bucket = storage.bucket();
+      const file = bucket.file(`certificates/${encodeURIComponent(profile.originalname)}`);
+      const stream = file.createWriteStream({ metadata: { contentType: profile.mimetype } });
+
+      stream.on('error', (err) => {
+        return res.status(500).json({ error: 'Failed to upload file', details: err.message });
+      });
+
+      stream.on('finish', async () => {
+        fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+      });
+
+      stream.end(profile.buffer);
+    }
+
+    // --- Tutor mapping ---
+    const cohort = await Cohort.findById(program.cohortId).populate({
+      path: 'courseTutors',
+      match: { course: program.courseId, center: program.center, mode: program.mode },
+      select: 'tutors',
+    });
+    program.tutorId = cohort?.courseTutors[0]?.tutors || 'pending';
+
+    // --- Address compatibility ---
+    let _houseNo = (houseNo ?? '').trim();
+    let _streetName = (streetName ?? '').trim();
+    let _city = (city ?? '').trim();
+    if ((!_houseNo || !_streetName || !_city) && typeof address === 'string' && address.trim()) {
+      const parts = address.split(',').map(s => s.trim()).filter(Boolean);
+      _houseNo = _houseNo || parts[0] || '';
+      _streetName = _streetName || parts[1] || '';
+      _city = _city || parts[2] || '';
+    }
+
+    const newStudent = new Student({
+      firstName,
+      lastName,
+      email,
+      password: hashPwd,
+      contact,
+      houseNo: _houseNo,
+      streetName: _streetName,
+      city: _city,
+      program,
+      profile: fileUrl || '',
+      gender,
+      allowed,
+      status,
+    });
+
+    const saveStudent = await newStudent.save();
+
+    const populatedStudent = await saveStudent.populate({
+      path: 'program.courseId',
+      model: 'Course',
+      select: 'title',
+    });
+
+    const courseTitle = populatedStudent.program.courseId.title;
+    const fromEmail = 'no-reply@lasop.net';
+    const fromName = (process.env.FROM_NAME || 'LASOP').trim();
+    const from = `${fromName} <${fromEmail}>`;
+
+    const html = getWelcomeHtml(firstName, courseTitle);
+    const text = `Hi ${firstName}!\n\nCongratulations!\n\nLearn more: https://www.lasop.net/about\nContact: https://www.lasop.net/contact\nLogin: https://www.lasop.net/login\n\n— Faith Igboin\nAdmissions Office\nLagos School of Programming Limited\nOjodu-Berger, Lagos\n+2347025713326`;
+
+    const mailOptions = {
+      from,
+      to: email,
+      subject: `Welcome to ${courseTitle} at LASOP`,
+      text,
+      html,
+      headers: { 'Auto-Submitted': 'auto-generated', 'X-Auto-Response-Suppress': 'All', Precedence: 'bulk' },
+      envelope: { from: fromEmail, to: email },
+      attachments: [
+        { filename: 'lasop.png', path: assetPath('lasop.png'), cid: 'logo@lasop' },
+        { filename: 'email1.png', path: assetPath('email1.png'), cid: 'img1@lasop' },
+        { filename: 'email2.png', path: assetPath('email2.png'), cid: 'img2@lasop' },
+      ],
+    };
+
+    if (transporter) transporter.sendMail(mailOptions).catch(console.error);
+
+    const io = getSocket();
+    if (io) {
+      io.to('lasop_global_room').emit('newStudent', saveStudent);
+      io.to(saveStudent._id.toString()).emit('newStudent', saveStudent);
+    }
+
+    return res.status(201).json({
+      message: 'Account created successfully and confirmation email sent!',
+      data: saveStudent,
+    });
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
