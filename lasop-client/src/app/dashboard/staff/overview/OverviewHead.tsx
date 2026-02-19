@@ -16,12 +16,15 @@ function OverviewHead() {
 
     const dispatch = useDispatch<AppDispatch>()
 
-    useEffect(() => {
-        if (staffActiveCohort) {
-            const findCohort = cohort.find((coh) => coh._id === staffActiveCohort)
-            setConvertCohort(findCohort);
-        }
-    }, [staffActiveCohort])
+   useEffect(() => {
+    if (staffActiveCohort && Array.isArray(cohort)) {
+        const findCohort = cohort.find(
+            (coh) => coh && coh._id === staffActiveCohort
+        );
+        setConvertCohort(findCohort);
+    }
+}, [staffActiveCohort, cohort]);
+
 
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCohortId = event.target.value;
