@@ -8,23 +8,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { CohortMain } from '@/interfaces/interface';
 
 function OverviewHead() {
-    const staffAssignedCohort = useSelector((state: RootState) => state.staffFilter.staffAssignedCohort);
+    const staffAssignedCohort = useSelector((state: RootState) => state.staffFilter.staffAssignedCohort) || [];
     const staffActiveCohort = useSelector((state: RootState) => state.staffFilter.staffOverviewSelectedCohort);
-    const cohort = useSelector((state: RootState) => state.cohort.cohort);
+    const cohort = useSelector((state: RootState) => state.cohort.cohort) || [];
 
     const [convertCohort, setConvertCohort] = useState<CohortMain>();
 
     const dispatch = useDispatch<AppDispatch>()
 
-   useEffect(() => {
-    if (staffActiveCohort && Array.isArray(cohort)) {
-        const findCohort = cohort.find(
-            (coh) => coh && coh._id === staffActiveCohort
-        );
-        setConvertCohort(findCohort);
-    }
-}, [staffActiveCohort, cohort]);
-
+    useEffect(() => {
+        if (staffActiveCohort && Array.isArray(cohort)) {
+            const findCohort = cohort.find((coh) => coh?._id === staffActiveCohort);
+            setConvertCohort(findCohort);
+        }
+    }, [staffActiveCohort, cohort]);
 
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCohortId = event.target.value;
@@ -37,29 +34,27 @@ function OverviewHead() {
                 <h3 className='font-bold text-xl'>Overview</h3>
             </div>
             <div className="filter flex items-center gap-3">
-                {/* <div className="from flex items-center gap-2 ">
-                    <span className='text-[12px]'>From:</span>
-                    <form action="" className='p-[4px] border border-shadow rounded-md h-fit'>
-                        <input type="date" className='w-[130px] h-[30px] text-[14px] outline-none' id="" />
-                    </form>
-                </div>
-                <div className="from flex items-center gap-2 ">
-                    <span className='text-[12px]'>To:</span>
-                    <form action="" className='p-[4px] border border-shadow rounded-md h-fit'>
-                        <input type="date" className='w-[130px] h-[30px] text-[14px] outline-none' id="" />
-                    </form>
-                </div> */}
                 <div className="from flex items-center gap-2">
                     <form action="" className='p-[4px] border border-shadow rounded-md h-fit'>
                         <div className="select_ctrl w-[100px] flex items-center justify-between">
                             <IoFilter className='text-accent' />
-                            <select value={staffActiveCohort} onChange={handleChange} className='w-full h-[25px] px-2 outline-none border-none text-[12px] rounded-md' id="">
-                                <option disabled value={staffActiveCohort}>{convertCohort?.cohortName}</option>
-                                {
-                                    staffAssignedCohort.map((coh) => (
-                                        <option key={coh._id} value={coh._id}>{coh.cohortName}</option>
-                                    ))
-                                }
+                            <select
+                                value={staffActiveCohort || ''}
+                                onChange={handleChange}
+                                className='w-full h-[25px] px-2 outline-none border-none text-[12px] rounded-md'
+                            >
+                                <option disabled value={staffActiveCohort || ''}>
+                                    {convertCohort?.cohortName || 'Select cohort'}
+                                </option>
+                                {Array.isArray(staffAssignedCohort) &&
+                                    staffAssignedCohort.map(
+                                        (coh) =>
+                                            coh && (
+                                                <option key={coh._id} value={coh._id}>
+                                                    {coh.cohortName}
+                                                </option>
+                                            )
+                                    )}
                             </select>
                         </div>
                     </form>

@@ -23,68 +23,83 @@ interface MyObject {
 }
 
 interface Chart {
-    labels: string[],
-    datasets: any[]
+    labels: string[];
+    datasets: any[];
 }
 
 function OverviewMain() {
-    const [getCol, setGetCol] = useState<MyObject[]>([])
-    const item: (MyObject | undefined)[] = []
+    const [getCol, setGetCol] = useState<MyObject[]>([]);
 
-    const staffAssignedCohort = useSelector((state: RootState) => state.staffFilter.staffAssignedCohort);
+    const staffAssignedCohort = useSelector((state: RootState) => state.staffFilter.staffAssignedCohort) || [];
     const staffActiveCohort = useSelector((state: RootState) => state.staffFilter.staffOverviewSelectedCohort);
     const staffDetail = useSelector((state: RootState) => state.staff.logDetails?._id);
 
-    const cohort = useSelector((state: RootState) => state.cohort.cohort);
+    const cohort = useSelector((state: RootState) => state.cohort.cohort) || [];
+    const students = useSelector((state: RootState) => state.student.student) || [];
+    const certificates = useSelector((state: RootState) => state.certificate.certificates) || [];
+    const classrooms = useSelector((state: RootState) => state.classroom.classroom) || [];
 
-    const students = useSelector((state: RootState) => state.student.student);
-    const certificates = useSelector((state: RootState) => state.certificate.certificates);
+    const dispatch = useDispatch<AppDispatch>();
 
-    const classrooms = useSelector((state: RootState) => state.classroom.classroom);
-
-    const dispatch = useDispatch<AppDispatch>()
-
-    // Getting students and graduates under active cohort taken by tutor
     const [studentUnderActiveCoh, setStudentUnderActiveCoh] = useState<number>();
     const [graduatesUnderActiveCoh, setGraduatesUnderActiveCoh] = useState<number>();
-
-    useEffect(() => {
-        if (staffActiveCohort) {
-            const studentInActiveCohort = students.filter((stu) => stu.program.cohortId._id === staffActiveCohort && stu.program.tutorId._id === staffDetail && (stu.status === 'student' || stu.status === 'graduate'))
-            setStudentUnderActiveCoh(studentInActiveCohort.length)
-
-            const graduatesUnderActiveCoh = studentInActiveCohort.filter((stu) => certificates.some((ct) => ct.studentId._id === stu._id));
-            setGraduatesUnderActiveCoh(graduatesUnderActiveCoh.length)
-        }
-    }, [staffActiveCohort])
-
-    // Getting completed cohort by staff
     const [completedCohort, setCompletedCohort] = useState<number>();
-
-    useEffect(() => {
-        if (staffAssignedCohort) {
-            const getCompletedCoh = staffAssignedCohort.filter((coh) => coh.status === 'completed');
-            setCompletedCohort(getCompletedCoh.length)
-        }
-    }, [staffAssignedCohort])
-
-    // Setting chart data, based on last class attendance, absent student and completed class
     const [completedClassActiveCohort, setCompletedClassActiveCohort] = useState<number>();
     const [attendanceOnLastClass, setAttendanceOnLastClass] = useState<number>();
     const [absentOnLastClass, setAbsentOnLastClass] = useState<number>();
 
+    // Students & graduates under active cohort
     useEffect(() => {
         if (staffActiveCohort && staffDetail) {
-            const getCompletedClass = classrooms.filter((cls) => cls.cohortId._id === staffActiveCohort && cls.tutorId._id === staffDetail && cls.status === 'completed');
+            const studentInActiveCohort = students.filter(
+                (stu) =>
+                    stu?.program?.cohortId?._id === staffActiveCohort &&
+                    stu?.program?.tutorId?._id === staffDetail &&
+                    (stu.status === 'student' || stu.status === 'graduate')
+            );
+
+            setStudentUnderActiveCoh(studentInActiveCohort.length);
+
+            const graduatesUnderActiveCoh = studentInActiveCohort.filter((stu) =>
+                certificates.some((ct) => ct.studentId?._id === stu?._id)
+            );
+
+            setGraduatesUnderActiveCoh(graduatesUnderActiveCoh.length);
+        } else {
+            setStudentUnderActiveCoh(0);
+            setGraduatesUnderActiveCoh(0);
+        }
+    }, [staffActiveCohort, staffDetail, students, certificates]);
+
+    // Completed cohorts
+    useEffect(() => {
+        if (Array.isArray(staffAssignedCohort)) {
+            const getCompletedCoh = staffAssignedCohort.filter((coh) => coh?.status === 'completed');
+            setCompletedCohort(getCompletedCoh.length);
+        } else {
+            setCompletedCohort(0);
+        }
+    }, [staffAssignedCohort]);
+
+    // Attendance & completed classes
+    useEffect(() => {
+        if (staffActiveCohort && staffDetail) {
+            const getCompletedClass = classrooms.filter(
+                (cls) =>
+                    cls?.cohortId?._id === staffActiveCohort &&
+                    cls?.tutorId?._id === staffDetail &&
+                    cls?.status === 'completed'
+            );
+
             setCompletedClassActiveCohort(getCompletedClass.length);
 
             const lastCompletedClass = getCompletedClass[getCompletedClass.length - 1];
 
             if (lastCompletedClass?.attendance) {
-                setAttendanceOnLastClass(lastCompletedClass.attendance.length)
+                setAttendanceOnLastClass(lastCompletedClass.attendance.length);
 
                 const getAbsentee = students.filter(
-                    (student) => !lastCompletedClass.attendance.some((att) => att._id === student._id)
+                    (student) => !lastCompletedClass.attendance.some((att) => att?._id === student?._id)
                 );
 
                 setAbsentOnLastClass(getAbsentee.length);
@@ -92,21 +107,21 @@ function OverviewMain() {
                 setAttendanceOnLastClass(0);
                 setAbsentOnLastClass(0);
             }
+        } else {
+            setCompletedClassActiveCohort(0);
+            setAttendanceOnLastClass(0);
+            setAbsentOnLastClass(0);
         }
-    }, [staffActiveCohort, staffDetail])
+    }, [staffActiveCohort, staffDetail, classrooms, students]);
 
     const attendanceChartData: Chart = {
-        labels: [
-            'Attended',
-            'Completed class',
-            'Absent'
-        ],
+        labels: ['Attended', 'Completed class', 'Absent'],
         datasets: [
             {
                 label: 'Attendance tracking',
                 data: [
-                    attendanceOnLastClass === 0 ? 50 : attendanceOnLastClass, 
-                    completedClassActiveCohort === 0 ? 50 : completedClassActiveCohort, 
+                    attendanceOnLastClass === 0 ? 50 : attendanceOnLastClass,
+                    completedClassActiveCohort === 0 ? 50 : completedClassActiveCohort,
                     absentOnLastClass === 0 ? 50 : absentOnLastClass
                 ],
                 borderColor: "#5BBE97",
@@ -116,7 +131,7 @@ function OverviewMain() {
                 weight: 50
             }
         ]
-    }
+    };
 
     return (
         <main className='w-full p-5'>
@@ -127,7 +142,7 @@ function OverviewMain() {
                     </div>
                     <div className='flex justify-between items-center'>
                         <div className="count">
-                            <h3 className='font-bold text-[30px] text-shadow'>{studentUnderActiveCoh}</h3>
+                            <h3 className='font-bold text-[30px] text-shadow'>{studentUnderActiveCoh || 0}</h3>
                         </div>
                         <div className="staff_icon">
                             <Image className='w-[30px] h-[30px]' src={student} alt='' />
@@ -140,7 +155,7 @@ function OverviewMain() {
                     </div>
                     <div className='flex justify-between items-center'>
                         <div className="count">
-                            <h3 className='font-bold text-[30px] text-shadow'>{staffAssignedCohort.length}</h3>
+                            <h3 className='font-bold text-[30px] text-shadow'>{staffAssignedCohort?.length || 0}</h3>
                         </div>
                         <div className="staff_icon">
                             <Image className='w-[30px] h-[30px]' src={staff} alt='' />
@@ -153,7 +168,7 @@ function OverviewMain() {
                     </div>
                     <div className='flex justify-between items-center'>
                         <div className="count">
-                            <h3 className='font-bold text-[30px] text-shadow'>{graduatesUnderActiveCoh}</h3>
+                            <h3 className='font-bold text-[30px] text-shadow'>{graduatesUnderActiveCoh || 0}</h3>
                         </div>
                         <div className="staff_icon">
                             <Image className='w-[30px] h-[30px]' src={graduate} alt='' />
@@ -166,7 +181,7 @@ function OverviewMain() {
                     </div>
                     <div className='flex justify-between items-center'>
                         <div className="count">
-                            <h3 className='font-bold text-[30px] text-shadow'>{completedCohort}</h3>
+                            <h3 className='font-bold text-[30px] text-shadow'>{completedCohort || 0}</h3>
                         </div>
                         <div className="staff_icon">
                             <Image className='w-[30px] h-[30px]' src={complete} alt='' />
@@ -243,4 +258,4 @@ function OverviewMain() {
     )
 }
 
-export default OverviewMain
+export default OverviewMain;
