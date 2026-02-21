@@ -426,7 +426,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 250,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 3000,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -517,7 +517,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 300,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 350,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -610,7 +610,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 400,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 450,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -682,7 +682,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 400,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 450,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -738,7 +738,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 250,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 300,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -818,7 +818,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N400,000 for Nigerians", "50% More for foreign students"]
+                info: ["N450,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -896,7 +896,7 @@ export const course: CourseData[] = [
             },
             {
                 title: "Tuition Fee",
-                info: ["N 300,000 for Nigerians", "50% More for foreign students"]
+                info: ["N 350,000 for Nigerians", "50% More for foreign students"]
             },
             {
                 title: "Lectures & Assesments",
@@ -1355,31 +1355,31 @@ interface CoursePrice {
 export const coursePrice: CoursePrice[] = [
     {
         title: 'Product Design',
-        fee: '250,000'
+        fee: '300,000'
     },
     {
         title: 'Frontend',
-        fee: '300,000'
+        fee: '350,000'
     },
     {
         title: 'Backend',
-        fee: '250,000'
+        fee: '350,000'
     },
     {
         title: 'Fullstack',
-        fee: '400,000'
+        fee: '450,000'
     },
     {
         title: 'Mobile app',
-        fee: '250,000'
+        fee: '450,000'
     },
     {
         title: 'Data Science and AI',
-        fee: '400,000'
+        fee: '450,000'
     },
     {
         title: 'Data Analysis',
-        fee: '300,000'
+        fee: '350,000'
     },
 ];
 
