@@ -105,7 +105,7 @@ export default function ProblemSection() {
             <div className="relative w-[400px] h-[400px] rounded-full overflow-hidden shadow-2xl transform group-hover:scale-105 transition-all duration-500">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 via-transparent to-gray-600/10 z-10"></div>
               <img
-                src="https://t3.ftcdn.net/jpg/04/29/51/34/360_F_429513457_ERhtIk1aD60t7ivaz0QHAJrhcyJ6aPBe.jpg"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMpZyj2L9oSWXDyTkGOzYuGgEDNxgDH6QQ8w&s"
                 alt="Frustrated learner transformed into confident developer"
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
               />

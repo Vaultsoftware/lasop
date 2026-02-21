@@ -321,7 +321,6 @@ function LandMain() {
         </div>
       </section>
 
-      {/* courses */}
       <section className="">
         <StudentSuccessStories />
       </section>
@@ -380,46 +379,137 @@ function LandMain() {
           </div>
         </div>
       </section>
+      {/* what our students says  */}
 
-      <section className="md:main py-[3rem] px-4 sm:px-6 md:px-[30px] bg-secondary">
-        <div className="testimonial">
-          <div className="testimonial_head mb-[2rem] flex flex-col items-center">
-            <h1 data-aos="fade-down" className="font-bold text-2xl sm:text-3xl md:text-[40px] text-center text-shadow">
-              What Our Students Say
-            </h1>
-            <Image src={outline} alt="" className="w-auto h-auto max-w-full" />
-          </div>
-          <div className="testimonial_body grid md:grid-cols-3 xsm:grid-cols-2 gap-6">
-            {testimony.map((test) => (
-              <div
-                data-aos="fade-left"
-                key={test.id}
-                className="testimonial_list p-6 rounded-md bg-primary"
-                style={{ boxShadow: `6px 6px 0 ${test.color}` }}
-              >
-                <div className="testimonial_author mb-3">
-                  <h3
-                    className="head3 text-xl sm:text-2xl"
-                    style={{ borderBottom: `2px solid ${test.color}`, width: 'fit-content' }}
-                  >
-                    {test.name}
-                  </h3>
-                </div>
-                <div className="testimonial_msg">
-                  <p className="break-words">{test.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Link
-            data-aos="fade-up"
-            className="flex px-3 w-fit h-[40px] bg-shadow text-cyan-50 items-center justify-center rounded-md mt-5 ml-auto"
-            href="https://www.google.com/search?sca_esv=3f080a3bfc790179&hl=en-CA&sxsrf=AE3TifOO33Gx8Q995uhUSfiwlucakw7-Ew:1758827943233&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E9I0UjbeQh2PooW1uSNCuJDMZJXtOLF_JvSqspv3X0p4FopweGBjAriEveXoMsLzMhkDa5Ci-umN3vv0DucIAqlBuR3sKLdiF05Wbr3L9JAnU8YWcnnQGxgxZcIXmexvUCvAqCA%3D&q=Lagos+School+of+Programming+%28LASOP%29+Reviews&sa=X&ved=2ahUKEwir8JvW0PSPAxXlQkEAHVvAADUQ0bkNegQIJhAE&cshid=1758827964122899&biw=1358&bih=642&dpr=1"
+      {/* =====================================================
+    DROP-IN REPLACEMENT — "What Our Students Say" section
+    Paste this block in place of the existing <section className="md:main py-[3rem]...bg-secondary">
+    that contains the testimonial cards. All data/fetching untouched.
+   ===================================================== */}
+
+<section className="relative py-20 px-4 sm:px-8 md:px-16 overflow-hidden bg-[#0a0f1e]">
+
+  {/* ── decorative background blobs ── */}
+  <div className="pointer-events-none absolute inset-0">
+    <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#3360FF]/20 blur-[120px]" />
+    <div className="absolute bottom-0 right-0 w-[360px] h-[360px] rounded-full bg-cyan-500/10 blur-[100px]" />
+    {/* subtle grid overlay */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage:
+          'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)',
+        backgroundSize: '48px 48px',
+      }}
+    />
+  </div>
+
+  <div className="relative max-w-6xl mx-auto">
+
+    {/* ── heading ── */}
+    <div data-aos="fade-down" className="text-center mb-14">
+      <span className="inline-block text-xs font-bold tracking-[0.25em] uppercase text-cyan-400 mb-4">
+        ★ Student Voices
+      </span>
+      <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight">
+        What Our{' '}
+        <span className="relative inline-block">
+          <span className="bg-gradient-to-r from-[#3360FF] to-cyan-400 bg-clip-text text-transparent">
+            Students Say
+          </span>
+          {/* underline squiggle */}
+          <svg
+            className="absolute -bottom-2 left-0 w-full"
+            viewBox="0 0 200 8"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            View More Reviews
-          </Link>
+            <path
+              d="M0 6 Q50 0 100 6 Q150 12 200 6"
+              stroke="url(#sq)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <defs>
+              <linearGradient id="sq" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#3360FF" />
+                <stop offset="1" stopColor="#22d3ee" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+      </h2>
+    </div>
+
+    {/* ── cards ── */}
+    <div className="grid md:grid-cols-3 xsm:grid-cols-2 gap-6">
+      {testimony.map((test, idx) => (
+        <div
+          data-aos="fade-up"
+          data-aos-delay={idx * 100}
+          key={test.id}
+          className="group relative flex flex-col gap-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-7 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+        >
+          {/* accent bar on top */}
+          <div
+            className="absolute top-0 left-8 right-8 h-[3px] rounded-b-full opacity-80"
+            style={{ background: test.color }}
+          />
+
+          {/* quote icon */}
+          <svg
+            className="w-9 h-9 opacity-30"
+            style={{ color: test.color }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M14.017 21v-7.391c0-5.704 3.748-9.57 9-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.995zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.999v10h-9.999z" />
+          </svg>
+
+          {/* body */}
+          <p className="text-white/80 text-sm sm:text-base leading-relaxed flex-1 break-words">
+            {test.body}
+          </p>
+
+          {/* author */}
+          <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+            {/* avatar initial circle */}
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+              style={{ background: test.color }}
+            >
+              {test.name?.charAt(0) ?? '?'}
+            </div>
+            <div>
+              <p
+                className="font-bold text-sm"
+                style={{ color: test.color }}
+              >
+                {test.name}
+              </p>
+              <p className="text-white/40 text-xs">LASOP Graduate</p>
+            </div>
+          </div>
         </div>
-      </section>
+      ))}
+    </div>
+
+    {/* ── "View More Reviews" link ── */}
+    <div className="mt-12 flex justify-center" data-aos="fade-up">
+      <Link
+        href="https://www.google.com/search?sca_esv=3f080a3bfc790179&hl=en-CA&sxsrf=AE3TifOO33Gx8Q995uhUSfiwlucakw7-Ew:1758827943233&si=AMgyJEtREmoPL4P1I5IDCfuA8gybfVI2d5Uj7QMwYCZHKDZ-E9I0UjbeQh2PooW1uSNCuJDMZJXtOLF_JvSqspv3X0p4FopweGBjAriEveXoMsLzMhkDa5Ci-umN3vv0DucIAqlBuR3sKLdiF05Wbr3L9JAnU8YWcnnQGxgxZcIXmexvUCvAqCA%3D&q=Lagos+School+of+Programming+%28LASOP%29+Reviews&sa=X&ved=2ahUKEwir8JvW0PSPAxXlQkEAHVvAADUQ0bkNegQIJhAE&cshid=1758827964122899&biw=1358&bih=642&dpr=1"
+        className="group inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/15 hover:border-white/30 text-white font-semibold text-sm px-7 py-3.5 rounded-full transition-all duration-300"
+      >
+        View More Reviews
+        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
+
+  </div>
+</section>
 
       <section>
         <Testimonial />
@@ -559,7 +649,7 @@ function LandMain() {
             <ul data-aos="fade-left" className="grid gap-3 text-shadow">
               <li>
                 <p>
-                  Applying to LASOP Register by filling the application form on our website
+                  Register by filling the application form on our website
                 </p>
               </li>
               <li>
@@ -568,7 +658,7 @@ function LandMain() {
               <li>
                 <p>
                   Have Internet connection in place( if you are an online student but you will not need this if you study
-                  physically).
+                  physically because we have internet at the center).
                 </p>
               </li>
               <li>

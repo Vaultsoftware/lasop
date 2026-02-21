@@ -1,7 +1,3 @@
-// =============================================================
-// File: src/app/layout.tsx
-// =============================================================
-
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -16,11 +12,11 @@ import StoreProviderClient from "./StoreProviderClient";
 import AOSInitializer from "@/components/AOSInitializer/AOSInitializer";
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import FacebookPixel from "@/components/FacebookPixel";
+import WhatsAppFloat from "@/components/Tawk/WhatsApp";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const PIXEL_ID =
-  process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ?? "";
+const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ?? "";
 
 export const metadata: Metadata = {
   title: "Lagos School Of Programming",
@@ -42,12 +38,14 @@ export default function RootLayout({
           <StoreProviderClient>
             <AOSInitializer />
 
-            {/* Facebook Pixel (only loads if ID exists) */}
             {PIXEL_ID && <FacebookPixel pixelId={PIXEL_ID} />}
 
             {children}
 
             <ScrollToTop />
+
+            {/* Shows on every page except form pages like /getStarted */}
+            <WhatsAppFloat />
           </StoreProviderClient>
         </Suspense>
       </body>

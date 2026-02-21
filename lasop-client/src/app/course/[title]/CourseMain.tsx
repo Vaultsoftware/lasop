@@ -267,7 +267,7 @@ function CourseMain({ props }: Props) {
                                     Have Internet connection
                                     in place( if you are an online
                                     student but you will not need
-                                    this if you study physically).
+                                    this if you study physically because we have internet at the center).
                                 </p>
                             </li>
                             <li>

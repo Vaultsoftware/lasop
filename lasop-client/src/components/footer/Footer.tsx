@@ -10,13 +10,14 @@ import lasopLogo from '../../asset/form/logo.png';
 function Footer() {
     return (
         <footer className='md:main py-[3rem] px-[30px] bg-footer text-cyan-50'>
-            <div className="foot_main grid xsm:grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+            <div className="foot_main grid xsm:grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
                 <div className="foot_logo grid gap-3">
                     <Link href='/' className="nav_logo font-bold text-2xl text-accent">
                         <Image className='w-[120px] h-[80px]' src={lasopLogo} alt='' />
                     </Link>
                     <Link href='/getStarted' className='flex w-[130px] h-[40px] bg-shadow text-cyan-50 items-center justify-center rounded-md'>Get Started</Link>
                 </div>
+
                 <div className="foot_contact">
                     <div className="contact_head mb-3">
                         <h3 className='head3'>Contact</h3>
@@ -48,6 +49,7 @@ function Footer() {
                         </div>
                     </div>
                 </div>
+
                 <div className="foot_pages">
                     <div className="pages_head mb-3">
                         <h3 className='head3'>Pages</h3>
@@ -61,6 +63,24 @@ function Footer() {
                         <Link href='/blog'>Blog</Link>
                     </div>
                 </div>
+
+                {/* ── NEW: Courses column ── */}
+                <div className="foot_courses">
+                    <div className="courses_head mb-3">
+                        <h3 className='head3'>Courses</h3>
+                    </div>
+                    <div className="courses_list grid gap-2 text-[14px]">
+                        <Link href='/webinar'>Webinar</Link>
+                        <Link href='/course/productdesign'>Product Design</Link>
+                        <Link href='/course/frontend'>Frontend Dev</Link>
+                        <Link href='/course/Fullstack'>Fullstack Dev</Link>
+                        <Link href='/course/cybersecurity'>Cyber Security</Link>
+                        <Link href='/course/mobileapp'>Mobile App Dev</Link>
+                        <Link href='/course/datascience'>Data Science</Link>
+                        <Link href='/course/dataanalysis'>Data Analysis</Link>
+                    </div>
+                </div>
+
                 <div className="foot_company">
                     <div className="company_head mb-3">
                         <h3 className='head3'>Company</h3>
@@ -70,50 +90,31 @@ function Footer() {
                         <Link href='/calendar'>Academic Calendar</Link>
                     </div>
                 </div>
+
                 <div className="foot_social">
                     <div className="social_head mb-3">
                         <h3 className='head3'>Socials</h3>
                     </div>
                     <div className="social_links text-[14px] grid gap-3">
                         <div className="social_list">
-                            <div className="social_icon">
-                                <FaLinkedin />
-                            </div>
-                            <div className="social_link">
-                                <Link href='https://linkedin.com/company/lasopdotnet'>LinkedIn</Link>
-                            </div>
+                            <div className="social_icon"><FaLinkedin /></div>
+                            <div className="social_link"><Link href='https://linkedin.com/company/lasopdotnet'>LinkedIn</Link></div>
                         </div>
                         <div className="social_list">
-                            <div className="social_icon">
-                                <FaWhatsapp />
-                            </div>
-                            <div className="social_link">
-                                <Link href='https://wa.me/+2347025713326'>WhatsApp</Link>
-                            </div>
+                            <div className="social_icon"><FaWhatsapp /></div>
+                            <div className="social_link"><Link href='https://wa.me/+2347025713326'>WhatsApp</Link></div>
                         </div>
                         <div className="social_list">
-                            <div className="social_icon">
-                                <FaTwitter />
-                            </div>
-                            <div className="social_link">
-                                <Link href='https://twitter.com/Lasopdotnet'>Twitter</Link>
-                            </div>
+                            <div className="social_icon"><FaTwitter /></div>
+                            <div className="social_link"><Link href='https://twitter.com/Lasopdotnet'>Twitter</Link></div>
                         </div>
                         <div className="social_list">
-                            <div className="social_icon">
-                                <FaFacebookF />
-                            </div>
-                            <div className="social_link">
-                                <Link href='https://www.facebook.com/lasopdotnet'>Facebook</Link>
-                            </div>
+                            <div className="social_icon"><FaFacebookF /></div>
+                            <div className="social_link"><Link href='https://www.facebook.com/lasopdotnet'>Facebook</Link></div>
                         </div>
                         <div className="social_list">
-                            <div className="social_icon">
-                                <FaInstagram />
-                            </div>
-                            <div className="social_link">
-                                <Link href='https://www.instagram.com/lasopdotnet'>Instagram</Link>
-                            </div>
+                            <div className="social_icon"><FaInstagram /></div>
+                            <div className="social_link"><Link href='https://www.instagram.com/lasopdotnet'>Instagram</Link></div>
                         </div>
                     </div>
                 </div>
