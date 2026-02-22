@@ -76,7 +76,7 @@ const courses: Course[] = [
   {
     title: 'CYBER SECURITY',
     description: 'Protect systems and networks with ethical hacking, encryption, and security protocols.',
-    href: '/course/Backend',
+    href: '/course/cybersecurity',
     icon: ShieldCheck,
     accentFrom: 'from-emerald-500',
     accentTo: 'to-teal-600',

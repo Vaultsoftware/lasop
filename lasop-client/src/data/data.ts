@@ -633,7 +633,7 @@ export const course: CourseData[] = [
         id: 3,
         dpt1: "Cyber Security",
         title: 'cybersecurity',
-        dpt2: "security",
+        dpt2: "",
         bannerText: "Our cyber security course covers general introductory, operating systems, networking, cryptography, web security, compliance, forensic, and ETHICAL HACKING, and it's capped with project/course defence.",
         bannerBtn: [
             { text: "Ojodu-Berger" },

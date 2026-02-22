@@ -280,6 +280,9 @@ function Started3() {
         return;
       }
     } catch { }
+
+    // Opens existing WhatsApp thread if it exists, otherwise starts a new one.
+    // wa.me is the correct deep-link entrypoint.
     window.location.href = `https://wa.me/${WHATSAPP_E164}?text=${encoded}`;
   };
 
@@ -494,10 +497,10 @@ function Started3() {
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800">
               <BigSpinner />
             </div>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-xl font-extrabold">
               {loading ? 'Submitting application…' : 'Verifying payment…'}
             </h3>
-            <p className="mt-1 text-sm text-slate-300">
+            <p className="mt-2 text-base font-semibold text-slate-200">
               Please hold while we verify your receipt and sync your application.
             </p>
             <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-700">
@@ -526,17 +529,17 @@ function Started3() {
         <div className="p-10 flex flex-col justify-center">
           <div className="mb-5">
             <FaArrowLeft
-              className="text-[20px] text-accent mb-3 cursor-pointer"
+              className="text-[22px] text-accent mb-3 cursor-pointer"
               onClick={() => dispatch(goBack())}
             />
             <h1 className="font-bold text-[25px]">
               <Image className="w-[120px] h-[80px]" src={lasopLogo} alt="" />
             </h1>
-            <h3 className="text-shadow font-semibold">Complete Your Application</h3>
+            <h3 className="text-shadow font-extrabold text-[18px]">Complete Your Application</h3>
           </div>
 
           {needsReupload && (
-            <div className="mb-4 text-[12px] p-3 rounded border border-amber-300 bg-amber-50 text-amber-700">
+            <div className="mb-4 text-[14px] font-semibold p-3 rounded border border-amber-300 bg-amber-50 text-amber-700">
               You previously uploaded a receipt. For security reasons, please re-upload the file to
               complete verification.
             </div>
@@ -545,19 +548,19 @@ function Started3() {
           <div className="w-full rounded-md shadow-md shadow-slate-600">
             <form onSubmit={handleSubmit} className="w-full p-7">
               <div className="mb-3">
-                <span className="text-[12px] font-semibold">Step 4/4</span>
-                <h3 className="font-bold">{title}</h3>
+                <span className="text-[14px] font-extrabold">Step 4/4</span>
+                <h3 className="font-extrabold text-[18px]">{title}</h3>
               </div>
 
               <div className="grid gap-4">
                 {/* Payment Type */}
                 <div className="grid gap-2">
-                  <label className="text-[12px]">Payment Type:</label>
+                  <label className="text-[14px] font-extrabold">Payment Type:</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setIsPartPay(false)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${!isPartPay ? 'bg-accent text-white border-accent' : ''
+                      className={`h-10 px-4 rounded-md border text-[14px] font-extrabold ${!isPartPay ? 'bg-accent text-white border-accent' : ''
                         }`}
                       disabled={overlayVisible}
                       aria-disabled={overlayVisible}
@@ -567,7 +570,7 @@ function Started3() {
                     <button
                       type="button"
                       onClick={() => setIsPartPay(true)}
-                      className={`h-8 px-3 rounded-md border text-[12px] ${isPartPay ? 'bg-accent text-white border-accent' : ''
+                      className={`h-10 px-4 rounded-md border text-[14px] font-extrabold ${isPartPay ? 'bg-accent text-white border-accent' : ''
                         }`}
                       disabled={overlayVisible}
                       aria-disabled={overlayVisible}
@@ -579,7 +582,7 @@ function Started3() {
 
                 {/* Amount */}
                 <div className="grid gap-2">
-                  <label className="text-[12px]">Amount due:</label>
+                  <label className="text-[14px] font-extrabold">Amount due:</label>
                   {isPartPay ? (
                     <div>
                       <div className="relative">
@@ -590,12 +593,12 @@ function Started3() {
                           value={amount}
                           onChange={handleAmountInput}
                           disabled={overlayVisible}
-                          className={`w-full h-[35px] pr-28 px-2 outline-none border text-[12px] rounded-md font-bold ${receiptHasAmount ? 'border-green-500' : 'border-shadow'
+                          className={`w-full h-[44px] pr-32 px-3 outline-none border text-[16px] font-extrabold rounded-md ${receiptHasAmount ? 'border-green-500' : 'border-shadow'
                             } ${overlayVisible ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         />
                         {receiptHasAmount && (
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[12px]">
-                            <FaCheckCircle className="text-green-600" />{' '}
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-2 text-[14px] font-extrabold">
+                            <FaCheckCircle className="text-green-600 text-[20px]" />{' '}
                             {matchMode === 'strict' ? 'Matched' : `Matched (${matchMode})`}
                           </span>
                         )}
@@ -606,21 +609,21 @@ function Started3() {
                           type="button"
                           onClick={rerunVerification}
                           disabled={overlayVisible}
-                          className={`h-8 px-3 rounded-md border text-[12px] ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                          className={`h-10 px-4 rounded-md border text-[14px] font-extrabold ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
                             }`}
                           title="Re-run verification"
                           aria-disabled={overlayVisible}
                         >
                           Re-run verification
                         </button>
-                        {amountError && <p className="text-[11px] text-red-600">{amountError}</p>}
+                        {amountError && <p className="text-[13px] font-semibold text-red-600">{amountError}</p>}
                       </div>
-                      <p className="text-[11px] text-gray-500 mt-1">
+                      <p className="text-[13px] font-semibold text-gray-600 mt-1">
                         Minimum part payment: ₦{MIN_PART_PAYMENT.toLocaleString()}
                       </p>
                     </div>
                   ) : (
-                    <span className="w-full h-[35px] px-2 outline-none border border-shadow text-[12px] rounded-md font-bold flex items-center">
+                    <span className="w-full h-[44px] px-3 outline-none border border-shadow text-[16px] rounded-md font-extrabold flex items-center">
                       {price?.toLocaleString?.() ?? price}
                     </span>
                   )}
@@ -628,18 +631,18 @@ function Started3() {
 
                 {/* Payment Details + Copy */}
                 <div className="grid gap-2">
-                  <label className="text-[12px]">Payment method:</label>
-                  <div className="rounded-md border border-shadow p-3 text-[12px]">
-                    <div className="font-semibold mb-2">Bank Transfer</div>
-                    <div className="grid gap-2">
+                  <label className="text-[14px] font-extrabold">Payment method:</label>
+                  <div className="rounded-md border border-shadow p-4 text-[14px]">
+                    <div className="font-extrabold mb-3 text-[16px]">Bank Transfer</div>
+                    <div className="grid gap-3">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
-                          <div className="text-[12px]">Account No:</div>
-                          <div className="font-bold select-all">1223017613</div>
+                          <div className="text-[14px] font-semibold">Account No:</div>
+                          <div className="font-extrabold select-all text-[18px]">1223017613</div>
                         </div>
                         <button
                           type="button"
-                          className="h-8 px-3 rounded-md border text-[12px]"
+                          className="h-10 px-4 rounded-md border text-[14px] font-extrabold"
                           onClick={() => copyToClipboard('1223017613', 'Account No')}
                           disabled={overlayVisible}
                           aria-disabled={overlayVisible}
@@ -650,12 +653,12 @@ function Started3() {
 
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
-                          <div className="text-[12px]">Name:</div>
-                          <div className="font-bold select-all">Lagos School of Programming Ltd</div>
+                          <div className="text-[14px] font-semibold">Name:</div>
+                          <div className="font-extrabold select-all text-[16px]">Lagos School of Programming Ltd</div>
                         </div>
                         <button
                           type="button"
-                          className="h-8 px-3 rounded-md border text-[12px]"
+                          className="h-10 px-4 rounded-md border text-[14px] font-extrabold"
                           onClick={() =>
                             copyToClipboard('Lagos School of Programming Ltd', 'Name')
                           }
@@ -668,12 +671,12 @@ function Started3() {
 
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
-                          <div className="text-[12px]">Bank:</div>
-                          <div className="font-bold select-all">Zenith</div>
+                          <div className="text-[14px] font-semibold">Bank:</div>
+                          <div className="font-extrabold select-all text-[16px]">Zenith</div>
                         </div>
                         <button
                           type="button"
-                          className="h-8 px-3 rounded-md border text-[12px]"
+                          className="h-10 px-4 rounded-md border text-[14px] font-extrabold"
                           onClick={() => copyToClipboard('Zenith', 'Bank')}
                           disabled={overlayVisible}
                           aria-disabled={overlayVisible}
@@ -682,7 +685,7 @@ function Started3() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-500 mt-2">
+                    <p className="text-[13px] font-semibold text-gray-600 mt-3">
                       Receipt must include at least two of: <b>Lagos</b>, <b>School</b>,{' '}
                       <b>Programming</b> (fuzzy match allowed).
                     </p>
@@ -691,12 +694,12 @@ function Started3() {
 
                 {/* Upload + Preview + Verify + Share */}
                 <div className="grid gap-2">
-                  <label className="text-[12px]">Upload proof of payment:</label>
+                  <label className="text-[14px] font-extrabold">Upload proof of payment:</label>
                   <input
                     type="file"
                     accept="image/*,application/pdf"
                     onChange={handleProofChange}
-                    className="w-full h-[35px] px-2 outline-none border border-shadow text-[12px] rounded-md bg-white"
+                    className="w-full h-[44px] px-3 outline-none border border-shadow text-[14px] font-semibold rounded-md bg-white"
                     disabled={overlayVisible}
                     aria-disabled={overlayVisible}
                   />
@@ -717,13 +720,13 @@ function Started3() {
                   )}
 
                   {/* Parsing status + match (inline parsing message removed; overlay covers it) */}
-                  <div className="text-[11px]">
+                  <div className="text-[13px] font-semibold">
                     {!parsing && (proof || receiptText) && (
                       <>
                         {/* Amount status (>= check) */}
                         {receiptHasAmount ? (
-                          <div className="space-y-1">
-                            <span className="text-green-700">
+                          <div className="space-y-2">
+                            <span className="text-green-700 font-extrabold text-[14px]">
                               ✓ Receipt amount{' '}
                               {typeof detectedAmount === 'number'
                                 ? `₦${detectedAmount.toLocaleString()}`
@@ -733,15 +736,15 @@ function Started3() {
                             </span>
                             {matchSnippet && (
                               <div className="mt-1">
-                                <div className="text-gray-500">Matched snippet:</div>
-                                <pre className="mt-0.5 bg-gray-50 border rounded px-2 py-1 text-[10px] whitespace-pre-wrap break-words">
+                                <div className="text-gray-600 font-extrabold text-[13px]">Matched snippet:</div>
+                                <pre className="mt-1 bg-gray-50 border rounded px-3 py-2 text-[12px] font-semibold whitespace-pre-wrap break-words">
                                   {matchSnippet}
                                 </pre>
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-red-700">
+                          <span className="text-red-700 font-extrabold text-[14px]">
                             {!normalizedAmount
                               ? 'Type an amount to verify against the receipt.'
                               : 'Receipt does not yet show an amount that meets the required amount.'}
@@ -749,20 +752,20 @@ function Started3() {
                         )}
 
                         {/* Account name status */}
-                        <div className="mt-2">
+                        <div className="mt-3">
                           {accountNameOK ? (
-                            <span className="text-green-700">
+                            <span className="text-green-700 font-extrabold text-[14px]">
                               ✓ Account name matches ({accountNameMatched.join(', ')}).
                             </span>
                           ) : (
-                            <span className="text-red-700">
+                            <span className="text-red-700 font-extrabold text-[14px]">
                               Account name not confirmed. Must include at least two of: Lagos, School, Programming.
                             </span>
                           )}
                           {accountNameSnippet && (
-                            <div className="mt-1">
-                              <div className="text-gray-500">Name snippet:</div>
-                              <pre className="mt-0.5 bg-gray-50 border rounded px-2 py-1 text-[10px] whitespace-pre-wrap break-words">
+                            <div className="mt-2">
+                              <div className="text-gray-600 font-extrabold text-[13px]">Name snippet:</div>
+                              <pre className="mt-1 bg-gray-50 border rounded px-3 py-2 text-[12px] font-semibold whitespace-pre-wrap break-words">
                                 {accountNameSnippet}
                               </pre>
                             </div>
@@ -775,7 +778,7 @@ function Started3() {
                   {/* WhatsApp flow */}
                   <button
                     type="button"
-                    className={`mt-2 h-9 w-full rounded-md border text-[12px] ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`mt-2 h-12 w-full rounded-md border text-[16px] font-extrabold ${overlayVisible ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     onClick={shareToWhatsApp}
                     aria-label="Send to WhatsApp"
@@ -787,32 +790,34 @@ function Started3() {
                   </button>
 
                   {/* Status + Confirm */}
-                  <div className="text-[11px]">
+                  <div className="text-[14px] font-semibold">
                     {isShareRecent(shareStartedAt) ? (
-                      <div className="mt-1">
-                        <div className="text-green-700">
+                      <div className="mt-2">
+                        <div className="text-green-700 font-extrabold text-[14px]">
                           WhatsApp opened. After sending, come back and confirm below.
                         </div>
-                        <label className="mt-2 flex items-center gap-2">
+                        <label className="mt-3 flex items-center gap-3">
                           <input
                             type="checkbox"
                             checked={shareConfirmed}
                             onChange={(e) => setShareConfirmed(e.target.checked)}
-                            className="h-3 w-3"
+                            className="h-6 w-6 accent-accent"
                             disabled={overlayVisible}
                             aria-disabled={overlayVisible}
                           />
-                          <span>I have sent the receipt via WhatsApp to +{WHATSAPP_E164}.</span>
+                          <span className="text-[14px] font-extrabold">
+                            I have sent the receipt via WhatsApp to +{WHATSAPP_E164}.
+                          </span>
                         </label>
                       </div>
                     ) : (
-                      <div className="mt-1 text-gray-600">
+                      <div className="mt-2 text-gray-700 font-semibold text-[14px]">
                         You must send your receipt to WhatsApp before completing the application.
                       </div>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[13px] font-semibold text-gray-600">
                     On mobile devices, the system may open a native share dialog. On desktop, WhatsApp Web opens in
                     the same tab. Use the Back button to return here after sending.
                   </p>
@@ -823,7 +828,7 @@ function Started3() {
                       <button
                         type="button"
                         onClick={() => setShowRaw((s) => !s)}
-                        className="h-7 px-2 rounded-md border text-[11px]"
+                        className="h-9 px-3 rounded-md border text-[13px] font-extrabold"
                         title="Toggle extracted text for debugging"
                         disabled={overlayVisible}
                         aria-disabled={overlayVisible}
@@ -831,7 +836,7 @@ function Started3() {
                         {showRaw ? 'Hide extracted text' : 'Show extracted text'}
                       </button>
                       {showRaw && (
-                        <pre className="mt-1 max-h-48 overflow-auto bg-gray-50 border rounded p-2 text-[10px] whitespace-pre-wrap break-words">
+                        <pre className="mt-2 max-h-48 overflow-auto bg-gray-50 border rounded p-3 text-[12px] font-semibold whitespace-pre-wrap break-words">
                           {receiptText.slice(0, 4000)}
                         </pre>
                       )}
@@ -844,7 +849,7 @@ function Started3() {
                 <button
                   type="submit"
                   disabled={completeDisabled}
-                  className={`w-full h-[35px] text-[12px] rounded-md ${completeDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-accent text-cyan-50'
+                  className={`w-full h-[44px] text-[16px] font-extrabold rounded-md ${completeDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-accent text-cyan-50'
                     }`}
                 >
                   Complete Application
@@ -853,10 +858,10 @@ function Started3() {
             </form>
           </div>
 
-          <div className="mt-6 text-[12px] text-center">
+          <div className="mt-6 text-[14px] font-semibold text-center">
             <span>
               I have an account.{' '}
-              <Link href="/login" className="font-bold text-accent">
+              <Link href="/login" className="font-extrabold text-accent text-[14px]">
                 Log in
               </Link>
             </span>
