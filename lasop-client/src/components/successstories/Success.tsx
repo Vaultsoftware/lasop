@@ -172,58 +172,60 @@ interface StudentProfile {
   initials: string;
   skills: string[];
   accentColor: 'blue' | 'emerald' | 'violet';
-  email?: string;
-  phone?: string;
+  contactLink?: string;
 }
 
 const StudentProfileCard: React.FC<{ profile: StudentProfile }> = ({ profile }) => {
   const colorMap = {
-    blue:    { gradient: 'from-blue-600 to-cyan-500',     text: 'text-blue-600',    pill: 'bg-blue-50 text-blue-700 border-blue-100' },
-    emerald: { gradient: 'from-emerald-600 to-teal-500',  text: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    violet:  { gradient: 'from-violet-600 to-purple-500', text: 'text-violet-600',  pill: 'bg-violet-50 text-violet-700 border-violet-100' },
+    blue:    { gradient: 'from-blue-600 to-cyan-500',     text: 'text-blue-600',    pill: 'bg-blue-50 text-blue-700 border-blue-100',    btn: 'bg-blue-600 hover:bg-blue-700' },
+    emerald: { gradient: 'from-emerald-600 to-teal-500',  text: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-700 border-emerald-100', btn: 'bg-emerald-600 hover:bg-emerald-700' },
+    violet:  { gradient: 'from-violet-600 to-purple-500', text: 'text-violet-600',  pill: 'bg-violet-50 text-violet-700 border-violet-100',   btn: 'bg-violet-600 hover:bg-violet-700' },
   };
   const c = colorMap[profile.accentColor];
 
   return (
-    <div className="mt-6 flex flex-wrap sm:flex-nowrap items-center gap-4 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
-      {/* Avatar */}
-      <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-sm font-bold text-white">{profile.initials}</span>
+    <div className="mt-6 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Avatar + Name block */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0`}>
+            <span className="text-sm font-bold text-white">{profile.initials}</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+              <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
+              <BadgeCheck className={`w-4 h-4 flex-shrink-0 ${c.text}`} />
+            </div>
+            <p className={`text-xs ${c.text} font-medium`}>{profile.title}</p>
+          </div>
+        </div>
+
+        {/* Badges */}
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Open to opportunities
+          </div>
+          {profile.contactLink && (
+            <Link
+              href={profile.contactLink}
+              className={`inline-flex items-center gap-1.5 ${c.btn} text-white text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors duration-200`}
+            >
+              <ArrowRight className="w-3 h-3" />
+              Message Admin
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* Name + title + skills */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
-          <BadgeCheck className={`w-4 h-4 flex-shrink-0 ${c.text}`} />
-        </div>
-        <p className={`text-xs ${c.text} font-medium mb-2`}>{profile.title}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {profile.skills.map((skill, idx) => (
-            <span key={idx} className={`text-xs px-2 py-0.5 rounded-full border ${c.pill}`}>{skill}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Open to opportunities badge + contact */}
-      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-        <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
-          Open to opportunities
-        </div>
-        {profile.email && (
-          <a href={`mailto:${profile.email}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
-            📧 {profile.email}
-          </a>
-        )}
-        {profile.phone && (
-          <a href={`tel:${profile.phone}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
-            📞 {profile.phone}
-          </a>
-        )}
+      {/* Skills — always full width below */}
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {profile.skills.map((skill, idx) => (
+          <span key={idx} className={`text-xs px-2 py-0.5 rounded-full border ${c.pill}`}>{skill}</span>
+        ))}
       </div>
     </div>
   );
@@ -293,10 +295,10 @@ export default function StudentSuccessStories() {
       previousIncome: "Teacher's Salary",
       multiplier: "∞ Potential",
       projects: [
-        "AgroStack - Revolutionary platform solving critical pain points for Nigerian farmers across the entire agricultural value chain",
-        "Selected for technical interview in Riyadh, Saudi Arabia for enterprise website scalability role",
-        "Kanban Task Management System - Advanced project management tool for teams and businesses",
-        "Multiple full-stack web applications serving thousands of users"
+        "AgroStack - A full-scale agri-tech platform built with React, Django, and PostgreSQL, solving critical pain points for Nigerian farmers across the entire agricultural value chain — from produce listing and buyer connections to real-time market pricing and logistics tracking",
+        "Enterprise Website Scalability — Selected for a technical interview in Riyadh, Saudi Arabia to work on high-traffic enterprise websites, demonstrating her ability to architect scalable, production-grade solutions that handle thousands of concurrent users",
+        "Kanban Task Management System - A sleek, drag-and-drop project management tool built with React and Node.js, designed for teams and businesses to streamline workflow, assign tasks, track progress, and meet deadlines with clarity",
+        "Multiple Full-Stack Web Applications — Delivered several client-facing web apps using the MERN stack combined with Django backends and Tailwind CSS, serving thousands of users with clean UIs and robust APIs"
       ],
       projectItems: [
         { image: "/lasopProject.jfif ", url: "https://agritech-woad.vercel.app/" },
@@ -309,17 +311,16 @@ export default function StudentSuccessStories() {
       profile: {
         name: "R. Olajumoke Kaothar",
         initials: "OK",
-        title: "Fullstack Developer & Tech Entrepreneur",
-        skills: ["React", "Next.js", "Node.js", "Django", "PostgreSQL", "REST APIs"],
+        title: "MERN Stack Developer · Django · Tailwind CSS · Tech Entrepreneur",
+        skills: ["MongoDB", "Express.js", "React", "Node.js", "Next.js", "Django", "PostgreSQL", "Tailwind CSS", "REST APIs", "Python"],
         accentColor: "blue",
-        email: "rafiuolajumoke7@gmail.com",
-        phone: "08083790474",
+        contactLink: "/contact",
       }
     },
     {
-      name: "Samuel Okonkwo",
+      name: "Bwirdimma Lot Sunday",
       duration: "1 year+ in Tech",
-      location: "Port Harcourt, Nigeria",
+      location: "Lagos State, Nigeria",
       previousRole: "Factory Worker",
       currentRole: "Freelance Developer",
       quote: "My hands were stained with machine oil, but my dreams were bigger than that factory floor.",
@@ -328,16 +329,16 @@ export default function StudentSuccessStories() {
       previousIncome: "₦45,000",
       multiplier: "8.4x increase",
       projects: [
-        "GroceryRun - Full-featured delivery app earning ₦120,000/month",
-        "School management system for 3 Port Harcourt schools",
-        "Restaurant ordering platform with payment integration",
-        "Church management system with member portal"
+        "EventLot - A dynamic event discovery and ticketing platform that connects event organizers with attendees across Port Harcourt, featuring real-time seat booking and payment integration",
+        "Luxury Homes Properties - A premium real estate listing website showcasing high-end properties with advanced search filters, virtual tour support, and agent contact management",
+        "Shoprite Clone - A fully functional e-commerce grocery platform with product categories, cart management, and seamless checkout — built to mirror real-world retail shopping experiences",
+        "Kaye Foundation - A non-profit organization website built to amplify the foundation's mission, featuring donation portals, volunteer sign-up, and impactful storytelling pages"
       ],
       projectItems: [
-        { image: "https://wrapmarketusercontent.com/assets/items/thumb/0ebdf5eaecbcab493384f45b09fda87b0b20900173ce05c6a05f9dc4a3004c16.webp?v=1710580878", url: "https://groceryrun-project.vercel.app" },
-        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaUEQzV_MP10HM4BWRNkBGflNdR0mjSB7ZOw&s", url: "https://school-management-project.vercel.app" },
-        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjbOihuKj9nP85KfbAqYznWjef7FpNC4kTyQ&s", url: "https://restaurant-ordering-project.vercel.app" },
-        { image: "https://s3.envato.com/files/519893740/01_wp_church_preview.jpg", url: "https://church-management-project.vercel.app" }
+        { image: "/eventLot.jfif", url: "https://groceryrun-project.vercel.app" },
+        { image: "/luxuryhomes.jfif", url: "https://school-management-project.vercel.app" },
+        { image: "/shoprite.jfif", url: "https://restaurant-ordering-project.vercel.app" },
+        { image: "/kaye.jfif", url: "https://church-management-project.vercel.app" }
       ],
       accentColor: "emerald",
       showExperience: true,
@@ -345,8 +346,9 @@ export default function StudentSuccessStories() {
         name: "Samuel Okonkwo",
         initials: "SO",
         title: "Fullstack Developer & Freelance Engineer",
-        skills: ["React", "Node.js", "Express.js", "MongoDB", "MySQL", "Payment APIs"],
+        skills: ["MongoDB", "Express.js", "React", "Node.js", "MySQL", "Payment APIs", "REST APIs", "JavaScript"],
         accentColor: "emerald",
+        contactLink: "/contact",
       }
     },
   ];
