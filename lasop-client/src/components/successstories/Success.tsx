@@ -343,8 +343,8 @@ export default function StudentSuccessStories() {
       accentColor: "emerald",
       showExperience: true,
       profile: {
-        name: "Samuel Okonkwo",
-        initials: "SO",
+        name: "Bwirdimma Lot Sunday",
+        initials: "BL",
         title: "Fullstack Developer & Freelance Engineer",
         skills: ["MongoDB", "Express.js", "React", "Node.js", "MySQL", "Payment APIs", "REST APIs", "JavaScript"],
         accentColor: "emerald",
