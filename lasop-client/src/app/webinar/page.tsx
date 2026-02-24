@@ -189,12 +189,13 @@ export default function LasopWebinar() {
         <div className="relative md:px-12 px-[30px] pb-16 lg:pb-20 pt-10 lg:pt-12">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="order-2 lg:order-1">
+              {/* CHANGED: Removed "EVERY SATURDAY" from the badge */}
               <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600"></span>
                 </span>
-                <span className="text-green-700 font-semibold">LIVE WEBINAR • EVERY SATURDAY • 100% FREE</span>
+                <span className="text-green-700 font-semibold">LIVE WEBINAR • 100% FREE</span>
               </div>
 
               <h1 className="text-2xl lg:text-4xl font-bold mb-4 leading-tight text-gray-900">
@@ -202,17 +203,18 @@ export default function LasopWebinar() {
               </h1>
 
               <p className="text-sm lg:text-base text-gray-600 mb-6 leading-relaxed">
-                Join 500+ professionals every Saturday for an exclusive 45-minute training that will accelerate your career growth
+                Join 500+ professionals for an exclusive 45-minute training that will accelerate your career growth
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <div className="space-y-2.5 text-sm">
                   <div className="flex items-center gap-3 text-gray-700">
                     <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium">Every Saturday — Next: {webinarDateLabel}</span>
+                    <span className="font-medium">Next Session: {webinarDateLabel}</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
                     <Clock className="w-4 h-4 text-blue-600" />
+                    {/* CHANGED: 45 Minutes confirmed here */}
                     <span className="font-medium">12:00 PM WAT (45 Minutes)</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
@@ -241,7 +243,7 @@ export default function LasopWebinar() {
       <div className="bg-white py-10 border-b border-gray-200">
         <div className="md:px-12 px-[30px]">
           <div className="text-center mb-5">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Next Saturday Webinar Starts In</p>
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Next Webinar Starts In</p>
             <h3 className="text-xl lg:text-2xl font-bold text-gray-900">{webinarDateLabel} — Don't Miss Out!</h3>
           </div>
           <div className="grid grid-cols-4 gap-3 mb-6">
@@ -255,8 +257,9 @@ export default function LasopWebinar() {
             ))}
           </div>
           <div className="text-center">
+            {/* CHANGED: Removed "every Saturday" reference */}
             <p className="text-xs text-gray-500 mb-4">
-              🔁 Happens <strong>every Saturday at 12:00 PM WAT</strong> — register once, join any week!
+              🔁 Register once — join any session!
             </p>
             <CTAButton />
           </div>
@@ -330,6 +333,7 @@ export default function LasopWebinar() {
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-white p-3 rounded-lg border border-blue-100 text-center">
                   <div className="text-2xl font-bold text-blue-600">45</div>
+                  {/* CHANGED: "Minutes" label confirmed as 45 */}
                   <p className="text-xs text-gray-600">Minutes</p>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-white p-3 rounded-lg border border-blue-100 text-center">
@@ -417,7 +421,8 @@ export default function LasopWebinar() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">500+</div><p className="text-xs lg:text-sm text-blue-200">Registered</p></div>
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">4.9★</div><p className="text-xs lg:text-sm text-blue-200">Rating</p></div>
-            <div><div className="text-2xl lg:text-3xl font-bold mb-1">Every Sat</div><p className="text-xs lg:text-sm text-blue-200">12:00 PM WAT</p></div>
+            {/* CHANGED: Removed "Every Sat" label, replaced with session time */}
+            <div><div className="text-2xl lg:text-3xl font-bold mb-1">12 PM</div><p className="text-xs lg:text-sm text-blue-200">WAT Session Time</p></div>
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">100%</div><p className="text-xs lg:text-sm text-blue-200">Free</p></div>
           </div>
         </div>
@@ -434,7 +439,8 @@ export default function LasopWebinar() {
                     Next Session: {webinarDateLabel}
                   </div>
                   <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Secure Your Free Seat Now</h2>
-                  <p className="text-sm text-gray-600">Register once — attend every Saturday!</p>
+                  {/* CHANGED: Removed "every Saturday" */}
+                  <p className="text-sm text-gray-600">Register once — attend any session!</p>
                 </div>
 
                 <form onSubmit={handleRegistration} className="space-y-4">
@@ -483,7 +489,7 @@ export default function LasopWebinar() {
                   <div className="flex items-center justify-center gap-5 text-xs text-gray-500 pt-2">
                     <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" />No payment</span>
                     <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" />Instant confirmation</span>
-                    <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" />Every Saturday</span>
+                    <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" />45 Minutes</span>
                   </div>
                 </form>
               </div>
@@ -504,8 +510,9 @@ export default function LasopWebinar() {
                       <ul className="space-y-1.5 text-xs text-gray-700">
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>You've joined the WhatsApp group ✅</li>
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Confirmation email sent to your inbox</li>
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Zoom link sent every Friday before the session</li>
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>See you every Saturday at 12:00 PM WAT! 🗓️</li>
+                        {/* CHANGED: Updated to 45 minutes */}
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Zoom link sent before the 45-minute session</li>
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>See you at 12:00 PM WAT! 🗓️</li>
                       </ul>
                     </div>
                   </div>
