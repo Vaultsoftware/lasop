@@ -6,33 +6,7 @@ import emailjs from '@emailjs/browser';
 
 const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/KyW1KwzDbOaH6XhzrQzioN?mode=gi_t';
 
-function getNextSaturday(): Date {
-  const now = new Date();
-  const watOffset = 60;
-  const watNow = new Date(now.getTime() + (watOffset - now.getTimezoneOffset()) * 60000);
-  const day = watNow.getDay();
-  const daysUntilSaturday = day === 6
-    ? (watNow.getHours() < 12 ? 0 : 7)
-    : (6 - day);
-  const nextSat = new Date(watNow);
-  nextSat.setDate(watNow.getDate() + daysUntilSaturday);
-  nextSat.setHours(12, 0, 0, 0);
-  return new Date(nextSat.getTime() - watOffset * 60000);
-}
-
-function formatSaturdayDate(date: Date): string {
-  const watDate = new Date(date.getTime() + 60 * 60000);
-  return watDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
 export default function LasopWebinar() {
-  const [targetDate, setTargetDate] = useState<Date>(getNextSaturday);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -40,24 +14,6 @@ export default function LasopWebinar() {
   const [sending, setSending] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [hasClickedWhatsApp, setHasClickedWhatsApp] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-      if (distance <= 0) {
-        setTargetDate(getNextSaturday());
-        return;
-      }
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
 
   useEffect(() => {
     emailjs.init('jmMjHWm08bK1xNwwI');
@@ -98,15 +54,6 @@ export default function LasopWebinar() {
       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </a>
   );
-
-  const webinarDateLabel = formatSaturdayDate(targetDate);
-
-  const countdownItems = [
-    { label: timeLeft.days === 1 ? 'Day' : 'Days', value: timeLeft.days },
-    { label: timeLeft.hours === 1 ? 'Hour' : 'Hours', value: timeLeft.hours },
-    { label: timeLeft.minutes === 1 ? 'Minute' : 'Minutes', value: timeLeft.minutes },
-    { label: timeLeft.seconds === 1 ? 'Second' : 'Seconds', value: timeLeft.seconds },
-  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -189,7 +136,6 @@ export default function LasopWebinar() {
         <div className="relative md:px-12 px-[30px] pb-16 lg:pb-20 pt-10 lg:pt-12">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="order-2 lg:order-1">
-              {/* CHANGED: Removed "EVERY SATURDAY" from the badge */}
               <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75"></span>
@@ -209,12 +155,7 @@ export default function LasopWebinar() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <div className="space-y-2.5 text-sm">
                   <div className="flex items-center gap-3 text-gray-700">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium">Next Session: {webinarDateLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-700">
                     <Clock className="w-4 h-4 text-blue-600" />
-                    {/* CHANGED: 45 Minutes confirmed here */}
                     <span className="font-medium">12:00 PM WAT (45 Minutes)</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
@@ -236,32 +177,6 @@ export default function LasopWebinar() {
                 />
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white py-10 border-b border-gray-200">
-        <div className="md:px-12 px-[30px]">
-          <div className="text-center mb-5">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Next Webinar Starts In</p>
-            <h3 className="text-xl lg:text-2xl font-bold text-gray-900">{webinarDateLabel} — Don't Miss Out!</h3>
-          </div>
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            {countdownItems.map((item) => (
-              <div key={item.label} className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 text-center shadow-sm border border-blue-100">
-                <div className="text-2xl lg:text-4xl font-bold text-blue-600 mb-1">
-                  {String(item.value).padStart(2, '0')}
-                </div>
-                <div className="text-xs font-semibold text-gray-600 uppercase">{item.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
-            {/* CHANGED: Removed "every Saturday" reference */}
-            <p className="text-xs text-gray-500 mb-4">
-              🔁 Register once — join any session!
-            </p>
-            <CTAButton />
           </div>
         </div>
       </div>
@@ -333,7 +248,6 @@ export default function LasopWebinar() {
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-white p-3 rounded-lg border border-blue-100 text-center">
                   <div className="text-2xl font-bold text-blue-600">45</div>
-                  {/* CHANGED: "Minutes" label confirmed as 45 */}
                   <p className="text-xs text-gray-600">Minutes</p>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-white p-3 rounded-lg border border-blue-100 text-center">
@@ -421,7 +335,6 @@ export default function LasopWebinar() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">500+</div><p className="text-xs lg:text-sm text-blue-200">Registered</p></div>
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">4.9★</div><p className="text-xs lg:text-sm text-blue-200">Rating</p></div>
-            {/* CHANGED: Removed "Every Sat" label, replaced with session time */}
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">12 PM</div><p className="text-xs lg:text-sm text-blue-200">WAT Session Time</p></div>
             <div><div className="text-2xl lg:text-3xl font-bold mb-1">100%</div><p className="text-xs lg:text-sm text-blue-200">Free</p></div>
           </div>
@@ -434,12 +347,7 @@ export default function LasopWebinar() {
             {!registered ? (
               <div className="p-6 lg:p-8">
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold mb-3">
-                    <Bell className="w-3 h-3" />
-                    Next Session: {webinarDateLabel}
-                  </div>
                   <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Secure Your Free Seat Now</h2>
-                  {/* CHANGED: Removed "every Saturday" */}
                   <p className="text-sm text-gray-600">Register once — attend any session!</p>
                 </div>
 
@@ -510,14 +418,12 @@ export default function LasopWebinar() {
                       <ul className="space-y-1.5 text-xs text-gray-700">
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>You've joined the WhatsApp group ✅</li>
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Confirmation email sent to your inbox</li>
-                        {/* CHANGED: Updated to 45 minutes */}
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Zoom link sent before the 45-minute session</li>
                         <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>See you at 12:00 PM WAT! 🗓️</li>
                       </ul>
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-5">Next session: {webinarDateLabel} 👋</p>
               </div>
             )}
           </div>
