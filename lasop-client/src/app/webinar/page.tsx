@@ -8,17 +8,30 @@ import emailjs from '@emailjs/browser';
 const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/KyW1KwzDbOaH6XhzrQzioN?mode=gi_t';
 
 function getNextSaturday(): Date {
+  // Always work in WAT (UTC+1) by using UTC methods + 1 hour offset
   const now = new Date();
-  const watOffset = 60;
-  const watNow = new Date(now.getTime() + (watOffset - now.getTimezoneOffset()) * 60000);
-  const day = watNow.getDay();
-  const daysUntilSaturday = day === 6
-    ? (watNow.getHours() < 12 ? 0 : 7)
-    : (6 - day);
-  const nextSat = new Date(watNow);
-  nextSat.setDate(watNow.getDate() + daysUntilSaturday);
-  nextSat.setHours(12, 0, 0, 0);
-  return new Date(nextSat.getTime() - watOffset * 60000);
+  const watHour = now.getUTCHours() + 1; // WAT = UTC + 1
+  const watMinute = now.getUTCMinutes();
+
+  // Get WAT date — if watHour >= 24 it means we've crossed midnight in WAT
+  const watDate = new Date(now.getTime() + 60 * 60 * 1000); // shift by 1 hour
+  const day = watDate.getUTCDay(); // 0=Sun, 6=Sat in WAT
+
+  const normalizedHour = watHour >= 24 ? watHour - 24 : watHour;
+
+  if (day === 6 && (normalizedHour < 12 || (normalizedHour === 12 && watMinute === 0))) {
+    // It's Saturday and before 12:00 PM WAT — count down to TODAY 12:00 PM WAT
+    const todayNoonWAT = new Date(watDate);
+    todayNoonWAT.setUTCHours(11, 0, 0, 0); // 11:00 UTC = 12:00 WAT
+    return todayNoonWAT;
+  } else {
+    // Past 12PM Saturday, or any other day — count to NEXT Saturday 12PM WAT
+    const daysUntilNextSat = day === 6 ? 7 : (6 - day);
+    const nextSat = new Date(watDate);
+    nextSat.setUTCDate(watDate.getUTCDate() + daysUntilNextSat);
+    nextSat.setUTCHours(11, 0, 0, 0); // 11:00 UTC = 12:00 WAT
+    return nextSat;
+  }
 }
 
 // Defined outside to avoid react/no-unstable-nested-components ESLint error
@@ -35,7 +48,7 @@ function CTAButton() {
 }
 
 export default function LasopWebinar() {
-  const [targetDate, setTargetDate] = useState<Date>(getNextSaturday);
+  const [targetDate, setTargetDate] = useState<Date>(() => getNextSaturday());
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -238,8 +251,8 @@ export default function LasopWebinar() {
           <div className="text-center mb-5">
             <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Webinar Starts In</p>
           </div>
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            {countdownItems.map((item) => (
+          <div className={`grid gap-3 mb-6 ${timeLeft.days > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            {countdownItems.filter((item) => !(item.label === 'Day' || item.label === 'Days') || item.value > 0).map((item) => (
               <div key={item.label} className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 text-center shadow-sm border border-blue-100">
                 <div className="text-2xl lg:text-4xl font-bold text-blue-600 mb-1">
                   {String(item.value).padStart(2, '0')}
