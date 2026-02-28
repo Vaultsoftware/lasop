@@ -1,12 +1,42 @@
 'use client';
-import { Calendar, Clock, Users, Video, CheckCircle, ArrowRight, Bell, BookOpen, Sparkles, MessageCircle, X } from 'lucide-react';
+
+import { Clock, Users, Video, CheckCircle, ArrowRight, Bell, BookOpen, Sparkles, MessageCircle, X } from 'lucide-react';
 import Navbar from './../../components/navbar/Navbar';
 import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 
 const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/KyW1KwzDbOaH6XhzrQzioN?mode=gi_t';
 
+function getNextSaturday(): Date {
+  const now = new Date();
+  const watOffset = 60;
+  const watNow = new Date(now.getTime() + (watOffset - now.getTimezoneOffset()) * 60000);
+  const day = watNow.getDay();
+  const daysUntilSaturday = day === 6
+    ? (watNow.getHours() < 12 ? 0 : 7)
+    : (6 - day);
+  const nextSat = new Date(watNow);
+  nextSat.setDate(watNow.getDate() + daysUntilSaturday);
+  nextSat.setHours(12, 0, 0, 0);
+  return new Date(nextSat.getTime() - watOffset * 60000);
+}
+
+// Defined outside to avoid react/no-unstable-nested-components ESLint error
+function CTAButton() {
+  return (
+    <a
+      href="#register"
+      className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl group"
+    >
+      Register Free Now
+      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+    </a>
+  );
+}
+
 export default function LasopWebinar() {
+  const [targetDate, setTargetDate] = useState<Date>(getNextSaturday);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -16,10 +46,28 @@ export default function LasopWebinar() {
   const [hasClickedWhatsApp, setHasClickedWhatsApp] = useState(false);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate.getTime() - now;
+      if (distance <= 0) {
+        setTargetDate(getNextSaturday());
+        return;
+      }
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000),
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  useEffect(() => {
     emailjs.init('jmMjHWm08bK1xNwwI');
   }, []);
 
-  const handleRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegistration = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (email && name && phone) {
       setHasClickedWhatsApp(false);
@@ -35,9 +83,10 @@ export default function LasopWebinar() {
       console.log('Email sent successfully:', response);
       setShowWhatsAppModal(false);
       setRegistered(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { text?: string; message?: string };
       console.error('Error sending email:', error);
-      alert(`Registration error: ${error.text || error.message || 'Please check your internet connection and try again.'}`);
+      alert(`Registration error: ${err.text || err.message || 'Please check your internet connection and try again.'}`);
     } finally {
       setSending(false);
     }
@@ -48,17 +97,18 @@ export default function LasopWebinar() {
     setHasClickedWhatsApp(true);
   };
 
-  const CTAButton = () => (
-    <a href="#register" className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl group">
-      Register Free Now
-      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-    </a>
-  );
+  const countdownItems = [
+    { label: timeLeft.days === 1 ? 'Day' : 'Days', value: timeLeft.days },
+    { label: timeLeft.hours === 1 ? 'Hour' : 'Hours', value: timeLeft.hours },
+    { label: timeLeft.minutes === 1 ? 'Minute' : 'Minutes', value: timeLeft.minutes },
+    { label: timeLeft.seconds === 1 ? 'Second' : 'Seconds', value: timeLeft.seconds },
+  ];
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
+      {/* ── WhatsApp Modal ── */}
       {showWhatsAppModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 px-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 lg:p-8 relative">
@@ -75,7 +125,7 @@ export default function LasopWebinar() {
 
             <h3 className="text-xl font-bold text-gray-900 text-center mb-2">One Last Step! 🎉</h3>
             <p className="text-sm text-gray-600 text-center mb-6">
-              Join our <span className="font-semibold text-green-600">WhatsApp Group</span> to complete your registration. You'll get updates, reminders, and exclusive content there.
+              Join our <span className="font-semibold text-green-600">WhatsApp Group</span> to complete your registration. You&apos;ll get updates, reminders, and exclusive content there.
             </p>
 
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
@@ -83,7 +133,7 @@ export default function LasopWebinar() {
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-start gap-2">
                   <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                  Click <strong>"Join WhatsApp Group To Complete Registration"</strong>
+                  Click <strong>&quot;Join WhatsApp Group To Complete Registration&quot;</strong>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
@@ -91,7 +141,7 @@ export default function LasopWebinar() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                  Come back here and click <strong>"I've Joined"</strong>
+                  Come back here and click <strong>&quot;I&apos;ve Joined&quot;</strong>
                 </li>
               </ul>
             </div>
@@ -111,35 +161,36 @@ export default function LasopWebinar() {
             >
               {sending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Completing Registration...
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-5 h-5" />
-                  I've Joined — Complete Registration
+                  I&apos;ve Joined — Complete Registration
                 </>
               )}
             </button>
 
             <p className="text-xs text-center mt-3 font-medium">
               {hasClickedWhatsApp
-                ? <span className="text-green-600">✅ Great! Now click "I've Joined" above to finish</span>
-                : <span className="text-red-500">⚠️ Please click "Join WhatsApp Group" first before continuing</span>
+                ? <span className="text-green-600">✅ Great! Now click &quot;I&apos;ve Joined&quot; above to finish</span>
+                : <span className="text-red-500">⚠️ Please click &quot;Join WhatsApp Group&quot; first before continuing</span>
               }
             </p>
           </div>
         </div>
       )}
 
+      {/* ── Hero ── */}
       <div className="relative bg-white overflow-hidden border-b border-gray-200">
         <div className="relative md:px-12 px-[30px] pb-16 lg:pb-20 pt-10 lg:pt-12">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="order-2 lg:order-1">
               <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600" />
                 </span>
                 <span className="text-green-700 font-semibold">LIVE WEBINAR • 100% FREE</span>
               </div>
@@ -181,6 +232,29 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Countdown Timer ── */}
+      <div className="bg-white py-10 border-b border-gray-200">
+        <div className="md:px-12 px-[30px]">
+          <div className="text-center mb-5">
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Webinar Starts In</p>
+          </div>
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            {countdownItems.map((item) => (
+              <div key={item.label} className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 text-center shadow-sm border border-blue-100">
+                <div className="text-2xl lg:text-4xl font-bold text-blue-600 mb-1">
+                  {String(item.value).padStart(2, '0')}
+                </div>
+                <div className="text-xs font-semibold text-gray-600 uppercase">{item.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center">
+            <CTAButton />
+          </div>
+        </div>
+      </div>
+
+      {/* ── What You'll Learn ── */}
       <div className="py-12 lg:py-16 bg-gray-50">
         <div className="md:px-12 px-[30px]">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -196,7 +270,7 @@ export default function LasopWebinar() {
             <div>
               <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">
                 <Sparkles className="w-3 h-3" />
-                What You'll Learn
+                What You&apos;ll Learn
               </div>
               <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-3">Master Skills That Matter</h2>
               <p className="text-sm lg:text-base text-gray-600 mb-5 leading-relaxed">
@@ -221,6 +295,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Who Should Attend ── */}
       <div className="py-12 lg:py-16 bg-white">
         <div className="md:px-12 px-[30px]">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -236,7 +311,7 @@ export default function LasopWebinar() {
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {['Young professionals', 'Career starters', 'Job seekers', 'Students', 'Career switchers', 'Skill upgraders'].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 bg-blue-50 p-2.5 rounded-lg border border-blue-100">
-                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
                     <span className="text-sm text-gray-700 font-medium">{item}</span>
                   </div>
                 ))}
@@ -270,6 +345,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Why Attend ── */}
       <div className="py-12 lg:py-16 bg-gray-50">
         <div className="md:px-12 px-[30px] text-center">
           <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-4">Why You Should Attend This Webinar</h2>
@@ -296,6 +372,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Speakers ── */}
       <div className="py-12 lg:py-16 bg-white">
         <div className="md:px-12 px-[30px]">
           <div className="text-center mb-10">
@@ -330,6 +407,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Stats Bar ── */}
       <div className="py-10 bg-blue-600">
         <div className="md:px-12 px-[30px]">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
@@ -341,6 +419,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Registration Form ── */}
       <div id="register" className="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-2xl mx-auto px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
@@ -348,7 +427,6 @@ export default function LasopWebinar() {
               <div className="p-6 lg:p-8">
                 <div className="text-center mb-6">
                   <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Secure Your Free Seat Now</h2>
-                  <p className="text-sm text-gray-600">Register once — attend any session!</p>
                 </div>
 
                 <form onSubmit={handleRegistration} className="space-y-4">
@@ -406,7 +484,7 @@ export default function LasopWebinar() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-10 h-10 text-green-600" />
                 </div>
-                <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">You're All Set! 🎉</h3>
+                <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">You&apos;re All Set! 🎉</h3>
                 <p className="text-base text-gray-600 mb-6">
                   Check your inbox at <span className="text-blue-600 font-semibold">{email}</span>
                 </p>
@@ -416,10 +494,10 @@ export default function LasopWebinar() {
                     <div>
                       <p className="font-bold text-gray-900 mb-2 text-sm">What Happens Next?</p>
                       <ul className="space-y-1.5 text-xs text-gray-700">
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>You've joined the WhatsApp group ✅</li>
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Confirmation email sent to your inbox</li>
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>Zoom link sent before the 45-minute session</li>
-                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full"></div>See you at 12:00 PM WAT! 🗓️</li>
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full" />You&apos;ve joined the WhatsApp group ✅</li>
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full" />Confirmation email sent to your inbox</li>
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full" />Zoom link sent before the 45-minute session</li>
+                        <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-600 rounded-full" />See you at 12:00 PM WAT! 🗓️</li>
                       </ul>
                     </div>
                   </div>
@@ -430,6 +508,7 @@ export default function LasopWebinar() {
         </div>
       </div>
 
+      {/* ── Footer ── */}
       <div className="bg-gray-900 py-6">
         <div className="md:px-12 px-[30px] text-center">
           <p className="text-gray-400 text-xs">© 2026 LASOP. All rights reserved.</p>
