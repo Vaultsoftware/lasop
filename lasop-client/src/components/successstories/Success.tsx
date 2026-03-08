@@ -1,13 +1,177 @@
 'use client';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, TrendingUp, Clock, Briefcase, MapPin, User, Check, ExternalLink, Star, BadgeCheck } from 'lucide-react';
+import { ArrowRight, TrendingUp, Clock, Briefcase, MapPin, User, Check, ExternalLink, Star, BadgeCheck, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import FaceOfStudents from './../faceOfstudents/faceOfStudents';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+
+/* =================== Project Modal =================== */
+interface ProjectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  project: {
+    image: string;
+    title: string;
+    description: string;
+    index: number;
+  } | null;
+  allProjects: { image: string; url: string }[];
+  projectDescriptions: string[];
+  studentName: string;
+  accentColor: 'blue' | 'emerald' | 'violet';
+  onNavigate: (direction: 'prev' | 'next') => void;
+}
+
+const ProjectModal: React.FC<ProjectModalProps> = ({
+  isOpen,
+  onClose,
+  project,
+  allProjects,
+  projectDescriptions,
+  studentName,
+  accentColor,
+  onNavigate,
+}) => {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') onNavigate('prev');
+      if (e.key === 'ArrowRight') onNavigate('next');
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose, onNavigate]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  if (!isOpen || !project) return null;
+
+  const colorMap = {
+    blue:    { btn: 'bg-blue-600 hover:bg-blue-700', text: 'text-blue-400', border: 'border-blue-500', dot: 'bg-blue-500', dotInactive: 'bg-blue-200' },
+    emerald: { btn: 'bg-emerald-600 hover:bg-emerald-700', text: 'text-emerald-400', border: 'border-emerald-500', dot: 'bg-emerald-500', dotInactive: 'bg-emerald-200' },
+    violet:  { btn: 'bg-violet-600 hover:bg-violet-700', text: 'text-violet-400', border: 'border-violet-500', dot: 'bg-violet-500', dotInactive: 'bg-violet-200' },
+  };
+  const c = colorMap[accentColor];
+
+  // Extract project name (text before the first " - " or " — ")
+  const projectTitle = project.description.split(/\s[-—]\s/)[0];
+  const projectDetail = project.description.replace(projectTitle, '').replace(/^\s*[-—]\s*/, '');
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+
+      {/* Modal */}
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:bg-slate-900 transition-colors"
+          aria-label="Close modal"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Image section */}
+        <div className="relative bg-slate-100 flex-shrink-0" style={{ height: '260px' }}>
+          <img
+            src={project.image}
+            alt={projectTitle}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+          {/* Nav arrows */}
+          {allProjects.length > 1 && (
+            <>
+              <button
+                onClick={() => onNavigate('prev')}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                aria-label="Previous project"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => onNavigate('next')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                aria-label="Next project"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {allProjects.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx === project.index ? `w-6 ${c.dot}` : `w-1.5 ${c.dotInactive}`}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Content section */}
+        <div className="flex flex-col flex-1 overflow-y-auto p-6 sm:p-8">
+          {/* Student badge */}
+          <div className={`inline-flex items-center gap-2 mb-4 text-xs font-semibold px-3 py-1.5 rounded-full border ${c.border} ${c.text} self-start`}>
+            <User className="w-3.5 h-3.5" />
+            {studentName}
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 leading-tight">
+            {projectTitle}
+          </h2>
+
+          {projectDetail && (
+            <p className="text-slate-600 leading-relaxed text-base">
+              {projectDetail}
+            </p>
+          )}
+
+          {/* Project counter */}
+          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-sm text-slate-400">
+              Project {project.index + 1} of {allProjects.length}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onNavigate('prev')}
+                className="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center gap-1.5"
+              >
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </button>
+              <button
+                onClick={() => onNavigate('next')}
+                className="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center gap-1.5"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* =================== Slider =================== */
 interface SliderStudent {
@@ -165,65 +329,64 @@ const SwiperStudentSlider: React.FC = () => {
   );
 };
 
-/* =================== Student Profile Card (small & clean) =================== */
+/* =================== Student Profile Card =================== */
 interface StudentProfile {
   name: string;
   title: string;
   initials: string;
   skills: string[];
   accentColor: 'blue' | 'emerald' | 'violet';
-  email?: string;
-  phone?: string;
+  contactLink?: string;
 }
 
 const StudentProfileCard: React.FC<{ profile: StudentProfile }> = ({ profile }) => {
   const colorMap = {
-    blue:    { gradient: 'from-blue-600 to-cyan-500',     text: 'text-blue-600',    pill: 'bg-blue-50 text-blue-700 border-blue-100' },
-    emerald: { gradient: 'from-emerald-600 to-teal-500',  text: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    violet:  { gradient: 'from-violet-600 to-purple-500', text: 'text-violet-600',  pill: 'bg-violet-50 text-violet-700 border-violet-100' },
+    blue:    { gradient: 'from-blue-600 to-cyan-500',     text: 'text-blue-600',    pill: 'bg-blue-50 text-blue-700 border-blue-100',    btn: 'bg-blue-600 hover:bg-blue-700' },
+    emerald: { gradient: 'from-emerald-600 to-teal-500',  text: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-700 border-emerald-100', btn: 'bg-emerald-600 hover:bg-emerald-700' },
+    violet:  { gradient: 'from-violet-600 to-purple-500', text: 'text-violet-600',  pill: 'bg-violet-50 text-violet-700 border-violet-100',   btn: 'bg-violet-600 hover:bg-violet-700' },
   };
   const c = colorMap[profile.accentColor];
 
   return (
-    <div className="mt-6 flex flex-wrap sm:flex-nowrap items-center gap-4 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
-      {/* Avatar */}
-      <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-sm font-bold text-white">{profile.initials}</span>
+    <div className="mt-6 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0`}>
+            <span className="text-sm font-bold text-white">{profile.initials}</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+              <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
+              <BadgeCheck className={`w-4 h-4 flex-shrink-0 ${c.text}`} />
+            </div>
+            <p className={`text-xs ${c.text} font-medium`}>{profile.title}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Open to opportunities
+          </div>
+          {profile.contactLink && (
+            <Link
+              href={profile.contactLink}
+              className={`inline-flex items-center gap-1.5 ${c.btn} text-white text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors duration-200`}
+            >
+              <ArrowRight className="w-3 h-3" />
+              Message Admin
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* Name + title + skills */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
-          <BadgeCheck className={`w-4 h-4 flex-shrink-0 ${c.text}`} />
-        </div>
-        <p className={`text-xs ${c.text} font-medium mb-2`}>{profile.title}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {profile.skills.map((skill, idx) => (
-            <span key={idx} className={`text-xs px-2 py-0.5 rounded-full border ${c.pill}`}>{skill}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Open to opportunities badge + contact */}
-      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-        <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
-          Open to opportunities
-        </div>
-        {profile.email && (
-          <a href={`mailto:${profile.email}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
-            📧 {profile.email}
-          </a>
-        )}
-        {profile.phone && (
-          <a href={`tel:${profile.phone}`} className="text-xs text-slate-500 hover:text-slate-800 transition-colors">
-            📞 {profile.phone}
-          </a>
-        )}
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {profile.skills.map((skill, idx) => (
+          <span key={idx} className={`text-xs px-2 py-0.5 rounded-full border ${c.pill}`}>{skill}</span>
+        ))}
       </div>
     </div>
   );
@@ -233,14 +396,29 @@ const StudentProfileCard: React.FC<{ profile: StudentProfile }> = ({ profile }) 
 export default function StudentSuccessStories() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeStudentIdx, setActiveStudentIdx] = useState(0);
+  const [activeProjectIdx, setActiveProjectIdx] = useState(0);
+
+  const openModal = (studentIdx: number, projectIdx: number) => {
+    setActiveStudentIdx(studentIdx);
+    setActiveProjectIdx(projectIdx);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => setModalOpen(false);
+
+  const navigateProject = (direction: 'prev' | 'next') => {
+    const total = students[activeStudentIdx].projectItems.length;
+    setActiveProjectIdx((prev) =>
+      direction === 'next' ? (prev + 1) % total : (prev - 1 + total) % total
+    );
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const observerOptions: IntersectionObserverInit = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px',
-    };
-
+    const observerOptions: IntersectionObserverInit = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -249,17 +427,12 @@ export default function StudentSuccessStories() {
         }
       });
     }, observerOptions);
-
     const elements = containerRef.current.querySelectorAll('.fade-in-element');
     elements.forEach((el, index) => {
-      const htmlElement = el as HTMLElement;
-      htmlElement.style.transitionDelay = `${index * 80}ms`;
+      (el as HTMLElement).style.transitionDelay = `${index * 80}ms`;
       observer.observe(el);
     });
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
 
   interface Student {
@@ -293,13 +466,13 @@ export default function StudentSuccessStories() {
       previousIncome: "Teacher's Salary",
       multiplier: "∞ Potential",
       projects: [
-        "AgroStack - Revolutionary platform solving critical pain points for Nigerian farmers across the entire agricultural value chain",
-        "Selected for technical interview in Riyadh, Saudi Arabia for enterprise website scalability role",
-        "Kanban Task Management System - Advanced project management tool for teams and businesses",
-        "Multiple full-stack web applications serving thousands of users"
+        "AgroStack - A full-scale agri-tech platform built with React, Django, and PostgreSQL, solving critical pain points for Nigerian farmers across the entire agricultural value chain — from produce listing and buyer connections to real-time market pricing and logistics tracking",
+        "Enterprise Website Scalability — Selected for a technical interview in Riyadh, Saudi Arabia to work on high-traffic enterprise websites, demonstrating her ability to architect scalable, production-grade solutions that handle thousands of concurrent users",
+        "Kanban Task Management System - A sleek, drag-and-drop project management tool built with React and Node.js, designed for teams and businesses to streamline workflow, assign tasks, track progress, and meet deadlines with clarity",
+        "Multiple Full-Stack Web Applications — Delivered several client-facing web apps using the MERN stack combined with Django backends and Tailwind CSS, serving thousands of users with clean UIs and robust APIs"
       ],
       projectItems: [
-        { image: "/lasopProject.jfif ", url: "https://agritech-woad.vercel.app/" },
+        { image: "/lasopProject.jfif", url: "https://agritech-woad.vercel.app/" },
         { image: "/Kanban.jfif", url: "https://kanban-task-management-dusky.vercel.app/" },
         { image: "/Agrro.jfif", url: "https://agritech-woad.vercel.app/" },
         { image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=600&fit=crop", url: "https://your-third-project.vercel.app" },
@@ -309,17 +482,16 @@ export default function StudentSuccessStories() {
       profile: {
         name: "R. Olajumoke Kaothar",
         initials: "OK",
-        title: "Fullstack Developer & Tech Entrepreneur",
-        skills: ["React", "Next.js", "Node.js", "Django", "PostgreSQL", "REST APIs"],
+        title: "MERN Stack Developer · Django · Tailwind CSS · Tech Entrepreneur",
+        skills: ["MongoDB", "Express.js", "React", "Node.js", "Next.js", "Django", "PostgreSQL", "Tailwind CSS", "REST APIs", "Python"],
         accentColor: "blue",
-        email: "rafiuolajumoke7@gmail.com",
-        phone: "08083790474",
+        contactLink: "/contact",
       }
     },
     {
-      name: "Samuel Okonkwo",
+      name: "Bwirdimma Lot Sunday",
       duration: "1 year+ in Tech",
-      location: "Port Harcourt, Nigeria",
+      location: "Lagos State, Nigeria",
       previousRole: "Factory Worker",
       currentRole: "Freelance Developer",
       quote: "My hands were stained with machine oil, but my dreams were bigger than that factory floor.",
@@ -328,25 +500,26 @@ export default function StudentSuccessStories() {
       previousIncome: "₦45,000",
       multiplier: "8.4x increase",
       projects: [
-        "GroceryRun - Full-featured delivery app earning ₦120,000/month",
-        "School management system for 3 Port Harcourt schools",
-        "Restaurant ordering platform with payment integration",
-        "Church management system with member portal"
+        "EventLot - A dynamic event discovery and ticketing platform that connects event organizers with attendees across Port Harcourt, featuring real-time seat booking and payment integration",
+        "Luxury Homes Properties - A premium real estate listing website showcasing high-end properties with advanced search filters, virtual tour support, and agent contact management",
+        "Shoprite Clone - A fully functional e-commerce grocery platform with product categories, cart management, and seamless checkout — built to mirror real-world retail shopping experiences",
+        "Kaye Foundation - A non-profit organization website built to amplify the foundation's mission, featuring donation portals, volunteer sign-up, and impactful storytelling pages"
       ],
       projectItems: [
-        { image: "https://wrapmarketusercontent.com/assets/items/thumb/0ebdf5eaecbcab493384f45b09fda87b0b20900173ce05c6a05f9dc4a3004c16.webp?v=1710580878", url: "https://groceryrun-project.vercel.app" },
-        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaUEQzV_MP10HM4BWRNkBGflNdR0mjSB7ZOw&s", url: "https://school-management-project.vercel.app" },
-        { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjbOihuKj9nP85KfbAqYznWjef7FpNC4kTyQ&s", url: "https://restaurant-ordering-project.vercel.app" },
-        { image: "https://s3.envato.com/files/519893740/01_wp_church_preview.jpg", url: "https://church-management-project.vercel.app" }
+        { image: "/eventLot.jfif", url: "https://groceryrun-project.vercel.app" },
+        { image: "/luxuryhomes.jfif", url: "https://school-management-project.vercel.app" },
+        { image: "/shoprite.jfif", url: "https://restaurant-ordering-project.vercel.app" },
+        { image: "/kaye.jfif", url: "https://church-management-project.vercel.app" }
       ],
       accentColor: "emerald",
       showExperience: true,
       profile: {
-        name: "Samuel Okonkwo",
-        initials: "SO",
+        name: "Bwirdimma Lot Sunday",
+        initials: "BL",
         title: "Fullstack Developer & Freelance Engineer",
-        skills: ["React", "Node.js", "Express.js", "MongoDB", "MySQL", "Payment APIs"],
+        skills: ["MongoDB", "Express.js", "React", "Node.js", "MySQL", "Payment APIs", "REST APIs", "JavaScript"],
         accentColor: "emerald",
+        contactLink: "/contact",
       }
     },
   ];
@@ -381,8 +554,36 @@ export default function StudentSuccessStories() {
     return classes[color as keyof typeof classes] ?? classes.blue;
   };
 
+  // Build current modal project info
+  const activeStudent = students[activeStudentIdx];
+  const activeProjectItem = activeStudent?.projectItems[activeProjectIdx];
+  const activeProjectDescription = activeStudent?.projects[activeProjectIdx] ?? '';
+  const activeProjectTitle = activeProjectDescription.split(/\s[-—]\s/)[0];
+
   return (
     <div ref={containerRef} className="min-h-screen bg-white">
+
+      {/* ===== Project Modal ===== */}
+      <ProjectModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        project={
+          activeProjectItem
+            ? {
+                image: activeProjectItem.image,
+                title: activeProjectTitle,
+                description: activeProjectDescription,
+                index: activeProjectIdx,
+              }
+            : null
+        }
+        allProjects={activeStudent?.projectItems ?? []}
+        projectDescriptions={activeStudent?.projects ?? []}
+        studentName={activeStudent?.name ?? ''}
+        accentColor={activeStudent?.accentColor ?? 'blue'}
+        onNavigate={navigateProject}
+      />
+
       {/* Hero Section */}
       <section className="relative px-6 py-8 md:py-12 bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="max-w-7xl mx-auto text-center">
@@ -391,7 +592,6 @@ export default function StudentSuccessStories() {
               Former Student's Testimonies
             </h1>
           </div>
-
           <div className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Discover how our students transformed their lives in just 6 months
@@ -409,9 +609,8 @@ export default function StudentSuccessStories() {
             <article key={i} className="fade-in-element opacity-0 translate-y-12 transition-all duration-700 ease-out">
               <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
 
-                {/* Left Column - Profile & Story */}
+                {/* Left Column */}
                 <div className="lg:col-span-5 space-y-6">
-                  {/* Profile Card */}
                   <div className={`bg-gradient-to-br ${accent.gradient} p-8 rounded-2xl text-white shadow-xl`}>
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
@@ -440,7 +639,6 @@ export default function StudentSuccessStories() {
                     </div>
                   </div>
 
-                  {/* Transformation Card */}
                   <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-4">Career Transformation</h3>
                     <div className="space-y-4">
@@ -458,7 +656,6 @@ export default function StudentSuccessStories() {
                     </div>
                   </div>
 
-                  {/* Income Stats */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
                       <div className="flex items-center gap-2 mb-2">
@@ -479,9 +676,8 @@ export default function StudentSuccessStories() {
                   </div>
                 </div>
 
-                {/* Right Column - Quote, Projects & Portfolio */}
+                {/* Right Column */}
                 <div className="lg:col-span-7 space-y-6">
-                  {/* Quote */}
                   <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl">
                     <div className="text-6xl font-serif text-white/20 mb-4">"</div>
                     <blockquote className="text-xl md:text-2xl font-medium leading-relaxed italic">
@@ -489,7 +685,6 @@ export default function StudentSuccessStories() {
                     </blockquote>
                   </div>
 
-                  {/* Projects */}
                   <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm">
                     <div className="flex items-center gap-3 mb-6">
                       <Briefcase className={`w-6 h-6 ${accent.text}`} />
@@ -507,17 +702,17 @@ export default function StudentSuccessStories() {
                     </div>
                   </div>
 
-                  {/* Portfolio Grid */}
+                  {/* Portfolio Grid — NOW OPENS MODAL instead of external link */}
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-4">Portfolio Showcase</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Portfolio Showcase</h3>
+                    <p className="text-sm text-slate-500 mb-4">Click any project to learn more</p>
                     <div className="grid grid-cols-2 gap-4">
                       {student.projectItems.map((item, idx) => (
-                        <a
+                        <button
                           key={idx}
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative overflow-hidden rounded-xl aspect-video shadow-md hover:shadow-xl transition-all duration-300 block"
+                          onClick={() => openModal(i, idx)}
+                          className="group relative overflow-hidden rounded-xl aspect-video shadow-md hover:shadow-xl transition-all duration-300 block text-left w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                          aria-label={`View project ${idx + 1} by ${student.name}`}
                         >
                           <img
                             src={item.image}
@@ -525,13 +720,21 @@ export default function StudentSuccessStories() {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             loading="lazy"
                           />
+                          {/* Hover overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div className="flex items-center gap-2 text-white font-semibold">
-                              <span>View Project</span>
-                              <ExternalLink className="w-4 h-4" />
+                            <div className="flex flex-col items-center gap-1.5 text-white">
+                              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                                <ExternalLink className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-semibold">View Details</span>
                             </div>
                           </div>
-                        </a>
+
+                          {/* Project number badge */}
+                          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                            #{idx + 1}
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -539,9 +742,7 @@ export default function StudentSuccessStories() {
 
               </div>
 
-              {/* ===== STUDENT PROFILE CARD (below each story) ===== */}
               <StudentProfileCard profile={student.profile} />
-
             </article>
           );
         })}
