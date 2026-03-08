@@ -759,7 +759,7 @@ function Started3() {
                             </span>
                           ) : (
                             <span className="text-red-700 font-extrabold text-[14px]">
-                              Account name not confirmed. Must include at least two of: Lagos, School, Programming.
+                              Account name not confirmed.
                             </span>
                           )}
                           {accountNameSnippet && (
